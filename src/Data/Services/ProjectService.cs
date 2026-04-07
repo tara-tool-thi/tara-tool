@@ -1,18 +1,19 @@
-namespace tara_tool.Data;
+namespace tara_tool.Data.Services;
 
-public class ProjectsService(ApplicationDbContext context)
+
+public class ProjectService(ApplicationDbContext context)
 {
     public async Task<Project> CreateProjectAsync(string name)
     {
-        Project project = new Project
+        Project newProject = new Project
         {
             ProjectName = name
         };
 
-        context.Projects.Add(project);
+        context.Projects.Add(newProject);
         await context.SaveChangesAsync();
 
-        return project;
+        return newProject;
     }
 
     public async Task<Project?> RetrieveProjectInfoAsync(long ID)

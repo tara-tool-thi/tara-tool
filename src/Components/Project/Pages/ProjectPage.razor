@@ -1,30 +1,38 @@
-﻿@page "/Project/{Id:long}"
+﻿@page "/Project/{urlId:long}"
 
 <!-- Without this functions won't run for some reason -->
 @rendermode InteractiveServer
 
+@using Microsoft.AspNetCore.Mvc
 @using Microsoft.EntityFrameworkCore
-@using tara_tool.Data
+@using tara_tool.Data.Services
+@using Microsoft.AspNetCore.Components;
 
 
-<!-- Db Context has to be swapped from ApplicationDbContext to IDbContextFactory -->
+<!-- Db Context has to be swapped from ApplicationDbContext to IDbContextFactory as per our guidelines -->
+<!-- for IDbContextFactory to work I would have to swap
+    builder.Services.AddDbContext<ApplicationDbContext>(
+    options => options.UseSqlite(connectionString)); 
+    for 
+    builder.Services.AddDbContextFactory<ApplicationDbContext>(
+    options => options.UseSqlite(connectionString)); 
+    in Program.cs -->
 @inject ApplicationDbContext Db 
+
+@inject NavigationManager NavigationManager
 
 
 <PageTitle>Project</PageTitle>
 
-<h1>Hello, world!</h1>
-
-Welcome to the new Project @Id's Page
-
+<br />
 <h2>
     <div style="display: flex;">
-        Project ID: @Id
+        @projectName
         <FluentSpacer />
-        Last Edited: xxxx
+        Last Edited: @retrievedProjectLastModifiedDate
     </div>
 </h2>
-
+<br />
 <div style="display: flex;">
     <FluentAutocomplete TOption="ItemDefinition"
                     AutoComplete="off"
@@ -33,23 +41,22 @@ Welcome to the new Project @Id's Page
                     Width="250px"
                     MaxAutoHeight="200px"
                     Placeholder="Search for Items"
-                    OnOptionsSearch="@OnSearchAsync"
+                    OnOptionsSearch="@onSearchAsync"
                     MaximumSelectedOptions="5"
                     OptionText="@(item => item.ItemName)"
-                    @bind-SelectedOptions="@SearchItems" />
-    <FluentSpacer />
+                    @bind-SelectedOptions="@searchItems" />
 
     <FluentSpacer />
 
-    <FluentSpacer />
-    <FluentButton IconStart="@(new Icons.Regular.Size16.Add())">
-        Button
+    <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
+        New Item
     </FluentButton>
 </div>
 
-
-<FluentDataGrid Items="@SelectedItems.AsQueryable()" Pagination="@pagination">
-    <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" />
+<br />
+<FluentDataGrid TGridItem="ItemDefinition" Items="@selectedItems.AsQueryable()" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")">
+    <PropertyColumn Property="@(p => p.Id)" Sortable="true" Width="40px" Title="#"/>
+    <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name"/>
 </FluentDataGrid>
 
 <FluentPaginator State="@pagination" />
@@ -58,140 +65,176 @@ Welcome to the new Project @Id's Page
 <h1>Helpful Debug Functions</h1>
 
 <FluentSpacer />
-<FluentTextField @bind-Value="projectName"  Style="width: auto;" />
-<FluentButton OnClick="@CreateProject">Create Project</FluentButton>
-<br />Did CreateProject run? <h4>@Test</h4>
+<FluentTextField @bind-Value="debugProjectName"  Style="width: auto;" />
+<FluentButton OnClick="@(() => createProject(debugProjectName))">Create Project</FluentButton>
+<br />Did CreateProject run? <h4>@dbDebug</h4>
 
 <FluentSpacer />
-<FluentTextField @bind-Value="WantedprojectID"  Style="width: auto;" TextFieldType="TextFieldType.Number" />
-<FluentButton OnClick="@RetrieveProjectInfo">Get Project Info</FluentButton>
-<br />Project @WantedprojectID's name is: <h4>@RetrievedProjectName</h4>
-<br />Project @WantedprojectID created on: <h4>@RetrievedProjectCreationDate</h4>
-<br />Project @WantedprojectID last modified on: <h4>@RetrievedProjectLastModifiedDate</h4>
+<FluentTextField @bind-Value="wantedProjectID"  Style="width: auto;" TextFieldType="TextFieldType.Number" />
+<FluentButton OnClick="@retrieveProjectInfoButton">Get Project Info</FluentButton>
+<br />Project @wantedProjectID's name is: <h4>@retrievedProjectName</h4>
+<br />Project @wantedProjectID created on: <h4>@debugRetrievedProjectCreationDate</h4>
+<br />Project @wantedProjectID last modified on: <h4>@debugRetrievedProjectLastModifiedDate</h4>
 
 <FluentSpacer />
-<FluentTextField @bind-Value="ItemName"  Style="width: auto;" />
-<FluentButton OnClick="@AddItem">Add Item with custom name to project 1</FluentButton>
+<FluentTextField @bind-Value="itemNameToBeAdded"  Style="width: auto;" />
+<FluentButton OnClick="@(() => addItem(itemNameToBeAdded))">Add Item with custom name to project 1</FluentButton>
 
 @code {
     [Parameter]
-    public long Id { get; set; }
-
-    //Code for the DataGrid
-    PaginationState pagination = new PaginationState() { ItemsPerPage = 2 };
-
+    public long urlId { get; set; }
 
     private string projectName = "";
 
-    private string WantedprojectID = "";
+    private DateTime retrievedProjectLastModifiedDate;
 
-    private string Test = "No";
+    private string debugProjectName = "";
 
-    private string RetrievedProjectName = "";
+    private string wantedProjectID = "";
 
-    private DateTime RetrievedProjectLastModifiedDate;
+    private string dbDebug = "No";
 
-    private DateTime RetrievedProjectCreationDate;
+    private string retrievedProjectName = "";
 
-    private string ItemName = "";
+    private DateTime debugRetrievedProjectLastModifiedDate;
+
+    private DateTime debugRetrievedProjectCreationDate;
+
+    private string itemNameToBeAdded = "";
+
+    private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
     private IQueryable<ItemDefinition> itemsQuery = Enumerable.Empty<ItemDefinition>().AsQueryable();
 
-    private async Task CreateProject()
+    private IEnumerable<ItemDefinition> selectedItems = Array.Empty<ItemDefinition>();
+
+    private IEnumerable<ItemDefinition> searchItems = Array.Empty<ItemDefinition>();
+
+    protected override async void OnInitialized()
     {
-        ProjectsService projectService = new ProjectsService(Db);
-
-        await projectService.CreateProjectAsync(projectName);
-        
-
-        if (Db == null)
+        //New project has to be created when urlId == -1
+        if(urlId == -1)
         {
-            Console.WriteLine("Db is null!");
+            ProjectService projectService = new ProjectService(Db);
+
+            Project newProject = await projectService.CreateProjectAsync("New unnamed Project");
+
+            NavigationManager.NavigateTo($"/Project/{newProject.Id}");
+
             return;
         }
 
-        Console.WriteLine("Db OK");
+        Project? requestedProject = await retrieveProjectInfo();
 
-        
-        Test = "Yes";
+        if(requestedProject == null)
+        {
+            NavigationManager.NavigateTo("/");
+
+            return;
+        }
+
+        projectName = requestedProject!.ProjectName;
+
+        retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+
+        itemsQuery = Db.ItemDefinitions
+                        .Where(p => p.IdProject == urlId);
+
+        selectedItems = itemsQuery;
     }
 
-    private async Task RetrieveProjectInfo()
+    private async Task createProject(string name)
     {
-        //long ParsedProjectID;
+        ProjectService projectService = new ProjectService(Db);
 
-        long.TryParse(WantedprojectID, out long ParsedProjectID);
+        await projectService.CreateProjectAsync(name);
+        
+        dbDebug = "Yes";
+    }
 
-        ProjectsService projectService = new ProjectsService(Db);
+    private async Task<Project?> retrieveProjectInfo()
+    {
+        ProjectService projectService = new ProjectService(Db);
 
-        Project? RetrievedProject = await projectService.RetrieveProjectInfoAsync(ParsedProjectID);
+        Project? retrievedProject = await projectService.RetrieveProjectInfoAsync(urlId);
 
-        if (RetrievedProject == null)
+        return retrievedProject;
+    }
+
+    private async Task retrieveProjectInfoButton()
+    {
+        long.TryParse(wantedProjectID, out long parsedProjectID);
+
+        ProjectService projectService = new ProjectService(Db);
+
+        Project? retrievedProject = await projectService.RetrieveProjectInfoAsync(parsedProjectID);
+
+        if (retrievedProject == null)
         {
             // handle "not found"
             // Add redirect to Invalid Project Page;
         }
 
-        RetrievedProjectName = RetrievedProject!.ProjectName;
+        retrievedProjectName = retrievedProject!.ProjectName;
 
-        RetrievedProjectCreationDate = RetrievedProject.DateCreated;
+        debugRetrievedProjectCreationDate = retrievedProject.DateCreated;
 
-        RetrievedProjectLastModifiedDate = RetrievedProject.DateLastChanged;
-
+        debugRetrievedProjectLastModifiedDate = retrievedProject.DateLastChanged;
     }
 
-    private async Task AddItem()
+    private async Task addItem(string name)
     {
         ItemsService itemsService = new ItemsService(Db);
 
         try
-        {   // Fixed ID of 1 for testing/debug purposes
-            await itemsService.CreateItemAsync(long.Parse("1"), ItemName);
+        {   
+            await itemsService.CreateItemAsync(urlId, name);
         }
         catch
         {
-
+            // Some kind of message that Item could not be created
         }
+
+        // Refresh the datagrid to show new item
+        itemsQuery = Db.ItemDefinitions
+                        .Where(p => p.IdProject == urlId);
+
+        OptionsSearchEventArgs<ItemDefinition> e = new OptionsSearchEventArgs<ItemDefinition>();
+        await onSearchAsync(e);
     }
 
-    protected override void OnInitialized()
+    // User has to click into the autocomplete box again for selectedItems to apply to the DataGrid
+    private async Task onSearchAsync(OptionsSearchEventArgs<ItemDefinition> e)
     {
-
-        itemsQuery = Db.ItemDefinitions.Where(p => p.IdProject == long.Parse("1"));
-
-        SelectedItems = itemsQuery;
-    }
-
-    IEnumerable<ItemDefinition> SelectedItems = Array.Empty<ItemDefinition>();
-
-    IEnumerable<ItemDefinition> SearchItems = Array.Empty<ItemDefinition>();
-
-    
-    // User has to click into the autocomplete box again for SelectedItems to apply to the DataGrid
-    private async Task OnSearchAsync(OptionsSearchEventArgs<ItemDefinition> e)
-    {
-        if (string.IsNullOrWhiteSpace(e.Text) && !SearchItems.Any())
+        if (string.IsNullOrWhiteSpace(e.Text) && !searchItems.Any())
         {
-            // No search, show all projects
-            SelectedItems = itemsQuery;
+            // No search, show all items
+            selectedItems = itemsQuery;
         }
-        else if (!SearchItems.Any())
+        else if (!searchItems.Any())
         {
-
-            SelectedItems = Db.ItemDefinitions
+            selectedItems = Db.ItemDefinitions
                 .Where(p => EF.Functions.Like(p.ItemName, $"%{e.Text}%"));
-
         }
         else
         {
-            SelectedItems = SearchItems;
+            selectedItems = searchItems;
         }
 
-        IEnumerable<ItemDefinition> allItems = Db.ItemDefinitions.Where(i => EF.Functions.Like(i.ItemName, $"%{e.Text}%"));
-                                                //.Select(i => i.ItemName);
-                                                //.ToList();
+        IEnumerable<ItemDefinition> allItems = Db.ItemDefinitions
+                                                .Where(i => EF.Functions.Like(i.ItemName, $"%{e.Text}%"));
+                                                
         e.Items = allItems;
     }
 
+    private async Task onRowClick(FluentDataGridRow<ItemDefinition> row)
+    {
+        if (row.Item is null)
+        {
+            return;
+        }
+
+        NavigationManager.NavigateTo($"/Item/{row.Item.Id}");
+    }
 }
 
