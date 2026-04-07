@@ -1,0 +1,56 @@
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<script>
+    function activateLogoutForm() {
+        document.getElementById("logoutform").submit();
+    }
+</script>
+
+<FluentStack HorizontalAlignment="HorizontalAlignment.End" VerticalAlignment="VerticalAlignment.Center"
+             Width="min-content">
+    <FluentProfileMenu @bind-Open="@openProfileMenu" FullName="@EMail.Split('@').FirstOrDefault(EMail)" EMail="@EMail"
+                       HeaderLabel="Logged in as" TopCorner=true OnFooterLinkClick=@RedirectToAccountPage OnHeaderButtonClick=@SignOut>
+        <EndTemplate>
+            @EMail
+        </EndTemplate>
+    </FluentProfileMenu>
+</FluentStack>
+
+<form id="logoutform" action="Account/Logout" method="post">
+    <AntiforgeryToken />
+    <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+</form>
+
+@code {
+    private bool openProfileMenu { get; set; } = false;
+    private string? currentUrl;
+
+    [Parameter]
+    public required string EMail { get; set; }
+
+    private void RedirectToAccountPage()
+    {
+        openProfileMenu = false;
+        NavigationManager.NavigateTo("/Account/Manage");
+    }
+
+    private void SignOut()
+    {
+        openProfileMenu = false;
+        JSRuntime.InvokeVoidAsync(@"activateLogoutForm");
+    }
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+}
