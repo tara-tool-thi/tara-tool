@@ -1,0 +1,86 @@
+@page "/Projects"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using tara_tool.Components.Pages.UIComponents
+@inject ProjectService projectService
+@inject AuthenticationStateProvider _authenticationState
+@inject NavigationManager navigator
+
+
+@attribute [Authorize]
+
+<PageTitle>Projects</PageTitle>
+
+
+<AuthorizeView>
+  <div style="display: flex;">
+    <h4><b style="text-align: center;">My Projects</b></h4>
+    <FluentSpacer />
+    <FluentButton @onclick=@(() => navigator.NavigateTo(navigator.BaseUri + "/Project/-1"))>
+      + New Project
+    </FluentButton>
+  </div>
+
+  <TinyText Value="Select a project to continue" />
+
+
+  <div style="display: flex;">
+    <FluentSearch  Placeholder="Type to search for title..." Style="width: 25%;" @bind-Value=@TitleSearch />
+    <FluentSpacer />
+    <FluentAutocomplete TOption="string"  Placeholder="Type to search for owner..." OnOptionsSearch="@OnSearchAsync" OptionText="@(item => item)" Style="width: 25%;" @bind-SelectedOptions="@selectedMails"/>
+
+  </div>
+
+  <div @key=@TitleSearch>
+    @foreach(var project in allProjectsWithAccess.Where(a => (TitleSearch == null || a.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 || selectedMails.Contains(a.Access.FirstOrDefault(a => a.Owner == true)?.Member.Email)))) {
+      <ProjectCard Project=@project/>
+    }
+  </div>
+
+</AuthorizeView>
+
+@code {
+
+  List<Project> allProjectsWithAccess = new();
+  List<string> allEmails  = new();
+  IEnumerable<string> selectedMails = Array.Empty<string>();
+
+  private string? _titleSearchBack = null;
+  private string? TitleSearch
+  {
+    get => _titleSearchBack;
+    set
+    {
+      if (string.IsNullOrWhiteSpace(value))
+      {
+        _titleSearchBack = null;
+      } 
+      else {
+        _titleSearchBack = value;
+      }
+    }
+  }
+
+
+  protected override async Task OnInitializedAsync()
+  {
+
+    ClaimsPrincipal user = (await _authenticationState.GetAuthenticationStateAsync()).User;
+    string? UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
+
+    if (UserId == null)
+    {
+      return;
+    }
+
+    allProjectsWithAccess = await projectService.GetProjectsAsync(UserId!, (value) => value.Include(a =>
+    a.Access).ThenInclude(a => a.Member).AsQueryable());
+    allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a => a.Member).Where(m => m.Email != null).Select(m => m.Email!).ToList();
+  }
+
+   private async Task OnSearchAsync(OptionsSearchEventArgs<string> e) {
+      e.Items = allEmails.Where(s => s.Contains(e.Text ,StringComparison.OrdinalIgnoreCase)).OrderBy(s => s);
+   }
+}
+

@@ -14,6 +14,19 @@ public class ApplicationDbContext(
   public DbSet<ItemDefinition> ItemDefinitions { get; set; }
   public DbSet<Image> Images { get; set; }
 
+  static public void GetDbConfig(DbContextOptionsBuilder databaseBuilder,
+                                 WebApplicationBuilder builder)
+  {
+    // We will look up the config file here later and connect to either sqlite
+    // or postgress
+    string? connectionString =
+        builder.Configuration.GetConnectionString("DefaultConnection") ??
+        throw new InvalidOperationException(
+            "Connection string 'DefaultConnection' not found.");
+
+    databaseBuilder.UseSqlite(connectionString);
+  }
+
   protected override void OnModelCreating(ModelBuilder builder)
   {
     base.OnModelCreating(builder);
