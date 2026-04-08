@@ -55,6 +55,8 @@
 <FluentDataGrid TGridItem="ItemDefinition" Items="@selectedItems.AsQueryable()" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")">
     <PropertyColumn Property="@(p => p.Id)" Sortable="true" Width="40px" Title="#"/>
     <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name"/>
+    <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function"/>
+    <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true" Title="Operational Environment"/>
 </FluentDataGrid>
 
 <FluentPaginator State="@pagination" />
@@ -71,7 +73,6 @@
 
     private string retrievedProjectName = "";
 
-    private string itemNameToBeAdded = "";
 
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
