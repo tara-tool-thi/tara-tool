@@ -15,25 +15,45 @@
 
 <div class="center">
     <FluentCard Width="400px">
-        <h1>TARA Tool</h1>
-        <h5>Threat Analysis & Risk Assessment</h5>
-        <h5>ISO/SAE 21434</h5>
-        <div>
-            <FluentTextField TextFieldType="TextFieldType.Email" @bind-Value=email Label="Email" Placeholder="example@thi.de" Required="true"></FluentTextField>
-            <FluentTextField TextFieldType="TextFieldType.Password" @bind-Value=password Label="Password" Placeholder="*******" Required="true"></FluentTextField>
-            <br />
-            <p>Forgot your password? 
-                <FluentAnchor Href="Account/ForgotPassword" Appearance="Appearance.Hypertext">Reset Password</FluentAnchor>
-            </p>
-            <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Login</FluentButton>
-            <p>Don't have an account yet?
-                <FluentAnchor Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" Appearance="Appearance.Hypertext">Register</FluentAnchor>
-            </p>
+        <div class="center">
+            <StatusMessage Message="@errorMessage" />
         </div>
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <DataAnnotationsValidator />
+            <FluentValidationSummary class="text-danger" role="alert" />
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center">
+                <h1>TARA Tool</h1>
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="-50" HorizontalAlignment="HorizontalAlignment.Center">
+                    <h5>Threat Analysis & Risk Assessment</h5>
+                    <h5>ISO/SAE 21434</h5>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" Width="80%">
+                    <div style="width: 100%;">
+                        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=email Label="Email" Placeholder="example@thi.de" Required="true" style="width: 100%;"></FluentTextField>
+                        <FluentValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+                    <div style="width: 100%;">
+                        <FluentTextField Name="Input.Password" TextFieldType="TextFieldType.Password" @bind-Value=password Label="Password" Placeholder="*******" Required="true" style="width: 100%;"></FluentTextField>
+                        <FluentValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+                    <br />
+                    <p>Forgot your password? 
+                        <FluentAnchor Href="Account/ForgotPassword" Appearance="Appearance.Hypertext">Reset Password</FluentAnchor>
+                    </p>
+                    <FluentStack>
+                        <FluentCheckbox Name="Input.RememberMe" @bind-Value="Input.RememberMe" Label="Remember me" />
+                    </FluentStack>
+                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" style="width: 100%;">Login</FluentButton>
+                    <p>Don't have an account yet?
+                        <FluentAnchor Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" Appearance="Appearance.Hypertext">Register here</FluentAnchor>
+                    </p>
+                </FluentStack>
+            </FluentStack>
+        </EditForm>
     </FluentCard>
 </div>
 
-<FluentGrid>
+@* <FluentGrid>
     <FluentGridItem xs="8" sm="4">
         <StatusMessage Message="@errorMessage" />
         <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
@@ -67,7 +87,7 @@
         <hr />
         <ExternalLoginPicker />
     </FluentGridItem>
-</FluentGrid>
+</FluentGrid> *@
 
 <style>
     .center{
@@ -76,6 +96,9 @@
         align-items: center;
     }
     h1, h5 {text-align: center;}
+    .link {
+        text-decoration: none;
+    }
 </style>
 
 
