@@ -6,6 +6,7 @@
 
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Identity
 @using tara_tool.Data.Services
 
 
@@ -20,6 +21,8 @@
 @inject ApplicationDbContext Db 
 
 @inject NavigationManager NavigationManager
+
+@inject UserManager<ApplicationUser> UserManager
 
 
 <PageTitle>Project</PageTitle>
@@ -54,11 +57,27 @@
 </div>
 
 <br />
-<FluentDataGrid TGridItem="ItemDefinition" Items="@selectedItems.AsQueryable()" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")">
-    <PropertyColumn Property="@(p => p.Id)" Sortable="true" Width="40px" Title="#"/>
-    <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name"/>
-    <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function"/>
-    <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true" Title="Operational Environment"/>
+<FluentDataGrid TGridItem="ItemDefinition" Items="@selectedItems.AsQueryable()" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
+
+    <EmptyContent>
+        <div style="padding:40px; text-align:center; opacity:0.7;">
+            <div style="font-size:18px; margin-bottom:8px;">
+                No items found
+            </div>
+            <div style="font-size:14px;">
+                Try adjusting your filters or adding new data.
+            </div>
+        </div>
+    </EmptyContent>
+
+    <ChildContent>
+        <TemplateColumn Title="#" Sortable="true" Width="40px" >
+            @(selectedItems.ToList().IndexOf(context) + 1)
+        </TemplateColumn>
+        <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name"/>
+        <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function"/>
+        <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true" Title="Operational Environment"/>
+    </ChildContent>
 </FluentDataGrid>
 
 <FluentPaginator State="@pagination" />
@@ -87,6 +106,9 @@ Items per page:
     [Parameter]
     public long urlId { get; set; }
 
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     private string projectName = "";
 
     private DateTime retrievedProjectLastModifiedDate;
@@ -107,6 +129,22 @@ Items per page:
             ProjectService projectService = new ProjectService(Db);
 
             Project newProject = await projectService.CreateProjectAsync("New unnamed Project");
+
+            ApplicationUser? user  = await UserManager.GetUserAsync(HttpContext.User);
+
+            AccessControl accessControl = new AccessControl
+            {
+                Member = user!,
+                Project = newProject,
+                ReadAccess = true,
+                WriteAccess = true,
+                Manage = true,
+                Owner = true,
+            };
+
+            Db.AccessControls.Add(accessControl);
+
+            await Db.SaveChangesAsync();
 
             NavigationManager.NavigateTo($"/Project/{newProject.Id}");
 
@@ -149,11 +187,9 @@ Items per page:
 
         Project? requestedProject = await retrieveProjectInfo();
 
-        if (requestedProject != null)
-        {
-            projectName = requestedProject.ProjectName;
-            retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
-        }
+        retrievedProjectLastModifiedDate = requestedProject!.DateLastChanged;
+
+        await Db.SaveChangesAsync();
 
         NavigationManager.NavigateTo($"/Item/{newItem.Id}");
     }
@@ -169,7 +205,8 @@ Items per page:
         else if (!searchItems.Any())
         {
             selectedItems = Db.ItemDefinitions
-                .Where(p => EF.Functions.Like(p.ItemName, $"%{e.Text}%"));
+                .Where(p => EF.Functions.Like(p.ItemName, $"%{e.Text}%"))
+                .Where(p => p.IdProject == urlId);
         }
         else
         {
@@ -177,7 +214,8 @@ Items per page:
         }
 
         IEnumerable<ItemDefinition> allItems = Db.ItemDefinitions
-                                                .Where(i => EF.Functions.Like(i.ItemName, $"%{e.Text}%"));
+                                                .Where(i => EF.Functions.Like(i.ItemName, $"%{e.Text}%"))
+                                                .Where(p => p.IdProject == urlId);
                                                 
         e.Items = allItems;
     }
