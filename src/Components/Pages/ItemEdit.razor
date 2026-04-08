@@ -2,6 +2,7 @@
 
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
+<<<<<<< HEAD
 
 <div class="item-header">
   <h1 class="item-title">Item Definition</h1>
@@ -19,6 +20,8 @@
     </div>
   </div>
 </div>
+=======
+>>>>>>> fed7949 (Show item info from db in item definition page)
 
 <h1>Editing item @itemId</h1>
 
@@ -66,6 +69,22 @@
     ItemsService itemsService = new ItemsService(DbContext);
     ItemDefinition? itemDefinition = await itemsService.RetrieveItemDefinitionInfoAsync(itemId);
 
+    if (itemDefinition == null)
+    {
+      NavigationManager.NavigateTo("/");
+      return;
+    }
+
+    itemName = itemDefinition.ItemName;
+    itemFunction = itemDefinition.ItemFunction;
+    itemOperationalEnvironmentText = itemDefinition.OperationalEnvironmentText;
+  }
+
+  protected override async void OnInitialized()
+  {
+    ItemsService itemsService = new ItemsService(DbContext);
+    ItemDefinition? itemDefinition = await itemsService.RetrieveItemDefinitionInfoAsync(itemId);
+    
     if (itemDefinition == null)
     {
       NavigationManager.NavigateTo("/");
