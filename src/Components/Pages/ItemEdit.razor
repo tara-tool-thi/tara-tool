@@ -1,0 +1,40 @@
+@page "/Item/{itemId:long}"
+
+@inject ApplicationDbContext DbContext
+
+<h1>Editing item @itemId</h1>
+
+<FluentCard Height=200px>
+  <h2>Item name</h2>
+  <FluentTextArea @bind-Value=itemName Placeholder="Item name">@itemName</FluentTextArea>
+</FluentCard>
+
+<br>
+
+<FluentCard Height=200px>
+  <h2>Item description</h2>
+  <FluentTextArea @bind-Value=itemDescription Placeholder="Item description"></FluentTextArea>
+</FluentCard>
+
+<br>
+
+<FluentButton Appearance="Appearance.Accent" onclick="SaveClicked">Save</FluentButton>
+
+@code {
+  [Parameter]
+  public long itemId { get; set; }
+
+  // using var db = new ApplicationDbContext();
+  // List<Project>? projects = null;
+
+  string itemName = "bla";
+  string itemDescription = string.Empty;
+
+  string something = "test";
+
+  private async Task SaveClicked()
+  {
+    something = "Test";
+    Console.WriteLine("Save clicked!");
+  }
+}
