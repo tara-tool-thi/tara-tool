@@ -12,6 +12,7 @@ public class ItemsService(ApplicationDbContext context)
             };
 
             context.ItemDefinitions.Add(newItem);
+            newItem.Project.DateLastChanged = DateTime.Now;
             await context.SaveChangesAsync();
 
             return;
