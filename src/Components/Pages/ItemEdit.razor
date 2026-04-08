@@ -42,7 +42,8 @@
 
 <br>
 
-<FluentButton Appearance="Appearance.Accent" onclick="SaveClicked">Save</FluentButton>
+<FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size16.Save())"
+              OnClick="@(() => SaveClicked())">Save</FluentButton>
 
 @code {
   [Parameter]
@@ -57,14 +58,14 @@
 
   private async Task SaveClicked()
   {
-    Console.WriteLine("Save clicked!");
+
   }
 
   protected override async void OnInitialized()
   {
     ItemsService itemsService = new ItemsService(DbContext);
     ItemDefinition? itemDefinition = await itemsService.RetrieveItemDefinitionInfoAsync(itemId);
-    
+
     if (itemDefinition == null)
     {
       NavigationManager.NavigateTo("/");
