@@ -34,7 +34,13 @@ body {
     width: 100dvw;
 }
 
-footer {
+.center{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+ footer {
     background: var(--neutral-layer-4);
     color: var(--neutral-foreground-rest);
     align-items: center;
