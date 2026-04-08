@@ -11,8 +11,9 @@ public class ItemsService(ApplicationDbContext context)
             ?? throw new Exception("Invalid Project ID for Item Creation")
         };
 
-        context.ItemDefinitions.Add(newItem);
-        await context.SaveChangesAsync();
+            context.ItemDefinitions.Add(newItem);
+            newItem.Project.DateLastChanged = DateTime.Now;
+            await context.SaveChangesAsync();
 
         return;
     }

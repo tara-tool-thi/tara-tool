@@ -59,25 +59,6 @@
 
 <FluentPaginator State="@pagination" />
 
-<br />
-<h1>Helpful Debug Functions</h1>
-
-<FluentSpacer />
-<FluentTextField @bind-Value="debugProjectName"  Style="width: auto;" />
-<FluentButton OnClick="@(() => createProject(debugProjectName))">Create Project</FluentButton>
-<br />Did CreateProject run? <h4>@dbDebug</h4>
-
-<FluentSpacer />
-<FluentTextField @bind-Value="wantedProjectID"  Style="width: auto;" TextFieldType="TextFieldType.Number" />
-<FluentButton OnClick="@retrieveProjectInfoButton">Get Project Info</FluentButton>
-<br />Project @wantedProjectID's name is: <h4>@retrievedProjectName</h4>
-<br />Project @wantedProjectID created on: <h4>@debugRetrievedProjectCreationDate</h4>
-<br />Project @wantedProjectID last modified on: <h4>@debugRetrievedProjectLastModifiedDate</h4>
-
-<FluentSpacer />
-<FluentTextField @bind-Value="itemNameToBeAdded"  Style="width: auto;" />
-<FluentButton OnClick="@(() => addItem(itemNameToBeAdded))">Add Item with custom name to project 1</FluentButton>
-
 @code {
     [Parameter]
     public long urlId { get; set; }
@@ -86,17 +67,9 @@
 
     private DateTime retrievedProjectLastModifiedDate;
 
-    private string debugProjectName = "";
-
     private string wantedProjectID = "";
 
-    private string dbDebug = "No";
-
     private string retrievedProjectName = "";
-
-    private DateTime debugRetrievedProjectLastModifiedDate;
-
-    private DateTime debugRetrievedProjectCreationDate;
 
     private string itemNameToBeAdded = "";
 
@@ -108,7 +81,7 @@
 
     private IEnumerable<ItemDefinition> searchItems = Array.Empty<ItemDefinition>();
 
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         //New project has to be created when urlId == -1
         if(urlId == -1)
@@ -147,7 +120,6 @@
 
         await projectService.CreateProjectAsync(name);
         
-        dbDebug = "Yes";
     }
 
     private async Task<Project?> retrieveProjectInfo()
@@ -174,10 +146,6 @@
         }
 
         retrievedProjectName = retrievedProject!.ProjectName;
-
-        debugRetrievedProjectCreationDate = retrievedProject.DateCreated;
-
-        debugRetrievedProjectLastModifiedDate = retrievedProject.DateLastChanged;
     }
 
     private async Task addItem(string name)
@@ -193,6 +161,13 @@
             // Some kind of message that Item could not be created
         }
 
+        Project? requestedProject = await retrieveProjectInfo();
+
+        if (requestedProject != null)
+        {
+            projectName = requestedProject.ProjectName;
+            retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+        }
         // Refresh the datagrid to show new item
         itemsQuery = Db.ItemDefinitions
                         .Where(p => p.IdProject == urlId);
