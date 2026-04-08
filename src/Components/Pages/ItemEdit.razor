@@ -1,20 +1,27 @@
 @page "/Item/{itemId:long}"
 
 @inject ApplicationDbContext DbContext
+@inject NavigationManager NavigationManager
 
 <h1>Editing item @itemId</h1>
 
 <FluentCard Height=200px>
   <h2>Item name</h2>
-  <FluentTextArea @bind-Value=itemName Placeholder="Item name">@itemName</FluentTextArea>
+  <FluentTextArea @bind-Value="itemName" Placeholder="Item name">@itemName</FluentTextArea>
 </FluentCard>
 
 <br>
 
 <FluentCard Height=200px>
-  <h2>Item description</h2>
-  <FluentTextArea @bind-Value=itemDescription Placeholder="Item description"></FluentTextArea>
+  <h2>Item function</h2>
+  <FluentTextArea @bind-Value="itemFunction" Placeholder="Item function">@itemFunction</FluentTextArea>
 </FluentCard>
+
+<FluentCard Height=200px>
+  <h2>Item OperationalEnvironmentText</h2>
+  <FluentTextArea @bind-Value="itemFunction" Placeholder="Item function">@itemFunction</FluentTextArea>
+</FluentCard>
+
 
 <br>
 
@@ -27,14 +34,28 @@
   // using var db = new ApplicationDbContext();
   // List<Project>? projects = null;
 
-  string itemName = "bla";
-  string itemDescription = string.Empty;
-
-  string something = "test";
+  string itemName = string.Empty;
+  string itemFunction = string.Empty;
+  string itemOperationalEnvironmentText = string.Empty;
 
   private async Task SaveClicked()
   {
-    something = "Test";
     Console.WriteLine("Save clicked!");
+  }
+
+  protected override async void OnInitialized()
+  {
+    ItemsService itemsService = new ItemsService(DbContext);
+    ItemDefinition? itemDefinition = await itemsService.RetrieveItemDefinitionInfoAsync(itemId);
+    
+    if (itemDefinition == null)
+    {
+      NavigationManager.NavigateTo("/");
+      return;
+    }
+
+    itemName = itemDefinition.ItemName;
+    itemFunction = itemDefinition.ItemFunction;
+    itemOperationalEnvironmentText = itemDefinition.OperationalEnvironmentText;
   }
 }
