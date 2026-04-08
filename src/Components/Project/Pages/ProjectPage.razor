@@ -82,32 +82,7 @@
     </ChildContent>
 </FluentDataGrid>
 
-<FluentPaginator State="@pagination" >
-    <SummaryTemplate>
-        <FluentStack VerticalAlignment="VerticalAlignment.Center">
-            <span><b>@pagination.TotalItemCount</b>&nbsp;items</span>
-            <FluentSpacer/>
-            <span>Items per page:</span>
-            <FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => onPageCountChange(value))">
-                <FluentOption Value="5">
-                    5
-                </FluentOption>
-                <FluentOption Value="10" Selected>
-                    10
-                </FluentOption>
-                <FluentOption Value="25">
-                    25
-                </FluentOption>
-                <FluentOption Value="50">
-                    50
-                </FluentOption>
-                <FluentOption Value="100">
-                    100
-                </FluentOption>
-            </FluentSelect>
-        </FluentStack>
-    </SummaryTemplate>
-</FluentPaginator>
+<FluentPaginator State="@pagination" />
 
 @code {
     [Parameter]
@@ -116,6 +91,12 @@
     private string projectName = "";
 
     private DateTime retrievedProjectLastModifiedDate;
+
+    private string wantedProjectID = "";
+
+    private string retrievedProjectName = "";
+
+    private string itemNameToBeAdded = "";
 
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
@@ -194,6 +175,14 @@
         selectedItems = itemsQuery;
     }
 
+    private async Task createProject(string name)
+    {
+        ProjectService projectService = new ProjectService(Db);
+
+        await projectService.CreateProjectAsync(name);
+        
+    }
+
     private async Task<Project?> retrieveProjectInfo()
     {
         ProjectService projectService = new ProjectService(Db);
@@ -201,6 +190,23 @@
         Project? retrievedProject = await projectService.RetrieveProjectInfoAsync(urlId);
 
         return retrievedProject;
+    }
+
+    private async Task retrieveProjectInfoButton()
+    {
+        long.TryParse(wantedProjectID, out long parsedProjectID);
+
+        ProjectService projectService = new ProjectService(Db);
+
+        Project? retrievedProject = await projectService.RetrieveProjectInfoAsync(parsedProjectID);
+
+        if (retrievedProject == null)
+        {
+            // handle "not found"
+            // Add redirect to Invalid Project Page;
+        }
+
+        retrievedProjectName = retrievedProject!.ProjectName;
     }
 
     private async Task addItem(string name)
@@ -211,7 +217,16 @@
 
         Project? requestedProject = await retrieveProjectInfo();
 
-        retrievedProjectLastModifiedDate = requestedProject!.DateLastChanged;
+        Project? requestedProject = await retrieveProjectInfo();
+
+        if (requestedProject != null)
+        {
+            projectName = requestedProject.ProjectName;
+            retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+        }
+        // Refresh the datagrid to show new item
+        itemsQuery = Db.ItemDefinitions
+                        .Where(p => p.IdProject == urlId);
 
         await Db.SaveChangesAsync();
 
