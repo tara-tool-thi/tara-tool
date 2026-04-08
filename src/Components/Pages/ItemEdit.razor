@@ -3,6 +3,23 @@
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
 
+<div class="item-header">
+  <h1 class="item-title">Item Definition</h1>
+
+  <div class="info-tooltip-wrapper">
+    <button class="info-btn"
+            type="button"
+            aria-label="Hilfe anzeigen"
+            aria-describedby="item-definition-help">
+      i
+    </button>
+
+    <div class="info-popover" id="item-definition-help" role="tooltip">
+      <p>Hier definierst du die wichtigsten Daten des Items.</p>
+    </div>
+  </div>
+</div>
+
 <h1>Editing item @itemId</h1>
 
 <FluentCard Height=200px>
@@ -59,3 +76,56 @@
     itemOperationalEnvironmentText = itemDefinition.OperationalEnvironmentText;
   }
 }
+
+<style>
+  .item-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .item-title {
+    margin: 0;
+  }
+
+  .info-tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .info-btn {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    border: 1px solid #999;
+    background: #fff;
+    cursor: help;
+    font-weight: 600;
+    line-height: 1;
+    padding: 0;
+  }
+
+  .info-popover {
+    display: none;
+    position: absolute;
+    top: 120%;
+    left: 0;
+    z-index: 10;
+    min-width: 240px;
+    padding: 0.75rem;
+    background: #222;
+    color: #fff;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .info-popover p {
+    margin: 0;
+  }
+
+  .info-tooltip-wrapper:hover .info-popover,
+  .info-tooltip-wrapper:focus-within .info-popover {
+    display: block;
+  }
+</style>
