@@ -1,11 +1,12 @@
 @page "/Projects"
-@using System.Security.Claims
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
 @using tara_tool.Components.Pages.UIComponents
 @inject ProjectService projectService
-@inject AuthenticationStateProvider _authenticationState
 @inject NavigationManager navigator
+@inject UserManager<ApplicationUser> userManager
 
 
 @attribute [Authorize]
@@ -14,23 +15,20 @@
 
 
 <AuthorizeView>
-  <div style="display: flex;">
+  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <h4><b style="text-align: center;">My Projects</b></h4>
-    <FluentSpacer />
     <FluentButton @onclick=@(() => navigator.NavigateTo(navigator.BaseUri + "/Project/-1"))>
       + New Project
     </FluentButton>
-  </div>
+  </FluentStack>
+<p class="tiny-text">Select a project to continue</p>
 
-  <TinyText Value="Select a project to continue" />
 
 
-  <div style="display: flex;">
+  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <FluentSearch  Placeholder="Type to search for title..." Style="width: 25%;" @bind-Value=@TitleSearch />
-    <FluentSpacer />
     <FluentAutocomplete TOption="string"  Placeholder="Type to search for owner..." OnOptionsSearch="@OnSearchAsync" OptionText="@(item => item)" Style="width: 25%;" @bind-SelectedOptions="@selectedMails"/>
-
-  </div>
+  </FluentStack>
 
   <div @key=@TitleSearch>
     @foreach(var project in allProjectsWithAccess.Where(a => (TitleSearch == null || a.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 || selectedMails.Contains(a.Access.FirstOrDefault(a => a.Owner == true)?.Member.Email)))) {
@@ -42,6 +40,11 @@
 
 @code {
 
+  [CascadingParameter]
+  private HttpContext HttpContext {get; set;} = default!;
+  
+
+  ApplicationUser? user {get; set;}
   List<Project> allProjectsWithAccess = new();
   List<string> allEmails  = new();
   IEnumerable<string> selectedMails = Array.Empty<string>();
@@ -65,16 +68,13 @@
 
   protected override async Task OnInitializedAsync()
   {
-
-    ClaimsPrincipal user = (await _authenticationState.GetAuthenticationStateAsync()).User;
-    string? UserId = user.FindFirst(u => u.Type.Contains("nameidentifier"))?.Value;
-
-    if (UserId == null)
+    user = await userManager.GetUserAsync(HttpContext.User);
+    if (user == null)
     {
       return;
     }
 
-    allProjectsWithAccess = await projectService.GetProjectsAsync(UserId!, (value) => value.Include(a =>
+    allProjectsWithAccess = await projectService.GetProjectsAsync(user.Id, (value) => value.Include(a =>
     a.Access).ThenInclude(a => a.Member).AsQueryable());
     allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a => a.Member).Where(m => m.Email != null).Select(m => m.Email!).ToList();
   }
