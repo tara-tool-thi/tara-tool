@@ -1,8 +1,10 @@
 ﻿@page "/Project/{urlId:long}"
 
-<!-- Without this functions won't run for some reason -->
 @rendermode InteractiveServer
 
+@attribute [Authorize]
+
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.EntityFrameworkCore
 @using tara_tool.Data.Services
 
@@ -61,6 +63,26 @@
 
 <FluentPaginator State="@pagination" />
 
+Items per page:
+
+<FluentSelect TOption="int" Width="60px" ValueChanged="@(value => onPageCountChange(value))">
+    <FluentOption Value="5">
+        5
+    </FluentOption>
+    <FluentOption Value="10" Selected>
+        10
+    </FluentOption>
+    <FluentOption Value="25">
+        25
+    </FluentOption>
+    <FluentOption Value="50">
+        50
+    </FluentOption>
+    <FluentOption Value="100">
+        100
+    </FluentOption>
+</FluentSelect>
+
 @code {
     [Parameter]
     public long urlId { get; set; }
@@ -68,11 +90,6 @@
     private string projectName = "";
 
     private DateTime retrievedProjectLastModifiedDate;
-
-    private string wantedProjectID = "";
-
-    private string retrievedProjectName = "";
-
 
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
@@ -115,14 +132,6 @@
         selectedItems = itemsQuery;
     }
 
-    private async Task createProject(string name)
-    {
-        ProjectService projectService = new ProjectService(Db);
-
-        await projectService.CreateProjectAsync(name);
-        
-    }
-
     private async Task<Project?> retrieveProjectInfo()
     {
         ProjectService projectService = new ProjectService(Db);
@@ -132,35 +141,11 @@
         return retrievedProject;
     }
 
-    private async Task retrieveProjectInfoButton()
-    {
-        long.TryParse(wantedProjectID, out long parsedProjectID);
-
-        ProjectService projectService = new ProjectService(Db);
-
-        Project? retrievedProject = await projectService.RetrieveProjectInfoAsync(parsedProjectID);
-
-        if (retrievedProject == null)
-        {
-            // handle "not found"
-            // Add redirect to Invalid Project Page;
-        }
-
-        retrievedProjectName = retrievedProject!.ProjectName;
-    }
-
     private async Task addItem(string name)
     {
         ItemsService itemsService = new ItemsService(Db);
-
-        try
-        {   
-            await itemsService.CreateItemAsync(urlId, name);
-        }
-        catch
-        {
-            // Some kind of message that Item could not be created
-        }
+ 
+        ItemDefinition newItem = await itemsService.CreateItemAsync(urlId, name);
 
         Project? requestedProject = await retrieveProjectInfo();
 
@@ -169,12 +154,8 @@
             projectName = requestedProject.ProjectName;
             retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
         }
-        // Refresh the datagrid to show new item
-        itemsQuery = Db.ItemDefinitions
-                        .Where(p => p.IdProject == urlId);
 
-        OptionsSearchEventArgs<ItemDefinition> e = new OptionsSearchEventArgs<ItemDefinition>();
-        await onSearchAsync(e);
+        NavigationManager.NavigateTo($"/Item/{newItem.Id}");
     }
 
     // User has to click into the autocomplete box again for selectedItems to apply to the DataGrid
@@ -209,6 +190,11 @@
         }
 
         NavigationManager.NavigateTo($"/Item/{row.Item.Id}");
+    }
+
+    private async Task onPageCountChange(string newValue)
+    {
+        await pagination.SetItemsPerPageAsync(int.Parse(newValue));
     }
 }
 
