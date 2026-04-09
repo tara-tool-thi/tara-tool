@@ -24,6 +24,8 @@
 
 @inject UserManager<ApplicationUser> UserManager
 
+@inject AuthenticationStateProvider AuthStateProvider
+
 
 <PageTitle>Project</PageTitle>
 
@@ -106,9 +108,6 @@ Items per page:
     [Parameter]
     public long urlId { get; set; }
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
     private string projectName = "";
 
     private DateTime retrievedProjectLastModifiedDate;
@@ -123,6 +122,18 @@ Items per page:
 
     protected override async Task OnInitializedAsync()
     {
+        AuthenticationState? authState = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        System.Security.Claims.ClaimsPrincipal? principal = authState.User;
+    
+        ApplicationUser? user  = await UserManager.GetUserAsync(principal);
+
+        if (user is null)
+        {
+            NavigationManager.NavigateTo($"/Account/InvalidUser");
+            return;
+        }
+
         //New project has to be created when urlId == -1
         if(urlId == -1)
         {
@@ -130,9 +141,7 @@ Items per page:
 
             Project newProject = await projectService.CreateProjectAsync("New unnamed Project");
 
-            ApplicationUser? user  = await UserManager.GetUserAsync(HttpContext.User);
-
-            AccessControl accessControl = new AccessControl
+            AccessControl newAccessControl = new AccessControl
             {
                 Member = user!,
                 Project = newProject,
@@ -142,11 +151,24 @@ Items per page:
                 Owner = true,
             };
 
-            Db.AccessControls.Add(accessControl);
+            Db.AccessControls.Add(newAccessControl);
 
             await Db.SaveChangesAsync();
 
             NavigationManager.NavigateTo($"/Project/{newProject.Id}");
+
+            return;
+        }
+
+        // Check if user has read access to this project
+        AccessControl? accessControl = Db.AccessControls
+                                        .SingleOrDefault(p => p.Project.Id == urlId &&
+                                        p.Member.Id == user!.Id &&
+                                        p.ReadAccess == true);
+
+        if(accessControl == null)
+        {
+            NavigationManager.NavigateTo("/");
 
             return;
         }
