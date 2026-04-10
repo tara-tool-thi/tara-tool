@@ -1,74 +1,122 @@
 @page "/Item/{itemId:long}"
+@rendermode InteractiveServer
+
+@using tara_tool.Data.Services
+@implements IDisposable
 
 @inject ApplicationDbContext DbContext
 @inject NavigationManager NavigationManager
-<<<<<<< HEAD
 
+<PageTitle>Item Definition</PageTitle>
+
+@*Info Popover*@
 <div class="item-header">
-  <h1 class="item-title">Item Definition</h1>
-
+  <h2 class="item-title">0. Item Definition</h2>
   <div class="info-tooltip-wrapper">
-    <button class="info-btn"
-            type="button"
-            aria-label="Hilfe anzeigen"
-            aria-describedby="item-definition-help">
-      i
-    </button>
-
-    <div class="info-popover" id="item-definition-help" role="tooltip">
-      <p>Hier definierst du die wichtigsten Daten des Items.</p>
+    <button class="info-btn" tabindex="0" aria-label="ISO/SAE 21434 Information">i</button>
+    <div class="info-popover" role="tooltip">
+      <p><strong>ISO/SAE 21434 - Item Definition</strong></p>
+      <p>The following aspects must be defined:</p>
+      <ul>
+        <li><strong>Placeholder:</strong> Placeholder</li>
+      </ul>
     </div>
   </div>
+  @if (!string.IsNullOrEmpty(saveStatus))
+  {
+    <span class="save-status-text">@saveStatus</span>
+  }
 </div>
-=======
->>>>>>> fed7949 (Show item info from db in item definition page)
 
-<h1>Editing item @itemId</h1>
+<br />
 
-<FluentCard Height=200px>
-  <h2>Item name</h2>
-  <FluentTextArea @bind-Value="itemName" Placeholder="Item name">@itemName</FluentTextArea>
-</FluentCard>
+@if (itemDefinition == null)
+{
+  <FluentProgressRing />
+}
+else
+{
+  <div class="form-section">
+    <FluentTextField @bind-Value="itemName" @bind-Value:after="ScheduleAutoSave"
+                     Label="Item Name" Placeholder="Enter item name..." style="width: 100%;" />
+  </div>
 
-<br>
+  <div class="form-section">
+    <FluentTextArea @bind-Value="itemDescription" @bind-Value:after="ScheduleAutoSave"
+                    Label="Item Description" Placeholder="Describe the item and its purpose..."
+                    Rows="4" style="width: 100%;" />
+  </div>
 
-<FluentCard Height=200px>
-  <h2>Item function</h2>
-  <FluentTextArea @bind-Value="itemFunction" Placeholder="Item function">@itemFunction</FluentTextArea>
-</FluentCard>
+  <div class="form-section">
+    <label class="field-label">Add Picture / Technical Sketch</label>
+    <div class="upload-zone">
+      @if (imagePreviewUrl != null)
+      {
+        <img src="@imagePreviewUrl" alt="Technical sketch preview" class="image-preview" />
+        <FluentButton Appearance="Appearance.Lightweight" OnClick="RemoveImage" style="margin-top: 0.5rem;">
+          Remove image
+        </FluentButton>
+      }
+      else
+      {
+        <div class="upload-placeholder">
+          <span>Drag &amp; Drop or</span>
+          <label for="techSketchInput" class="browse-link">browse</label>
+        </div>
+        <InputFile id="techSketchInput" OnChange="OnFileSelected" accept="image/*" class="file-input-overlay" />
+      }
+    </div>
+  </div>
 
-<FluentCard Height=200px>
-  <h2>Item OperationalEnvironmentText</h2>
-  <FluentTextArea @bind-Value="itemFunction" Placeholder="Item function">@itemFunction</FluentTextArea>
-</FluentCard>
-
-
-<br>
-
-<FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size16.Save())"
-              OnClick="@(() => SaveClicked())">Save</FluentButton>
+  <div class="form-section">
+    <FluentAccordion>
+      <FluentAccordionItem Heading="Item Boundary">
+        <FluentTextArea @bind-Value="itemBoundaryText" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="Describe the item boundaries and interfaces..."
+                        Rows="5" style="width: 100%;" />
+      </FluentAccordionItem>
+      <FluentAccordionItem Heading="Item Functions">
+        <FluentTextArea @bind-Value="itemFunction" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="List the functions this item fulfills..."
+                        Rows="5" style="width: 100%;" />
+      </FluentAccordionItem>
+      <FluentAccordionItem Heading="Preliminary Architecture">
+        <FluentTextArea @bind-Value="preliminaryArchitectureText" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="Describe the preliminary architecture..."
+                        Rows="5" style="width: 100%;" />
+      </FluentAccordionItem>
+      <FluentAccordionItem Heading="Operational Environment">
+        <FluentTextArea @bind-Value="operationalEnvironmentText" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="Describe the operational environment and operating conditions..."
+                        Rows="5" style="width: 100%;" />
+      </FluentAccordionItem>
+    </FluentAccordion>
+  </div>
+}
 
 @code {
   [Parameter]
   public long itemId { get; set; }
 
-  // using var db = new ApplicationDbContext();
-  // List<Project>? projects = null;
+  ItemDefinition? itemDefinition;
 
   string itemName = string.Empty;
+  string itemDescription = string.Empty;
+  string itemBoundaryText = string.Empty;
   string itemFunction = string.Empty;
-  string itemOperationalEnvironmentText = string.Empty;
+  string preliminaryArchitectureText = string.Empty;
+  string operationalEnvironmentText = string.Empty;
+  string? imagePreviewUrl;
+  string saveStatus = string.Empty;
 
-  private async Task SaveClicked()
-  {
+  System.Threading.Timer? saveTimer;
 
-  }
-
-  protected override async void OnInitialized()
+  protected override async Task OnInitializedAsync()
   {
     ItemsService itemsService = new ItemsService(DbContext);
-    ItemDefinition? itemDefinition = await itemsService.RetrieveItemDefinitionInfoAsync(itemId);
+    itemDefinition = await itemsService.RetrieveItemDefinitionInfoAsync(itemId);
 
+    @*Redirect to base path if item was not found*@
     if (itemDefinition == null)
     {
       NavigationManager.NavigateTo("/");
@@ -76,32 +124,93 @@
     }
 
     itemName = itemDefinition.ItemName;
+    itemDescription = itemDefinition.ItemDescription;
+    itemBoundaryText = itemDefinition.ItemBoundaryText;
     itemFunction = itemDefinition.ItemFunction;
-    itemOperationalEnvironmentText = itemDefinition.OperationalEnvironmentText;
+    preliminaryArchitectureText = itemDefinition.PreliminaryArchitectureText;
+    operationalEnvironmentText = itemDefinition.OperationalEnvironmentText;
+
+    if (itemDefinition.TechnicalSketch?.Data != null)
+      imagePreviewUrl = $"data:image/png;base64,{Convert.ToBase64String(itemDefinition.TechnicalSketch.Data)}";
   }
 
-  protected override async void OnInitialized()
+  @*Autosave is delayed by two seconds after pressed key to avoid repeated saving after a single user input*@
+  void ScheduleAutoSave()
   {
-    ItemsService itemsService = new ItemsService(DbContext);
-    ItemDefinition? itemDefinition = await itemsService.RetrieveItemDefinitionInfoAsync(itemId);
-    
-    if (itemDefinition == null)
+    saveTimer?.Dispose();
+    saveTimer = new System.Threading.Timer(async _ =>
     {
-      NavigationManager.NavigateTo("/");
-      return;
+      await InvokeAsync(SaveAsync);
+    }, null, TimeSpan.FromSeconds(2), Timeout.InfiniteTimeSpan);
+  }
+
+  async Task SaveAsync()
+  {
+    if (itemDefinition == null)
+     return;
+
+    itemDefinition.ItemName = itemName;
+    itemDefinition.ItemDescription = itemDescription;
+    itemDefinition.ItemBoundaryText = itemBoundaryText;
+    itemDefinition.ItemFunction = itemFunction;
+    itemDefinition.PreliminaryArchitectureText = preliminaryArchitectureText;
+    itemDefinition.OperationalEnvironmentText = operationalEnvironmentText;
+
+    saveStatus = "Saving...";
+    StateHasChanged();
+
+    try
+    {
+      ItemsService itemsService = new ItemsService(DbContext);
+      await itemsService.SaveItemAsync(itemDefinition);
+      saveStatus = "Saved";
+    }
+    catch
+    {
+      saveStatus = "Save failed";
     }
 
-    itemName = itemDefinition.ItemName;
-    itemFunction = itemDefinition.ItemFunction;
-    itemOperationalEnvironmentText = itemDefinition.OperationalEnvironmentText;
+    StateHasChanged();
   }
+
+  @*Reads file into a memorystream, converts it to a byte array, and builds a base64 preview URL for immediate display*@
+  @*stores bytes on itemDefinition.TechnicalSketch and schedules an auto-save*@
+  async Task OnFileSelected(InputFileChangeEventArgs fileArgs)
+  {
+    if (fileArgs.File == null || itemDefinition == null) return;
+
+    using var ms = new MemoryStream();
+    await fileArgs.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(ms);
+    var bytes = ms.ToArray();
+
+    imagePreviewUrl = $"data:{fileArgs.File.ContentType};base64,{Convert.ToBase64String(bytes)}";
+
+    if (itemDefinition.TechnicalSketch == null)
+      itemDefinition.TechnicalSketch = new Image(bytes) { Id = 0 };
+    else
+      itemDefinition.TechnicalSketch.Data = bytes;
+
+    ScheduleAutoSave();
+  }
+
+  void RemoveImage()
+  {
+    if (itemDefinition == null) return;
+    imagePreviewUrl = null;
+    itemDefinition.TechnicalSketch = null;
+    ScheduleAutoSave();
+  }
+
+  @*ensures timer is cleared and ready for new input*@
+  public void Dispose() => saveTimer?.Dispose();
 }
 
 <style>
   .item-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
   }
 
   .item-title {
@@ -118,34 +227,117 @@
     width: 1.5rem;
     height: 1.5rem;
     border-radius: 50%;
-    border: 1px solid #999;
-    background: #fff;
+    border: 1.5px solid #666;
+    background: transparent;
     cursor: help;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 0.8rem;
     line-height: 1;
     padding: 0;
+    color: #666;
+  }
+
+  .info-btn:hover {
+    background: #f0f0f0;
   }
 
   .info-popover {
     display: none;
     position: absolute;
-    top: 120%;
+    top: 130%;
     left: 0;
-    z-index: 10;
-    min-width: 240px;
-    padding: 0.75rem;
-    background: #222;
+    z-index: 100;
+    min-width: 320px;
+    padding: 1rem;
+    background: #2b2b2b;
     color: #fff;
-    border-radius: 6px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    font-size: 0.875rem;
+    line-height: 1.5;
   }
 
   .info-popover p {
+    margin: 0 0 0.5rem 0;
+  }
+
+  .info-popover ul {
     margin: 0;
+    padding-left: 1.25rem;
+  }
+
+  .info-popover li {
+    margin-bottom: 0.25rem;
   }
 
   .info-tooltip-wrapper:hover .info-popover,
   .info-tooltip-wrapper:focus-within .info-popover {
     display: block;
+  }
+
+  .save-status-text {
+    font-size: 0.85rem;
+    color: #555;
+  }
+
+  .form-section {
+    margin-bottom: 1.25rem;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .upload-zone {
+    position: relative;
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    text-align: center;
+    background: #fafafa;
+  }
+
+  .upload-zone:hover {
+    border-color: #888;
+  }
+
+  .upload-placeholder {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    color: #555;
+    font-size: 0.9rem;
+    pointer-events: none;
+  }
+
+  .browse-link {
+    color: var(--accent-foreground-rest, #0066cc);
+    cursor: pointer;
+    text-decoration: underline;
+    pointer-events: auto;
+  }
+
+  .file-input-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .image-preview {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 6px;
+    object-fit: contain;
   }
 </style>

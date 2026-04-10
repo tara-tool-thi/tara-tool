@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace tara_tool.Data;
 
 public class ItemsService(ApplicationDbContext context)
@@ -18,10 +20,28 @@ public class ItemsService(ApplicationDbContext context)
         return;
     }
 
-    public async Task<ItemDefinition?> RetrieveItemDefinitionInfoAsync(long id)
+    public async Task<ItemDefinition?> RetrieveItemDefinitionInfoAsync(long itemID)
     {
-        ItemDefinition? itemDefinition = await context.ItemDefinitions.FindAsync(id);
+        ItemDefinition? itemDefinition = await context.ItemDefinitions
+            .Include(item => item.TechnicalSketch)
+            .FirstOrDefaultAsync(item => item.Id == itemID);
 
         return itemDefinition;
+    }
+
+    public async Task SaveItemAsync(ItemDefinition item)
+    {
+        if (context.Entry(item).State == EntityState.Detached)
+        {
+            context.ItemDefinitions.Update(item);
+        }
+
+        if (item.TechnicalSketch != null &&
+            context.Entry(item.TechnicalSketch).State == EntityState.Detached)
+        {
+            context.Images.Add(item.TechnicalSketch);
+        }
+
+        await context.SaveChangesAsync();
     }
 }
