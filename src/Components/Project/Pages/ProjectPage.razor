@@ -166,12 +166,9 @@
         }
 
         // Check if user has read access to this project
-        AccessControl? accessControl = Db.AccessControls
-                                        .SingleOrDefault(p => p.Project.Id == urlId &&
-                                        p.Member.Id == user!.Id &&
-                                        p.ReadAccess == true);
+        bool userHasReadRights = await new AccessControlService(Db).CheckUserAccessRightsRead(urlId, user);
 
-        if(accessControl == null)
+        if(!userHasReadRights)
         {
             NavigationManager.NavigateTo("/");
 
