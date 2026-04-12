@@ -31,14 +31,14 @@
 
 <br />
 <h2>
-    <div style="display: flex;">
+    <FluentStack>
         @projectName
         <FluentSpacer />
         Last Edited: @retrievedProjectLastModifiedDate
-    </div>
+    </FluentStack>
 </h2>
 <br />
-<div style="display: flex;">
+<FluentStack VerticalAlignment="VerticalAlignment.Bottom">
     <FluentAutocomplete TOption="ItemDefinition"
                     AutoComplete="off"
                     Autofocus="true"
@@ -56,7 +56,7 @@
     <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
         New Item
     </FluentButton>
-</div>
+</FluentStack>
 
 <br />
 <FluentDataGrid TGridItem="ItemDefinition" Items="@selectedItems.AsQueryable()" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
@@ -82,27 +82,32 @@
     </ChildContent>
 </FluentDataGrid>
 
-<FluentPaginator State="@pagination" />
-
-Items per page:
-
-<FluentSelect TOption="int" Width="60px" ValueChanged="@(value => onPageCountChange(value))">
-    <FluentOption Value="5">
-        5
-    </FluentOption>
-    <FluentOption Value="10" Selected>
-        10
-    </FluentOption>
-    <FluentOption Value="25">
-        25
-    </FluentOption>
-    <FluentOption Value="50">
-        50
-    </FluentOption>
-    <FluentOption Value="100">
-        100
-    </FluentOption>
-</FluentSelect>
+<FluentPaginator State="@pagination" >
+    <SummaryTemplate>
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <span><b>@pagination.TotalItemCount</b>&nbsp;items</span>
+            <FluentSpacer/>
+            <span>Items per page:</span>
+            <FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => onPageCountChange(value))">
+                <FluentOption Value="5">
+                    5
+                </FluentOption>
+                <FluentOption Value="10" Selected>
+                    10
+                </FluentOption>
+                <FluentOption Value="25">
+                    25
+                </FluentOption>
+                <FluentOption Value="50">
+                    50
+                </FluentOption>
+                <FluentOption Value="100">
+                    100
+                </FluentOption>
+            </FluentSelect>
+        </FluentStack>
+    </SummaryTemplate>
+</FluentPaginator>
 
 @code {
     [Parameter]
