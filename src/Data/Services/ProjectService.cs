@@ -23,7 +23,7 @@ public class ProjectService(
   }
 
   public async Task<List<Project>>
-  GetProjectsAsync(string? IdUser = null,
+  GetProjectsAsync(string? IdUser,
                    Func<DbSet<Project>, IQueryable<Project>>? extend = null)
   {
     using ApplicationDbContext context =
@@ -34,11 +34,10 @@ public class ProjectService(
     {
       projectQuery = extend.Invoke(set);
     }
-    if (IdUser != null)
-    {
-      projectQuery = projectQuery.Where(
-          p => p.Access.Select(a => a.Member.Id).Contains(IdUser));
-    }
+    
+    //If Owner == null then the project will be shown - Ardwetha
+    projectQuery = projectQuery.Where(
+      p => p.Access.Select(a => a.Member.Id).Contains(IdUser));
 
     return await set.ToListAsync();
   }

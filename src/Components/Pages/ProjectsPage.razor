@@ -16,30 +16,7 @@
     </FluentButton>
   </FluentStack>
 <p class="tiny-text">Select a project to continue</p>
+
+  <ProjectsList />
 </AuthorizeView>
-
-@if(user != null) {
-  <ProjectsList User=@user/>
-}
-
-
-@code {
-
-  [CascadingParameter]
-  private HttpContext HttpContext {get; set;} = default!;
-  
-
-  ApplicationUser? user {get; set;}
-  
-  protected override async Task OnInitializedAsync()
-  {
-    
-    user = await UserManager.GetUserAsync(HttpContext.User);
-    if (user == null)
-    {
-      return;
-    }
-        
-   }
-}
 

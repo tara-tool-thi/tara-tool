@@ -1,5 +1,12 @@
-@inject ProjectService projectService
-@inject AuthenticationStateProvider AuthState
+@using System.Security.Claims
+@using Microsoft.AspNetCore.HttpLogging
+@using System.Runtime.InteropServices
+@using System.Reflection.Metadata.Ecma335
+
+@rendermode InteractiveServer
+@inject ProjectService ProjectService
+@inject SessionService SessionService
+@inject NavigationManager NavigationManager
 
  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <FluentSearch  Placeholder="Type to search for title..." Style="width: 25%;" @bind-Value=@TitleSearch />
@@ -15,10 +22,6 @@
 }
 
 @code {
-
-  
-  [Parameter]
-  required public ApplicationUser? User {get; set;}
   List<Project> allProjectsWithAccess = new();
   List<string> allEmails  = new();
   IEnumerable<string> selectedMails = Array.Empty<string>();
@@ -42,7 +45,15 @@
 
   protected override async Task OnInitializedAsync()
   {
-    allProjectsWithAccess = await projectService.GetProjectsAsync(User!.Id, (value) => value.Include(a =>
+
+    ApplicationUser? user = await SessionService.GetApplicationUserAsync();
+
+    if(user is null) {
+      NavigationManager.NavigateTo("Account/InvalidUser");
+      return;
+    }
+    
+    allProjectsWithAccess = await ProjectService.GetProjectsAsync(user!.Id, (value) => value.Include(a =>
     a.Access).ThenInclude(a => a.Member).AsQueryable());
     allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a => a.Member).Where(m => m.Email != null).Select(m => m.Email!).ToList();
   }
