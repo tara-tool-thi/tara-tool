@@ -1,12 +1,6 @@
 @page "/Projects"
-@rendermode InteractiveServer
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Identity
-@using Microsoft.EntityFrameworkCore
-@using tara_tool.Components.Pages.UIComponents
-@inject ProjectService projectService
-@inject NavigationManager navigator
-@inject UserManager<ApplicationUser> userManager
+@inject NavigationManager Navigator
+@inject UserManager<ApplicationUser> UserManager
 
 
 @attribute [Authorize]
@@ -17,26 +11,17 @@
 <AuthorizeView>
   <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <h4><b style="text-align: center;">My Projects</b></h4>
-    <FluentButton @onclick=@(() => navigator.NavigateTo(navigator.BaseUri + "/Project/-1"))>
+    <FluentButton @onclick=@(() => Navigator.NavigateTo(Navigator.BaseUri + "/Project/-1"))>
       + New Project
     </FluentButton>
   </FluentStack>
 <p class="tiny-text">Select a project to continue</p>
-
-
-
-  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-    <FluentSearch  Placeholder="Type to search for title..." Style="width: 25%;" @bind-Value=@TitleSearch />
-    <FluentAutocomplete TOption="string"  Placeholder="Type to search for owner..." OnOptionsSearch="@OnSearchAsync" OptionText="@(item => item)" Style="width: 25%;" @bind-SelectedOptions="@selectedMails"/>
-  </FluentStack>
-
-  <div @key=@TitleSearch>
-    @foreach(var project in allProjectsWithAccess.Where(a => (TitleSearch == null || a.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 || selectedMails.Contains(a.Access.FirstOrDefault(a => a.Owner == true)?.Member.Email)))) {
-      <ProjectCard Project=@project/>
-    }
-  </div>
-
 </AuthorizeView>
+
+@if(user != null) {
+  <ProjectsList User=@user/>
+}
+
 
 @code {
 
@@ -45,42 +30,16 @@
   
 
   ApplicationUser? user {get; set;}
-  List<Project> allProjectsWithAccess = new();
-  List<string> allEmails  = new();
-  IEnumerable<string> selectedMails = Array.Empty<string>();
-
-  private string? _titleSearchBack = null;
-  private string? TitleSearch
-  {
-    get => _titleSearchBack;
-    set
-    {
-      if (string.IsNullOrWhiteSpace(value))
-      {
-        _titleSearchBack = null;
-      } 
-      else {
-        _titleSearchBack = value;
-      }
-    }
-  }
-
-
+  
   protected override async Task OnInitializedAsync()
   {
-    user = await userManager.GetUserAsync(HttpContext.User);
+    
+    user = await UserManager.GetUserAsync(HttpContext.User);
     if (user == null)
     {
       return;
     }
-
-    allProjectsWithAccess = await projectService.GetProjectsAsync(user.Id, (value) => value.Include(a =>
-    a.Access).ThenInclude(a => a.Member).AsQueryable());
-    allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a => a.Member).Where(m => m.Email != null).Select(m => m.Email!).ToList();
-  }
-
-   private async Task OnSearchAsync(OptionsSearchEventArgs<string> e) {
-      e.Items = allEmails.Where(s => s.Contains(e.Text ,StringComparison.OrdinalIgnoreCase)).OrderBy(s => s);
+        
    }
 }
 
