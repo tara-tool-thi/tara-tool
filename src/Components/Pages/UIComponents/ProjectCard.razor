@@ -1,7 +1,8 @@
 @inject NavigationManager navigator
 
 <FluentCard @onclick=@(() => navigator.NavigateTo($"Project/{Project!.Id}"))>
-  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+               HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <h4>@Project.ProjectName</h4>
     <FluentSpacer />
     <FluentCard Width="10%">
@@ -21,7 +22,7 @@
   private string GetUpdatedString()
   {
     string ret = string.Empty;
-    TimeSpan span = Project.DateLastChanged - DateTime.UtcNow;
+    TimeSpan span = DateTime.UtcNow - Project.DateLastChanged;
     if (span.Days != 0)
     {
       ret = $"Updated {span.Days}d ago - ";
