@@ -8,58 +8,95 @@
 @inject SessionService SessionService
 @inject NavigationManager NavigationManager
 
- <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch" HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-    <FluentSearch  Placeholder="Type to search for title..." Style="width: 25%;" @bind-Value=@TitleSearch />
-    <FluentAutocomplete TOption="string"  Placeholder="Type to search for owner..." OnOptionsSearch="@OnSearchAsync" OptionText="@(item => item)" Style="width: 25%;" @bind-SelectedOptions="@selectedMails"/>
-  </FluentStack>
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+    <FluentSearch Placeholder="Type to search for title..." Style="width: 25%;" @bind-Value=@TitleSearch />
+    <FluentButton id="SelectOwnerPopoverButton" OnClick="() => openOwnerPopover = !openOwnerPopover">
+        Select Owners
+    </FluentButton>
 
-@if(allProjectsWithAccess.Count() != 0) {
-  <div @key=@TitleSearch>
-    @foreach(var project in allProjectsWithAccess.Where(a => (TitleSearch == null || a.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 || selectedMails.Contains(a.Access.FirstOrDefault(a => a.Owner == true)?.Member.Email)))) {
-      <ProjectCard Project=@project/>
-    }
-  </div>
+    <FluentPopover @bind-Open="@openOwnerPopover" AnchorId="SelectOwnerPopoverButton">
+
+        <Body>
+            @if (allEmails.Count() == 0)
+            {
+                <p>No E-Mails available</p>
+            }
+            else
+            {
+                <FluentSelect TOption="string" Placeholder="Select an Owner..." Items=@allEmails Multiple=@true
+                              Style="--elevation-shadow-flyout: none;" @bind-SelectedOptions="@selectedMails">
+                    <OptionTemplate>
+                        @context
+                    </OptionTemplate>
+                </FluentSelect>
+            }
+        </Body>
+    </FluentPopover>
+
+   
+</FluentStack>
+
+<br />
+
+@if (allProjectsWithAccess.Count() != 0)
+{
+    <div @key=@TitleSearch>
+        @foreach (var project in allProjectsWithAccess.Where(project => (TitleSearch == null ||
+                                    project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
+                                    selectedMails.Contains(project.Access?.FirstOrDefault(accessControl
+                                         => accessControl.Owner == true)?.Member.Email ?? string.Empty))))
+        {
+            <ProjectCard Project=@project />
+        }
+    </div>
 }
 
 @code {
-  List<Project> allProjectsWithAccess = new();
-  List<string> allEmails  = new();
-  IEnumerable<string> selectedMails = Array.Empty<string>();
+    List<Project> allProjectsWithAccess = new();
+    IEnumerable<string> allEmails = [];
+    IEnumerable<string> selectedMails = [];
 
-  private string? _titleSearchBack = null;
-  private string? TitleSearch
-  {
-    get => _titleSearchBack;
-    set
+    private bool openOwnerPopover = false;
+
+    private string? _titleSearchBack = null;
+    private string? TitleSearch
     {
-      if (string.IsNullOrWhiteSpace(value))
-      {
-        _titleSearchBack = null;
-      } 
-      else {
-        _titleSearchBack = value;
-      }
+        get => _titleSearchBack;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                _titleSearchBack = null;
+            }
+            else
+            {
+                _titleSearchBack = value;
+            }
+        }
     }
-  }
 
 
-  protected override async Task OnInitializedAsync()
-  {
+    protected override async Task OnInitializedAsync()
+    {
 
-    ApplicationUser? user = await SessionService.GetApplicationUserAsync();
+        ApplicationUser? user = await SessionService.GetApplicationUserAsync();
 
-    if(user is null) {
-      NavigationManager.NavigateTo("Account/InvalidUser");
-      return;
-    }
+        if (user is null)
+        {
+            NavigationManager.NavigateTo("Account/InvalidUser");
+            return;
+        }
     
-    allProjectsWithAccess = await ProjectService.GetProjectsAsync(user!.Id, (value) => value.Include(a =>
-    a.Access).ThenInclude(a => a.Member).AsQueryable());
-    allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a => a.Member).Where(m => m.Email != null).Select(m => m.Email!).ToList();
-  }
+        allProjectsWithAccess = await ProjectService.GetProjectsAsync(user!.Id, (value) => value.Include(a =>
+        a.Access).ThenInclude(a => a.Member).AsQueryable());
+        allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a => a.Member).Where(m =>
+    m.Email != null).Select(m => m.Email!).Distinct().ToList();
+    }
 
-   private async Task OnSearchAsync(OptionsSearchEventArgs<string> e) {
-      e.Items = allEmails.Where(s => s.Contains(e.Text ,StringComparison.OrdinalIgnoreCase)).OrderBy(s => s);
-   }
+    private async Task OnSearchAsync(OptionsSearchEventArgs<string> e)
+    {
+        e.Items = allEmails.Where(s => s.Contains(e.Text, StringComparison.OrdinalIgnoreCase)).OrderBy(s => s);
+    }
 }
 
