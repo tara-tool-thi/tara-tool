@@ -29,6 +29,16 @@ public class ItemsService(ApplicationDbContext context)
         return itemDefinition;
     }
 
+    public async Task DeleteItemAsync(long itemId)
+    {
+        ItemDefinition? item = await context.ItemDefinitions.FindAsync(itemId);
+        if (item != null)
+        {
+            context.ItemDefinitions.Remove(item);
+            await context.SaveChangesAsync();
+        }
+    }
+
     public async Task SaveItemAsync(ItemDefinition item)
     {
         if (context.Entry(item).State == EntityState.Detached)

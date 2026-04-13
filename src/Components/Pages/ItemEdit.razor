@@ -26,7 +26,23 @@
   {
     <span class="save-status-text">@saveStatus</span>
   }
+  <FluentSpacer />
+  <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)"
+                IconStart="@(new Icons.Regular.Size16.Delete())" Style="color: red; border-color: red;">
+    Delete Item
+  </FluentButton>
 </div>
+
+<FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete confirmation">
+  <FluentDialogHeader>Delete Item</FluentDialogHeader>
+  <FluentDialogBody>
+    Are you sure you want to delete <strong>@itemName</strong>? This cannot be undone.
+  </FluentDialogBody>
+  <FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = false)">Cancel</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" Style="background: red;" OnClick="DeleteAsync">Delete</FluentButton>
+  </FluentDialogFooter>
+</FluentDialog>
 
 <br />
 
@@ -108,6 +124,7 @@ else
   string operationalEnvironmentText = string.Empty;
   string? imagePreviewUrl;
   string saveStatus = string.Empty;
+  bool showDeleteDialog = false;
 
   System.Threading.Timer? saveTimer;
 
@@ -199,6 +216,16 @@ else
     imagePreviewUrl = null;
     itemDefinition.TechnicalSketch = null;
     ScheduleAutoSave();
+  }
+
+  async Task DeleteAsync()
+  {
+    if (itemDefinition == null) return;
+    long projectId = itemDefinition.IdProject;
+    saveTimer?.Dispose();
+    ItemsService itemsService = new ItemsService(DbContext);
+    await itemsService.DeleteItemAsync(itemId);
+    NavigationManager.NavigateTo($"/Project/{projectId}");
   }
 
   @*ensures timer is cleared and ready for new input*@
