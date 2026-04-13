@@ -1,47 +1,47 @@
 @inject NavigationManager navigator
 
 <FluentCard @onclick=@(() => navigator.NavigateTo($"Project/{Project!.Id}"))>
-  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
-               HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-    <h4>@Project.ProjectName</h4>
-    <FluentSpacer />
-    <p class="date-text">
-      @Project.DateLastChanged.ToShortDateString()
-    </p>
-  </FluentStack>
-  <p class="tiny-text">@GetUpdatedString()</p>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <h4>@Project.ProjectName</h4>
+        <FluentSpacer />
+        <p class="date-text">
+            @Project.DateLastChanged.ToShortDateString()
+        </p>
+    </FluentStack>
+    <p class="tiny-text">@GetUpdatedString()</p>
 </FluentCard>
 
 <br />
 
 
 @code {
-  [Parameter]
-  public required Project Project { get; set; }
+    [Parameter]
+    public required Project Project { get; set; }
 
-  private string GetUpdatedString()
-  {
-    string ret = string.Empty;
-    TimeSpan span = DateTime.UtcNow - Project.DateLastChanged;
-    if (span.Days != 0)
+    private string GetUpdatedString()
     {
-      ret = $"Updated {span.Days}d ago - ";
-    }
-    else if (span.Hours != 0)
-    {
-      ret = $"Updated {span.Hours}h ago - ";
-    }
-    else if (span.Minutes != 0)
-    {
-      ret = $"Updated {span.Minutes}m ago - ";
-    }
-    else
-    {
-      ret = $"Updated {span.Seconds}s ago - ";
-    }
+        string ret = string.Empty;
+        TimeSpan span = DateTime.UtcNow - Project.DateLastChanged;
+        if (span.Days != 0)
+        {
+            ret = $"Updated {span.Days}d ago - ";
+        }
+        else if (span.Hours != 0)
+        {
+            ret = $"Updated {span.Hours}h ago - ";
+        }
+        else if (span.Minutes != 0)
+        {
+            ret = $"Updated {span.Minutes}m ago - ";
+        }
+        else
+        {
+            ret = $"Updated {span.Seconds}s ago - ";
+        }
 
-    ret += $"Owner: {Project!.Access?.Where(a => a.Owner == true).FirstOrDefault()?.Member.Email ?? "null"}";
-    return ret;
-  }
+        ret += $"Owner: {Project!.Access?.Where(a => a.Owner == true).FirstOrDefault()?.Member.Email ?? "null"}";
+        return ret;
+    }
 }
 
