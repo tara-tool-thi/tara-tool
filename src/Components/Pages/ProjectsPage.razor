@@ -11,15 +11,16 @@
 
 
 <AuthorizeView>
-  <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
-               HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-    <h4><b style="text-align: center;">My Projects</b></h4>
-    <FluentButton @onclick=@(() => Navigator.NavigateTo(Navigator.BaseUri + "/Project/-1"))>
-      + New Project
-    </FluentButton>
-  </FluentStack>
-  <p class="tiny-text">Select a project to continue</p>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <h4><b style="text-align: center;">My Projects</b></h4>
+        <FluentButton OnClick=@(() => Navigator.NavigateTo(Navigator.BaseUri + "/Project/-1")) IconStart=@(new
+                                                                                                                           Icons.Regular.Size20.Add())>
+            New Project
+        </FluentButton>
+    </FluentStack>
+    <p class="tiny-text">Select a project to continue</p>
 
-  <ProjectsList />
+    <ProjectsList />
 </AuthorizeView>
 

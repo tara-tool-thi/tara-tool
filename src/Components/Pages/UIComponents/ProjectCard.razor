@@ -5,9 +5,9 @@
                HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <h4>@Project.ProjectName</h4>
     <FluentSpacer />
-    <FluentCard Width="10%">
+    <p class="date-text">
       @Project.DateLastChanged.ToShortDateString()
-    </FluentCard>
+    </p>
   </FluentStack>
   <p class="tiny-text">@GetUpdatedString()</p>
 </FluentCard>

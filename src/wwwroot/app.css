@@ -230,3 +230,7 @@ table th {
     color: #333333;
     font-size: 0.75em;
 }
+
+.date-text {
+    color: #888;
+}
