@@ -1,0 +1,36 @@
+@page "/UserManagement"
+@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+
+@inject DialogService DialogService
+@inject IDialogService _dialogService
+
+@attribute [Authorize]
+
+<PageTitle>User Management</PageTitle>
+
+    <FluentButton OnClick="OpenDialog">
+      + New User
+    </FluentButton>
+
+<h1>User Management</h1>
+
+@code {
+    private async Task OpenDialog()
+    {
+        var text = string.Empty;
+        var dialogInstance = await _dialogService.ShowDialogAsync(@<div>
+        <FluentTextField @bind-Value=text Label="Enter email address:" />
+    </div>
+    , new DialogParameters
+    {
+        Title = "Invite new user",
+    });
+
+        var result = await dialogInstance.Result;
+        if (!result.Cancelled)
+        {
+            await _dialogService.ShowSuccessAsync($"Email sent to: {text}", "Success");
+        }
+    }
+}
