@@ -1,4 +1,7 @@
 @page "/About"
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
 
 <PageTitle>
     About TARA Tool
@@ -9,5 +12,21 @@
 </h1>
 
 <p>
-    TARA Tool was created by students of the university of applied sciences of Ingolstadt (THI)
+    TARA Tool was created by students of the university of applied sciences of Ingolstadt (THI).
 </p>
+
+<FluentStack>
+    <FluentButton IconStart="@(new Icons.Regular.Size20.Branch())" OnClick="@RedirectToGithub">
+        GitHub Repository
+    </FluentButton>
+
+    <FluentButton IconStart="@(new Icons.Regular.Size20.Scales())" OnClick="@RedirectToLicence">Licence</FluentButton>
+</FluentStack>
+
+@code {
+    private void RedirectToGithub() => JSRuntime.InvokeVoidAsync("open", "https://www.github.com/tara-tool-thi/tara-tool",
+    "_blank");
+    private void RedirectToLicence() =>
+    JSRuntime.InvokeVoidAsync("open", "https://github.com/tara-tool-thi/tara-tool/tree/main?tab=AGPL-3.0-1-ov-file",
+    "_blank");
+}
