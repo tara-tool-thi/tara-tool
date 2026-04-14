@@ -13,18 +13,18 @@
   <h2 style="margin: 0;">0. Item Definition</h2>
   <div class="iso-help">
     <button type="button"
+            id="iso-help-button"
             class="iso-help-button"
-            aria-label="ISO/SAE 21434 Information"
-            aria-describedby="iso-help-popover">
+            aria-label="ISO/SAE 21434 Information">
       <FluentIcon Value="@(new Icons.Regular.Size24.Info())" />
     </button>
-    <div id="iso-help-popover" class="iso-help-popover" role="tooltip">
+    <FluentTooltip Anchor="iso-help-button">
       <p><strong>ISO/SAE 21434 - Item Definition</strong></p>
       <p>The following aspects must be defined:</p>
       <ul>
         <li><strong>Placeholder:</strong> Placeholder</li>
       </ul>
-    </div>
+    </FluentTooltip>
   </div>
   @if (!string.IsNullOrEmpty(saveStatus))
   {

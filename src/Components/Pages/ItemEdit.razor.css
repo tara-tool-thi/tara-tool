@@ -17,34 +17,3 @@ h2 {
     padding: 0;
     cursor: help;
 }
-
-.iso-help-popover {
-    display: none;
-    position: absolute;
-    left: 0;
-    top: calc(100% + 0.5rem);
-    z-index: 50;
-    min-width: 320px;
-    max-width: 420px;
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    background: #222;
-    color: #fff;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
-    line-height: 1.4;
-    font-size: 0.875rem;
-}
-
-.iso-help-popover p {
-    margin: 0 0 0.45rem 0;
-}
-
-.iso-help-popover ul {
-    margin: 0;
-    padding-left: 1.1rem;
-}
-
-.iso-help:hover .iso-help-popover,
-.iso-help:focus-within .iso-help-popover {
-    display: block;
-}
