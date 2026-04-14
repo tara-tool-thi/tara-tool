@@ -1,0 +1,26 @@
+@page "/Projects"
+
+@rendermode InteractiveServer
+@inject NavigationManager Navigator
+@inject UserManager<ApplicationUser> UserManager
+
+
+@attribute [Authorize]
+
+<PageTitle>Projects</PageTitle>
+
+
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+    <h1><b style="text-align: center;">My Projects</b></h1>
+    <FluentButton OnClick=@(() => Navigator.NavigateTo(Navigator.BaseUri + "/Project/-1")) IconStart=@(new
+                                                                                                                                                                                                                                  Icons.Regular.Size20.Add())>
+        New Project
+    </FluentButton>
+</FluentStack>
+<p class="tiny-text">Select a project to continue</p>
+
+<ProjectsList />
+
+

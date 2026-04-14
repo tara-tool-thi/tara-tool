@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.Identity
 @using tara_tool.Data
 
-@inject UserManager<ApplicationUser> UserManager
+@inject UserManager<ApplicationUser> UserManager /*UserManager ist eine Instanz von UserManager<ApplicationUser>*/
 @inject SignInManager<ApplicationUser> SignInManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
@@ -13,8 +13,47 @@
 
 <PageTitle>Log in</PageTitle>
 
-<h1>Log in</h1>
-<FluentGrid>
+<div class="center">
+    <FluentCard Width="400px">
+        <div class="center">
+            <StatusMessage Message="@errorMessage" />
+        </div>
+        <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+            <DataAnnotationsValidator />
+            <FluentValidationSummary class="text-danger" role="alert" />
+            <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center">
+                <h1>TARA Tool</h1>
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap="-50" HorizontalAlignment="HorizontalAlignment.Center">
+                    <h5>Threat Analysis & Risk Assessment</h5>
+                    <h5>ISO/SAE 21434</h5>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" Width="80%">
+                    <div style="width: 100%;">
+                        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=email Label="Email" Placeholder="example@thi.de" Required="true" style="width: 100%;"></FluentTextField>
+                        <FluentValidationMessage For="() => Input.Email" class="text-danger" />
+                    </div>
+                    <div style="width: 100%;">
+                        <FluentTextField Name="Input.Password" TextFieldType="TextFieldType.Password" @bind-Value=password Label="Password" Placeholder="*******" Required="true" style="width: 100%;"></FluentTextField>
+                        <FluentValidationMessage For="() => Input.Password" class="text-danger" />
+                    </div>
+                    <br />
+                    <p>Forgot your password? 
+                        <FluentAnchor Href="Account/ForgotPassword" Appearance="Appearance.Hypertext">Reset Password</FluentAnchor>
+                    </p>
+                    <FluentStack>
+                        <FluentCheckbox Name="Input.RememberMe" @bind-Value="Input.RememberMe" Label="Remember me" />
+                    </FluentStack>
+                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" style="width: 100%;">Login</FluentButton>
+                    <p>Don't have an account yet?
+                        <FluentAnchor Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" Appearance="Appearance.Hypertext">Register here</FluentAnchor>
+                    </p>
+                </FluentStack>
+            </FluentStack>
+        </EditForm>
+    </FluentCard>
+</div>
+
+@* <FluentGrid>
     <FluentGridItem xs="8" sm="4">
         <StatusMessage Message="@errorMessage" />
         <EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
@@ -48,24 +87,27 @@
         <hr />
         <ExternalLoginPicker />
     </FluentGridItem>
-</FluentGrid>
+</FluentGrid> *@
+
 
 @code {
-    private string? errorMessage;
+    private string? email;
+    private string? password;
+    private string? errorMessage; /*mit string? erlaubt man, dass die Variable den Wert null haben darf*/
     private EditContext editContext = default!;
 
     [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    private HttpContext HttpContext { get; set; } = default!; /*Es wird mit dem Standarwert (meist null) initialisiert und zugleich die Null-Warnung vom Compiler unterdrückt, weil "versprochen" wird, dass der Wert später noch gesetzt wird*/
 
     [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
+    private InputModel Input { get; set; } = default!; /*{get; set;} erstellt automatisch ein privates Feld + Getter + Setter*/
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() /*Task sagt die Methode arbeitet asynchron und liefert irgendwann einen Wert oder beendet die Operation*/
     {
-        Input ??= new();
+        Input ??= new(); /*nur setzen, wenn aktuell null ist*/
 
         editContext = new EditContext(Input);
 
@@ -76,7 +118,7 @@
         }
     }
 
-    public async Task LoginUser()
+    public async Task LoginUser() /*async: markiert eine methode als asychron, ermöglicht await; await: wartet asynchron auf einen task, ohne den thread zu blockieren*/
     {
         SignInResult result;
             // If doing a password sign-in, validate the form.

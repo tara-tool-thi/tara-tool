@@ -5,8 +5,7 @@ namespace tara_tool.Data;
 
 public class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options)
-    : IdentityDbContext<ApplicationUser>(options)
-{
+    : IdentityDbContext<ApplicationUser>(options) {
   // DbSets
   public DbSet<ApplicationUser> ApplicationUsers { get; set; }
   public DbSet<AccessControl> AccessControls { get; set; }
@@ -14,16 +13,29 @@ public class ApplicationDbContext(
   public DbSet<ItemDefinition> ItemDefinitions { get; set; }
   public DbSet<Image> Images { get; set; }
 
-  protected override void OnModelCreating(ModelBuilder builder)
-  {
+  static public void GetDbConfig(DbContextOptionsBuilder databaseBuilder,
+                                 WebApplicationBuilder builder) {
+    // We will look up the config file here later and connect to either sqlite
+    // or postgress
+    string? connectionString =
+        builder.Configuration.GetConnectionString("DefaultConnection") ??
+        throw new InvalidOperationException(
+            "Connection string 'DefaultConnection' not found.");
+
+    databaseBuilder.UseSqlite(connectionString);
+  }
+
+  protected override void OnModelCreating(ModelBuilder builder) {
     base.OnModelCreating(builder);
     // Build the Model, by defining its relations
     builder.Entity<AccessControl>()
         .HasOne(e => e.Project)
-        .WithMany(e => e.Access);
+        .WithMany(e => e.Access)
+        .IsRequired(true);
     builder.Entity<AccessControl>()
         .HasOne(e => e.Member)
-        .WithMany(e => e.Projects);
+        .WithMany(e => e.Projects)
+        .IsRequired(true);
     builder.Entity<Project>()
         .HasMany(e => e.ItemDefinitions)
         .WithOne(e => e.Project)

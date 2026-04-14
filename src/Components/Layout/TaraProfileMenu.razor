@@ -1,0 +1,106 @@
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@rendermode InteractiveServer
+
+<AuthorizeView>
+    <Authorized>
+        <script>
+                    function activateLogoutForm() {
+                        document.getElementById("logoutform").submit();
+                    }
+        </script>
+
+        <FluentProfileMenu @bind-Open="@openProfileMenu" FullName="@EMail.Split('@').FirstOrDefault(EMail)"
+                           EMail="@EMail" HeaderLabel="Logged in as" TopCorner=true OnFooterLinkClick=@RedirectToAccountPage>
+            <HeaderTemplate>
+                <FluentLabel part="header-label">Logged in as</FluentLabel>
+            </HeaderTemplate>
+            <FooterTemplate>
+                <FluentStack VerticalAlignment="@VerticalAlignment.Center">
+                    <FluentSpacer />
+                    <FluentButton Appearance="@Appearance.Neutral" OnClick="@LogOut"
+                                  IconStart="@(new Icons.Regular.Size20.SignOut())">
+                        Log out
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Accent" OnClick="@RedirectToAccountPage"
+                                  IconStart="@(new Icons.Regular.Size20.PersonSettings())">
+                        Manage Account
+                    </FluentButton>
+                </FluentStack>
+            </FooterTemplate>
+        </FluentProfileMenu>
+
+        <form id="logoutform" action="Account/Logout" method="post">
+            <AntiforgeryToken />
+            <input type="hidden" name="ReturnUrl" value="@currentUrl" />
+        </form>
+    </Authorized>
+
+    <NotAuthorized>
+        <FluentProfileMenu @bind-Open="@openProfileMenu" TopCorner=true Initials=":(">
+            <EndTemplate>
+                <span>Not logged in</span>
+            </EndTemplate>
+            <HeaderTemplate>
+                <FluentLabel Typo="Typography.H5">Not logged in</FluentLabel>
+            </HeaderTemplate>
+            <ChildContent>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentButton Appearance="Appearance.Neutral" OnClick=@Register
+                                  IconStart="@(new Icons.Regular.Size20.Add())">
+                        Register
+                    </FluentButton>
+                    <FluentButton Appearance="Appearance.Accent" OnClick=@LogIn
+                                  IconStart="@(new Icons.Regular.Size20.ArrowEnter())">
+                        Log in
+                    </FluentButton>
+                </FluentStack>
+            </ChildContent>
+            <FooterTemplate />
+        </FluentProfileMenu>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private bool openProfileMenu { get; set; } = false;
+    private string? currentUrl;
+
+    [Parameter]
+    public required string EMail { get; set; }
+
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    private void RedirectToAccountPage()
+    {
+        openProfileMenu = false;
+        NavigationManager.NavigateTo("/Account/Manage");
+    }
+
+    private void LogOut()
+    {
+        openProfileMenu = false;
+        JSRuntime.InvokeVoidAsync(@"activateLogoutForm");
+    }
+
+    private void LogIn()
+    {
+        openProfileMenu = false;
+        NavigationManager.NavigateTo("/Account/Login");
+    }
+
+    private void Register()
+    {
+        openProfileMenu = false;
+        NavigationManager.NavigateTo("/Account/Register");
+    }
+}
