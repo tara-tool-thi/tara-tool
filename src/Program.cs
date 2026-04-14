@@ -4,6 +4,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Components;
 using tara_tool.Components.Account;
 using tara_tool.Data;
+using tara_tool.Data.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(
     ServiceLifetime.Scoped);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.AddTransient<AccessControlService>();
 
 builder.Services
     .AddIdentityCore<ApplicationUser>(options => {
