@@ -41,17 +41,12 @@
 </h2>
 <br />
 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
-    <FluentAutocomplete TOption="ItemDefinition"
-                    AutoComplete="off"
-                    Autofocus="true"
-                    Label="Search for an Item"
-                    Width="250px"
-                    MaxAutoHeight="200px"
-                    Placeholder="Search for Items"
-                    OnOptionsSearch="@onSearchAsync"
-                    MaximumSelectedOptions="5"
-                    OptionText="@(item => item.ItemName)"
-                    @bind-SelectedOptions="@searchItems" />
+    <FluentTextField Label="Search for an Item"
+                     Placeholder="Search by name, function or environment"
+                     Style="width: 250px;"
+                     @bind-Value="searchText"
+                     Immediate="true" />
+
 
     <FluentSpacer />
 
@@ -61,8 +56,7 @@
 </FluentStack>
 
 <br />
-<FluentDataGrid TGridItem="ItemDefinition" Items="@selectedItems.AsQueryable()" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
-
+<FluentDataGrid TGridItem="ItemDefinition" Items="@FilteredItems" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
     <EmptyContent>
         <div style="padding:40px; text-align:center; opacity:0.7;">
             <div style="font-size:18px; margin-bottom:8px;">
@@ -76,7 +70,7 @@
 
     <ChildContent>
         <TemplateColumn Title="#" Sortable="true" Width="40px" >
-            @(selectedItems.ToList().IndexOf(context) + 1)
+            @(FilteredItems.ToList().IndexOf(context) + 1)
         </TemplateColumn>
         <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name"/>
         <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function"/>
@@ -102,11 +96,17 @@
 
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
+    private string searchText = string.Empty;
+
     private IQueryable<ItemDefinition> itemsQuery = Enumerable.Empty<ItemDefinition>().AsQueryable();
 
-    private IEnumerable<ItemDefinition> selectedItems = Array.Empty<ItemDefinition>();
-
-    private IEnumerable<ItemDefinition> searchItems = Array.Empty<ItemDefinition>();
+    private IQueryable<ItemDefinition> FilteredItems =>
+        string.IsNullOrWhiteSpace(searchText)
+            ? itemsQuery
+            : itemsQuery.Where(i =>
+                EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
+                EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
+                EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%"));
 
     protected override async Task OnInitializedAsync()
     {
@@ -147,7 +147,7 @@
         }
 
         // Check if user has read access to this project
-        bool userHasReadRights =  await new AccessControlService(Db).CheckUserAccessRightsRead(urlId, user);
+        bool userHasReadRights =  new AccessControlService(Db).CheckUserAccessRightsRead(urlId, user);
 
         if(!userHasReadRights)
         {
@@ -172,7 +172,6 @@
         itemsQuery = Db.ItemDefinitions
                         .Where(p => p.IdProject == urlId);
 
-        selectedItems = itemsQuery;
     }
 
     private async Task createProject(string name)
@@ -229,40 +228,15 @@
             projectName = requestedProject.ProjectName;
             retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
         }
+
+        await Db.SaveChangesAsync();
         // Refresh the datagrid to show new item
         itemsQuery = Db.ItemDefinitions
                         .Where(p => p.IdProject == urlId);
 
-        await Db.SaveChangesAsync();
-
         NavigationManager.NavigateTo($"/Item/{newItem.Id}");
     }
 
-    // User has to click into the autocomplete box again for selectedItems to apply to the DataGrid
-    private async Task onSearchAsync(OptionsSearchEventArgs<ItemDefinition> e)
-    {
-        if (string.IsNullOrWhiteSpace(e.Text) && !searchItems.Any())
-        {
-            // No search, show all items
-            selectedItems = itemsQuery;
-        }
-        else if (!searchItems.Any())
-        {
-            selectedItems = Db.ItemDefinitions
-                .Where(p => EF.Functions.Like(p.ItemName, $"%{e.Text}%"))
-                .Where(p => p.IdProject == urlId);
-        }
-        else
-        {
-            selectedItems = searchItems;
-        }
-
-        IEnumerable<ItemDefinition> allItems = Db.ItemDefinitions
-                                                .Where(i => EF.Functions.Like(i.ItemName, $"%{e.Text}%"))
-                                                .Where(p => p.IdProject == urlId);
-                                                
-        e.Items = allItems;
-    }
 
     private async Task onRowClick(FluentDataGridRow<ItemDefinition> row)
     {
@@ -279,3 +253,4 @@
         await pagination.SetItemsPerPageAsync(int.Parse(newValue));
     }
 }
+

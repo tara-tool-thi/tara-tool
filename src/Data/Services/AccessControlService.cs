@@ -3,71 +3,23 @@ namespace tara_tool.Data.Services;
 
 public class AccessControlService(ApplicationDbContext context)
 {
-    public async Task<bool> CheckUserAccessRightsRead(long ProjectId, ApplicationUser user)
+    public bool CheckUserAccessRightsRead(long ProjectId, ApplicationUser user)
     {
-        AccessControl? accessControl = context.AccessControls
-                                        .SingleOrDefault(p => p.Project.Id == ProjectId &&
-                                        p.Member.Id == user!.Id &&
-                                        p.ReadAccess == true);
-
-        if(accessControl == null)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.ReadAccess == true);
     }
 
-    public async Task<bool> CheckUserAccessRightsWrite(long ProjectId, ApplicationUser user)
+    public bool CheckUserAccessRightsWrite(long ProjectId, ApplicationUser user)
     {
-        AccessControl? accessControl = context.AccessControls
-                                        .SingleOrDefault(p => p.Project.Id == ProjectId &&
-                                        p.Member.Id == user!.Id &&
-                                        p.WriteAccess == true);
-
-        if(accessControl == null)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.WriteAccess == true);
     }
 
-    public async Task<bool> CheckUserAccessRightsManage(long ProjectId, ApplicationUser user)
+    public bool CheckUserAccessRightsManage(long ProjectId, ApplicationUser user)
     {
-        AccessControl? accessControl = context.AccessControls
-                                        .SingleOrDefault(p => p.Project.Id == ProjectId &&
-                                        p.Member.Id == user!.Id &&
-                                        p.Manage == true);
-
-        if(accessControl == null)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.Manage == true);
     }
 
-    public async Task<bool> CheckUserAccessRightsOwner(long ProjectId, ApplicationUser user)
+    public bool CheckUserAccessRightsOwner(long ProjectId, ApplicationUser user)
     {
-        AccessControl? accessControl = context.AccessControls
-                                        .SingleOrDefault(p => p.Project.Id == ProjectId &&
-                                        p.Member.Id == user!.Id &&
-                                        p.Owner == true);
-
-        if(accessControl == null)
-        {
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.Owner == true);
     }
 }
