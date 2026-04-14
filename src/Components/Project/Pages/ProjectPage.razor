@@ -26,6 +26,8 @@
 
 @inject AuthenticationStateProvider AuthStateProvider
 
+@inject ProjectService ProjectService
+
 
 <PageTitle>Project</PageTitle>
 
@@ -123,9 +125,7 @@
         //New project has to be created when urlId == -1
         if(urlId == -1)
         {
-            ProjectService projectService = new ProjectService(Db);
-
-            Project newProject = await projectService.CreateProjectAsync("New unnamed Project");
+            Project newProject = await CreateProjectAsync("New unnamed Project");
 
             AccessControl newAccessControl = new AccessControl
             {
@@ -147,7 +147,7 @@
         }
 
         // Check if user has read access to this project
-        bool userHasReadRights = await new AccessControlService(Db).CheckUserAccessRightsRead(urlId, user);
+        bool userHasReadRights =  await new AccessControlService(Db).CheckUserAccessRightsRead(urlId, user);
 
         if(!userHasReadRights)
         {
@@ -177,17 +177,26 @@
 
     private async Task createProject(string name)
     {
-        ProjectService projectService = new ProjectService(Db);
-
-        await projectService.CreateProjectAsync(name);
+        await CreateProjectAsync(name);
         
+    }
+
+    private async Task<Project> CreateProjectAsync(string name)
+    {
+        Project newProject = new Project
+        {
+            ProjectName = name
+        };
+
+        Db.Projects.Add(newProject);
+        await Db.SaveChangesAsync();
+
+        return newProject;
     }
 
     private async Task<Project?> retrieveProjectInfo()
     {
-        ProjectService projectService = new ProjectService(Db);
-
-        Project? retrievedProject = await projectService.RetrieveProjectInfoAsync(urlId);
+        Project? retrievedProject = await ProjectService.GetProjectAsync(urlId, null);
 
         return retrievedProject;
     }
@@ -196,9 +205,7 @@
     {
         long.TryParse(wantedProjectID, out long parsedProjectID);
 
-        ProjectService projectService = new ProjectService(Db);
-
-        Project? retrievedProject = await projectService.RetrieveProjectInfoAsync(parsedProjectID);
+        Project? retrievedProject = await ProjectService.GetProjectAsync(parsedProjectID, null);
 
         if (retrievedProject == null)
         {
@@ -272,4 +279,3 @@
         await pagination.SetItemsPerPageAsync(int.Parse(newValue));
     }
 }
-
