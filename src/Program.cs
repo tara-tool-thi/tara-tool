@@ -31,6 +31,7 @@ var connectionString =
         "Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlite(connectionString));
+builder.Services.AddScoped<ItemsService>();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
