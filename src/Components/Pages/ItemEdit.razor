@@ -84,14 +84,19 @@ else
                          MaximumFileCount="1"
                          MaximumFileSize="@(10 * 1024 * 1024)"
                          DragDropZoneVisible="true"
-                         AnchorId="techSketchBrowse"
+                         Id="techSketch"
                          Style="width: 100%; min-height: 120px;">
-          <div class="upload-dropzone-content">
-            <span>Drag &amp; Drop or</span>
-            <button id="techSketchBrowse" type="button">
-              browse
-            </button>
-          </div>
+          <ChildContent>
+            <br>
+            <label for="techSketch">
+              <FluentIcon Value="@(new @Icons.Regular.Size24.ArrowUpload())" />
+            </label>
+            <div>
+              Drag files here you wish to upload,
+              or <label for="techSketch">browse</label>
+              for them.
+            </div>
+          </ChildContent>
         </FluentInputFile>
       }
     </FluentStack>
