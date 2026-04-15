@@ -68,11 +68,11 @@ else
                     Rows="4" style="width: 100%;" />
 
     <FluentStack Orientation="Orientation.Vertical" Style="gap: 0.4rem;">
-      <div style="font-size: 0.875rem; font-weight: 600;">Add Picture / Technical Sketch</div>
+      <div class="upload-label">Add Picture / Technical Sketch</div>
       @if (imagePreviewUrl != null)
       {
         <img src="@imagePreviewUrl" alt="Technical sketch preview"
-             style="max-width: 100%; max-height: 300px; border-radius: 6px; object-fit: contain;" />
+             class="technical-sketch-preview" />
         <FluentButton Appearance="Appearance.Lightweight" OnClick="RemoveImage">
           Remove image
         </FluentButton>
@@ -86,9 +86,9 @@ else
                          DragDropZoneVisible="true"
                          AnchorId="techSketchBrowse"
                          Style="width: 100%; min-height: 120px;">
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 120px; padding: 1.5rem; text-align: center;">
+          <div class="upload-dropzone-content">
             <span>Drag &amp; Drop or</span>
-            <button id="techSketchBrowse" type="button" style="border: 0; background: transparent; color: var(--accent-foreground-rest, #0066cc); cursor: pointer; text-decoration: underline; padding: 0; font: inherit;">
+            <button id="techSketchBrowse" type="button">
               browse
             </button>
           </div>
