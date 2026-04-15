@@ -80,7 +80,32 @@
     </ChildContent>
 </FluentDataGrid>
 
-<FluentPaginator State="@pagination" />
+<FluentPaginator State="@pagination">
+    <SummaryTemplate>
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <span><b>@pagination.TotalItemCount</b>&nbsp;items</span>
+            <FluentSpacer />
+            <span>Items per page:</span>
+            <FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => onPageCountChange(value))">
+                <FluentOption Value="5">
+                    5
+                </FluentOption>
+                <FluentOption Value="10" Selected>
+                    10
+                </FluentOption>
+                <FluentOption Value="25">
+                    25
+                </FluentOption>
+                <FluentOption Value="50">
+                    50
+                </FluentOption>
+                <FluentOption Value="100">
+                    100
+                </FluentOption>
+            </FluentSelect>
+        </FluentStack>
+    </SummaryTemplate>
+</FluentPaginator>
 
 @code {
     [Parameter]

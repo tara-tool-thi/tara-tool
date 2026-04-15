@@ -52,9 +52,9 @@
 {
     <div @key=@TitleSearch>
         @foreach (var project in allProjectsWithAccess.Where(project => (TitleSearch == null ||
-                                                                                                                                                                            project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
-                                                                                                                                                                            selectedMails.Contains(project.Access?.FirstOrDefault(accessControl
-                                                                                                                                                                                 => accessControl.Owner == true)?.ApplicationUser.Email ?? string.Empty))))
+            project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
+                        selectedMails.Contains(project.Access?.FirstOrDefault(accessControl => accessControl.Owner ==
+            true)?.ApplicationUser.Email ?? string.Empty))))
         {
             <ProjectCard Project=@project />
         }
