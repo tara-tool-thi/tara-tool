@@ -40,7 +40,7 @@
             ret = $"Updated {span.Seconds}s ago - ";
         }
 
-        ret += $"Owner: {Project!.Access?.Where(a => a.Owner == true).FirstOrDefault()?.Member.Email ?? "null"}";
+        ret += $"Owner: {Project!.Access?.Where(a => a.Owner == true).FirstOrDefault()?.ApplicationUser.Email ?? "null"}";
         return ret;
     }
 }

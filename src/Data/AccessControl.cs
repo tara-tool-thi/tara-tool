@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace tara_tool.Data;
 
 public class AccessControl
@@ -10,6 +12,7 @@ public class AccessControl
   public bool Manage { get; set; } = false;
   public bool Owner { get; set; } = false;
 
-  public required ApplicationUser Member { get; set; }
+
+  public required ApplicationUser ApplicationUser { get; set; }
   public required Project Project { get; set; }
 }

@@ -43,9 +43,9 @@
 {
     <div @key=@TitleSearch>
         @foreach (var project in allProjectsWithAccess.Where(project => (TitleSearch == null ||
-                                    project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
-                                    selectedMails.Contains(project.Access?.FirstOrDefault(accessControl
-                                         => accessControl.Owner == true)?.Member.Email ?? string.Empty))))
+                                                    project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
+                                                    selectedMails.Contains(project.Access?.FirstOrDefault(accessControl
+                                                         => accessControl.Owner == true)?.ApplicationUser.Email ?? string.Empty))))
         {
             <ProjectCard Project=@project />
         }
@@ -88,9 +88,10 @@
             return;
         }
     
-        allProjectsWithAccess = await ProjectService.GetProjectsAsync(user!.Id, (value) => value.Include(a =>
-        a.Access).ThenInclude(a => a.Member).AsQueryable());
-        allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a => a.Member).Where(m =>
+        allProjectsWithAccess = await ProjectService.GetProjectsAsync((value) => value.Include(a =>
+        a.Access).ThenInclude(a => a.ApplicationUser));
+        allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a =>
+a.ApplicationUser).Where(m =>
     m.Email != null).Select(m => m.Email!).Distinct().ToList();
     }
 

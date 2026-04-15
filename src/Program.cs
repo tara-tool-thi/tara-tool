@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Build.Framework;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Components;
 using tara_tool.Components.Account;
@@ -18,7 +19,8 @@ builder.Services.AddScoped<AuthenticationStateProvider,
                            IdentityRevalidatingAuthenticationStateProvider>();
 
 builder.Services
-    .AddAuthentication(options => {
+    .AddAuthentication(options =>
+    {
       options.DefaultScheme = IdentityConstants.ApplicationScheme;
       options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
@@ -31,9 +33,11 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddTransient<AccessControlService>();
+builder.Services.AddTransient<ItemsService>();
 
 builder.Services
-    .AddIdentityCore<ApplicationUser>(options => {
+    .AddIdentityCore<ApplicationUser>(options =>
+    {
       options.SignIn.RequireConfirmedAccount = true;
       options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     })
@@ -49,9 +53,12 @@ builder.Services
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment()) {
+if (app.Environment.IsDevelopment())
+{
   app.UseMigrationsEndPoint();
-} else {
+}
+else
+{
   app.UseExceptionHandler("/Error", createScopeForErrors: true);
   // The default HSTS value is 30 days. You may want to change this for
   // production scenarios, see https://aka.ms/aspnetcore-hsts.
