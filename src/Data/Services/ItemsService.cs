@@ -22,7 +22,7 @@ public class ItemsService(ApplicationDbContext context, AccessControlService acc
         };
 
         context.ItemDefinitions.Add(newItem);
-        newItem.Project.DateLastChanged = DateTime.Now;
+        newItem.Project.DateLastChanged = DateTime.UtcNow;
         await context.SaveChangesAsync();
 
         return newItem;

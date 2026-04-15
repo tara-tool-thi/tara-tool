@@ -1,4 +1,4 @@
-@page "/Projects"
+@page "/"
 
 @rendermode InteractiveServer
 @inject NavigationManager Navigator
@@ -15,7 +15,7 @@
              HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <h1><b style="text-align: center;">My Projects</b></h1>
     <FluentButton OnClick=@(() => Navigator.NavigateTo(Navigator.BaseUri + "Project/-1")) IconStart=@(new
-                                                                                                                                                                                                                                                                                                                                    Icons.Regular.Size20.Add())>
+                                                                                                          Icons.Regular.Size20.Add())>
         New Project
     </FluentButton>
 </FluentStack>
