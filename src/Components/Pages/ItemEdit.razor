@@ -102,22 +102,22 @@ else
     </FluentStack>
 
     <FluentAccordion Style="width: 100%;">
-      <FluentAccordionItem Heading="Item Boundary" Style="width: 100%;">
+      <FluentAccordionItem Expanded="@ExpandedItemBoundaryText" Heading="Item Boundary" Style="width: 100%;">
         <FluentTextArea @bind-Value="itemDefinition!.ItemBoundaryText" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="Describe the item boundaries and interfaces..."
                         Rows="5" style="width: 100%;" />
       </FluentAccordionItem>
-      <FluentAccordionItem Heading="Item Functions" Style="width: 100%;">
+      <FluentAccordionItem Expanded="@ExpandedItemFunction" Heading="Item Functions" Style="width: 100%;">
         <FluentTextArea @bind-Value="itemDefinition!.ItemFunction" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="List the functions this item fulfills..."
                         Rows="5" style="width: 100%;" />
       </FluentAccordionItem>
-      <FluentAccordionItem Heading="Preliminary Architecture" Style="width: 100%;">
+      <FluentAccordionItem Expanded="@ExpandedPreliminaryArchitectureText" Heading="Preliminary Architecture" Style="width: 100%;">
         <FluentTextArea @bind-Value="itemDefinition!.PreliminaryArchitectureText" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="Describe the preliminary architecture..."
                         Rows="5" style="width: 100%;" />
       </FluentAccordionItem>
-      <FluentAccordionItem Heading="Operational Environment" Style="width: 100%;">
+      <FluentAccordionItem Expanded="@ExpandedOperationalEnvironmentText" Heading="Operational Environment" Style="width: 100%;">
         <FluentTextArea @bind-Value="itemDefinition!.OperationalEnvironmentText" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="Describe the operational environment and operating conditions..."
                         Rows="5" style="width: 100%;" />
@@ -137,6 +137,11 @@ else
 
   System.Threading.Timer? saveTimer;
 
+  bool ExpandedItemBoundaryText = false;
+  bool ExpandedItemFunction = false;
+  bool ExpandedPreliminaryArchitectureText = false;
+  bool ExpandedOperationalEnvironmentText = false;
+
   protected override async Task OnInitializedAsync()
   {
     itemDefinition = await ItemsService.RetrieveItemDefinitionInfoAsync(itemId);
@@ -146,6 +151,11 @@ else
       NavigationManager.NavigateTo("/");
       return;
     }
+
+    ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
+    ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);
+    ExpandedPreliminaryArchitectureText = !string.IsNullOrEmpty(itemDefinition.PreliminaryArchitectureText);
+    ExpandedOperationalEnvironmentText = !string.IsNullOrEmpty(itemDefinition.OperationalEnvironmentText);
 
     if (itemDefinition.TechnicalSketch?.Data != null)
       imagePreviewUrl = $"data:image/png;base64,{Convert.ToBase64String(itemDefinition.TechnicalSketch.Data)}";
