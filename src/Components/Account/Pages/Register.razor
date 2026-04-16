@@ -15,6 +15,8 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
+@inject IToastService ToastService
+
 
 <PageTitle>Register</PageTitle>
 
@@ -44,7 +46,7 @@
                 <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword" Label="Confirm Password" Placeholder="*******" Required="true" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
                 
-                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%">Log in</FluentButton>
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%" >Register</FluentButton>
             </FluentStack>
         </EditForm>
     </FluentGridItem>
@@ -55,6 +57,8 @@
         <ExternalLoginPicker />
     </FluentGridItem>*@
 </FluentGrid>
+
+
 
 
 @*<PageTitle>Register</PageTitle>
@@ -116,12 +120,13 @@ error.Description))}";
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var user = CreateUser();
+        ApplicationUser? user = CreateUser();
 
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
-        var emailStore = GetEmailStore();
+
+        IUserEmailStore<ApplicationUser>? emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
+        IdentityResult? result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
         {
@@ -131,26 +136,33 @@ error.Description))}";
 
         Logger.LogInformation("User created a new account with password.");
 
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        string? userId = await UserManager.GetUserIdAsync(user);
+        string? code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+        @*string? callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/Login").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+          
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));*@
 
-        if (UserManager.Options.SignIn.RequireConfirmedAccount)
+
+        RedirectManager.RedirectTo(
+                "Account/Login");
+
+        
+
+        @*if (UserManager.Options.SignIn.RequireConfirmedAccount)
         {
             RedirectManager.RedirectTo(
                 "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+                new Dictionary<string, object?>() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
         }
         else
         {
             await SignInManager.SignInAsync(user, isPersistent: false);
             RedirectManager.RedirectTo(ReturnUrl);
-        }
+        }*@
     }
 
     private ApplicationUser CreateUser()
@@ -174,6 +186,8 @@ error.Description))}";
         }
         return (IUserEmailStore<ApplicationUser>)UserStore;
     }
+
+
 
     private sealed class InputModel
     {
