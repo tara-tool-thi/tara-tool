@@ -1,23 +1,19 @@
 @page "/Item/{itemId:long}"
 @rendermode InteractiveServer
 
+@using tara_tool.Components.Dialogs
 @using tara_tool.Data.Services
 @implements IDisposable
 
 @inject ItemsService ItemsService
 @inject NavigationManager NavigationManager
+@inject IDialogService DialogService
 
 <PageTitle>Item Definition</PageTitle>
 
-<FluentStack VerticalAlignment="VerticalAlignment.Center" Style="flex-wrap: wrap; gap: 0.75rem;">
-  <h2 style="margin: 0;">0. Item Definition</h2>
-  <div class="iso-help">
-    <button type="button"
-            id="iso-help-button"
-            class="iso-help-button"
-            aria-label="ISO/SAE 21434 Information">
-      <FluentIcon Value="@(new Icons.Regular.Size24.Info())" />
-    </button>
+<FluentStack VerticalAlignment="VerticalAlignment.Center">
+  <h2>0. Item Definition</h2>
+    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button"/>
     <FluentTooltip Anchor="iso-help-button">
       <p><strong>ISO/SAE 21434 - Item Definition</strong></p>
       <p>The following aspects must be defined:</p>
@@ -25,7 +21,7 @@
         <li><strong>Placeholder:</strong> Placeholder</li>
       </ul>
     </FluentTooltip>
-  </div>
+
   @if (!string.IsNullOrEmpty(saveStatus))
   {
     <span style="font-size: 0.85rem; color: var(--neutral-foreground-rest);">@saveStatus</span>
@@ -59,23 +55,36 @@
 }
 else
 {
-  <FluentStack Orientation="Orientation.Vertical" Width="100%" Style="gap: 1.25rem;">
+  <FluentStack Orientation="Orientation.Vertical" Width="100%" >
+    <div class="fullwidth">
     <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after="ScheduleAutoSave"
-                     Label="Item Name" Placeholder="Enter item name..." style="width: 100%;" />
+                     Label="Item Name" Placeholder="Enter item name..." Class="fullwidth" />
+    </div>
 
+    <div class="fullwidth">
     <FluentTextArea @bind-Value="itemDefinition!.ItemDescription" @bind-Value:after="ScheduleAutoSave"
                     Label="Item Description" Placeholder="Describe the item and its purpose..."
-                    Rows="4" style="width: 100%;" />
+                    Rows="4" Class="fullwidth"/>
+    </div>
 
-    <FluentStack Orientation="Orientation.Vertical" Style="gap: 0.4rem;">
-      <FluentLabel>Technical Sketch</FluentLabel>
-      @if (imagePreviewUrl != null)
+    <FluentStack Orientation="Orientation.Vertical">
+         <FluentStack VerticalAlignment="VerticalAlignment.Center">
+          <FluentLabel>Technical Sketch</FluentLabel>
+            @if( imagePreviewUrl is not null)
+            {
+                <FluentButton Appearance="Appearance.Outline" OnClick="RemoveImage" Color="var(--error)">
+                  <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
+                  Remove
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.FullScreenMaximize())" OnClick="ShowTechnicalSketch">
+                    Show
+                </FluentButton>
+            }
+         </FluentStack>
+      @if (imagePreviewUrl is not null)
       {
         <img src="@imagePreviewUrl" alt="Technical sketch preview"
-             class="technical-sketch-preview" height="200"/>
-        <FluentButton Appearance="Appearance.Lightweight" OnClick="RemoveImage">
-          Remove image
-        </FluentButton>
+             class="technical-sketch-preview" height="200" @onclick="@ShowTechnicalSketch"/>
       }
       else
       {
@@ -92,35 +101,35 @@ else
               <FluentIcon Value="@(new @Icons.Regular.Size24.ArrowUpload())" />
             </label>
             <div>
-              Drag files here you wish to upload,
+              To upload a file, drag it here
               or <label for="techSketch">browse</label>
-              for them.
+              for it.
             </div>
           </ChildContent>
         </FluentInputFile>
       }
     </FluentStack>
 
-    <FluentAccordion Style="width: 100%;">
-      <FluentAccordionItem Expanded="@ExpandedItemBoundaryText" Heading="Item Boundary" Style="width: 100%;">
+    <FluentAccordion Class="fullwidth">
+      <FluentAccordionItem Expanded="@ExpandedItemBoundaryText" Heading="Item Boundary" >
         <FluentTextArea @bind-Value="itemDefinition!.ItemBoundaryText" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="Describe the item boundaries and interfaces..."
-                        Rows="5" style="width: 100%;" />
+                        Rows="5" Class="fullwidth" />
       </FluentAccordionItem>
-      <FluentAccordionItem Expanded="@ExpandedItemFunction" Heading="Item Functions" Style="width: 100%;">
+      <FluentAccordionItem Expanded="@ExpandedItemFunction" Heading="Item Functions" >
         <FluentTextArea @bind-Value="itemDefinition!.ItemFunction" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="List the functions this item fulfills..."
-                        Rows="5" style="width: 100%;" />
+                        Rows="5" Class="fullwidth" />
       </FluentAccordionItem>
-      <FluentAccordionItem Expanded="@ExpandedPreliminaryArchitectureText" Heading="Preliminary Architecture" Style="width: 100%;">
+      <FluentAccordionItem Expanded="@ExpandedPreliminaryArchitectureText" Heading="Preliminary Architecture" >
         <FluentTextArea @bind-Value="itemDefinition!.PreliminaryArchitectureText" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="Describe the preliminary architecture..."
-                        Rows="5" style="width: 100%;" />
+                        Rows="5" Class="fullwidth" />
       </FluentAccordionItem>
-      <FluentAccordionItem Expanded="@ExpandedOperationalEnvironmentText" Heading="Operational Environment" Style="width: 100%;">
+      <FluentAccordionItem Expanded="@ExpandedOperationalEnvironmentText" Heading="Operational Environment" >
         <FluentTextArea @bind-Value="itemDefinition!.OperationalEnvironmentText" @bind-Value:after="ScheduleAutoSave"
                         Placeholder="Describe the operational environment and operating conditions..."
-                        Rows="5" style="width: 100%;" />
+                        Rows="5" Class="fullwidth" />
       </FluentAccordionItem>
     </FluentAccordion>
   </FluentStack>
@@ -208,6 +217,12 @@ else
       itemDefinition.TechnicalSketch.Data = bytes;
 
     ScheduleAutoSave();
+  }
+
+  async Task ShowTechnicalSketch() {
+    if (itemDefinition is null or { TechnicalSketch: null }) return;
+
+    await DialogService.ShowDialogAsync<ImageViewer>(itemDefinition.TechnicalSketch, new DialogParameters{ Title="Technical Sketch", });
   }
 
   void RemoveImage()

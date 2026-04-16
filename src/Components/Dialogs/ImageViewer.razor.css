@@ -1,0 +1,9 @@
+img {
+    max-width: 82vw;
+    max-height: 75vh;
+    object-fit: scale-down;
+}
+
+h3 {
+    margin-bottom: 0;
+}

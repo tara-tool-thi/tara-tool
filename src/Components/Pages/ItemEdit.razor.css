@@ -1,20 +1,3 @@
 h2 {
     margin-bottom: 0;
 }
-
-.iso-help {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-}
-
-.iso-help-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    background: transparent;
-    padding: 0;
-    cursor: help;
-}
-
