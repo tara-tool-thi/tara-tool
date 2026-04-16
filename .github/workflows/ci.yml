@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  push:
+    branches: [ main, 'sprint/*' ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, 'sprint/*' ]
 
 jobs:
   build:
