@@ -29,13 +29,13 @@
             <hr />
             <FluentValidationSummary class="text-danger" role="alert" />
             <FluentStack Orientation="Orientation.Vertical">
-                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="name@example.com" Label="Email" Style="width: 100%" />
+                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.Email" class="text-danger" />
 
-                <FluentTextField Name="Input.Username" @bind-Value="Input.Username" Label="Username" Placeholder="Username" Required="true" Style="width: 100%;"></FluentTextField>
+                <FluentTextField Name="Input.Username" @bind-Value="Input.Username" Label="Username" Placeholder="John Doe" Required="true" Style="width: 100%;"></FluentTextField>
                 <FluentValidationMessage For="() => Input.Username" class="text-danger" />
 
-                <FluentTextField Name="Input.Organization" @bind-Value="Input.Organization" Label="Organization" Placeholder="Organization" Required="false" Style="width: 100%;"></FluentTextField>
+                <FluentTextField Name="Input.Organization" @bind-Value="Input.Organization" Label="Organization" Placeholder="University of Applied Sciences Ingolstadt" Required="false" Style="width: 100%;"></FluentTextField>
                 <FluentValidationMessage For="() => Input.Organization" class="text-danger" />
 
                 <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password" Label="Password" Placeholder="*******" Required="true" Style="width: 100%" />
@@ -118,7 +118,7 @@ error.Description))}";
     {
         var user = CreateUser();
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
