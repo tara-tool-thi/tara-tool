@@ -1,4 +1,6 @@
-namespace tara_tool.Data;
+using System.Reflection;
+
+namespace tara_tool.Data.Tabels;
 
 public class ItemDefinition
 {
@@ -15,4 +17,5 @@ public class ItemDefinition
   // Id
   public long IdProject { get; set; }
   public virtual required Project Project { get; set; }
+  public ICollection<Asset> Assets { get; set; } = [];
 }

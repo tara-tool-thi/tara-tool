@@ -1,9 +1,7 @@
-using System.Security.AccessControl;
 using Microsoft.EntityFrameworkCore;
-using tara_tool.Components.Pages;
-using tara_tool.Data.Services;
+using tara_tool.Data.Tabels;
 
-namespace tara_tool.Data;
+namespace tara_tool.Data.Services;
 
 public class ItemsService(ApplicationDbContext context, AccessControlService accessControlService)
 {

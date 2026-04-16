@@ -1,5 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using SQLitePCL;
+using tara_tool.Data.Tabels;
 
 namespace tara_tool.Data.Services;
 

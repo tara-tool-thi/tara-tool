@@ -1,4 +1,4 @@
-namespace tara_tool.Data;
+namespace tara_tool.Data.Tabels;
 
 public class Project
 {

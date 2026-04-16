@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using tara_tool.Data;
+using tara_tool.Data.Tabels;
 
 namespace tara_tool.Components.Account;
 

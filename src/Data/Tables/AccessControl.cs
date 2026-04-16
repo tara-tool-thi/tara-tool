@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace tara_tool.Data;
+namespace tara_tool.Data.Tabels;
 
 public class AccessControl
 {

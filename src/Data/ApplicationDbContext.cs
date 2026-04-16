@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using tara_tool.Data.Tabels;
+
 
 namespace tara_tool.Data;
 
@@ -13,6 +15,13 @@ public class ApplicationDbContext(
     public DbSet<Project> Projects { get; set; }
     public DbSet<ItemDefinition> ItemDefinitions { get; set; }
     public DbSet<Image> Images { get; set; }
+    public DbSet<Asset> Assets { get; set; }
+    public DbSet<Tag> Tags { get; set; }
+    public DbSet<DamageScenario> DamageScenarios { get; set; }
+    public DbSet<ImpactRating> ImpactRatings { get; set; }
+    public DbSet<TreatmentDecision> TreatmentDecisions { get; set; }
+    public DbSet<ThreatScenario> ThreatScenarios { get; set; }
+    public DbSet<AttackPath> AttackPaths { get; set; }
 
     static public void GetDbConfig(DbContextOptionsBuilder databaseBuilder,
                                    WebApplicationBuilder builder)
@@ -43,5 +52,25 @@ public class ApplicationDbContext(
             .HasMany(e => e.ItemDefinitions)
             .WithOne(e => e.Project)
             .HasForeignKey(e => e.IdProject);
+        builder.Entity<Asset>()
+            .HasMany(e => e.ItemDefinitions)
+            .WithMany(e => e.Assets);
+        builder.Entity<Asset>()
+            .HasMany(e => e.AssetGroup);
+        builder.Entity<Asset>()
+            .HasMany(e => e.DamageScenarios)
+            .WithMany(e => e.Assets);
+        builder.Entity<DamageScenario>()
+            .HasMany(e => e.ThreatScenarios)
+            .WithMany(e => e.DamageScenarios);
+        builder.Entity<DamageScenario>()
+            .HasOne(e => e.ImpactRating)
+            .WithOne(e => e.DamageScenario);
+        builder.Entity<ThreatScenario>()
+            .HasMany(e => e.AttackPaths)
+            .WithMany(e => e.ThreatScenarios);
+        builder.Entity<ImpactRating>()
+            .HasOne(e => e.TreatmentDecision)
+            .WithOne(e => e.ImpactRating);
     }
 }
