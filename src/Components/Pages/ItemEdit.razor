@@ -1,0 +1,247 @@
+@page "/Item/{itemId:long}"
+@rendermode InteractiveServer
+
+@using tara_tool.Components.Dialogs
+@using tara_tool.Data.Services
+@implements IDisposable
+
+@inject ItemsService ItemsService
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+<PageTitle>Item Definition</PageTitle>
+
+<FluentStack VerticalAlignment="VerticalAlignment.Center">
+  <h2>0. Item Definition</h2>
+    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button"/>
+    <FluentTooltip Anchor="iso-help-button">
+      <p><strong>ISO/SAE 21434 - Item Definition</strong></p>
+      <p>The following aspects must be defined:</p>
+      <ul>
+        <li><strong>Placeholder:</strong> Placeholder</li>
+      </ul>
+    </FluentTooltip>
+
+  @if (!string.IsNullOrEmpty(saveStatus))
+  {
+    <span style="font-size: 0.85rem; color: var(--neutral-foreground-rest);">@saveStatus</span>
+  }
+  <FluentSpacer />
+  <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)">
+    <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
+    Delete Item
+  </FluentButton>
+</FluentStack>
+
+<FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete confirmation">
+  <FluentDialogHeader><h3>Delete Item</h3></FluentDialogHeader>
+  <FluentDialogBody>
+    Are you sure you want to delete <strong>@itemDefinition?.ItemName</strong>? This cannot be undone.
+  </FluentDialogBody>
+  <FluentDialogFooter>
+    <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+      <FluentSpacer />
+      <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = false)">Cancel</FluentButton>
+      <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" OnClick="DeleteAsync">Delete</FluentButton>
+    </FluentStack>
+  </FluentDialogFooter>
+</FluentDialog>
+
+<div style="height: 1rem;"></div>
+
+@if (itemDefinition == null)
+{
+  <FluentProgressRing />
+}
+else
+{
+  <FluentStack Orientation="Orientation.Vertical" Width="100%" >
+    <div class="fullwidth">
+    <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after="ScheduleAutoSave"
+                     Label="Item Name" Placeholder="Enter item name..." Class="fullwidth" />
+    </div>
+
+    <div class="fullwidth">
+    <FluentTextArea @bind-Value="itemDefinition!.ItemDescription" @bind-Value:after="ScheduleAutoSave"
+                    Label="Item Description" Placeholder="Describe the item and its purpose..."
+                    Rows="4" Class="fullwidth"/>
+    </div>
+
+    <FluentStack Orientation="Orientation.Vertical">
+         <FluentStack VerticalAlignment="VerticalAlignment.Center">
+          <FluentLabel>Technical Sketch</FluentLabel>
+            @if( imagePreviewUrl is not null)
+            {
+                <FluentButton Appearance="Appearance.Outline" OnClick="RemoveImage" Color="var(--error)">
+                  <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
+                  Remove
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.FullScreenMaximize())" OnClick="ShowTechnicalSketch">
+                    Show
+                </FluentButton>
+            }
+         </FluentStack>
+      @if (imagePreviewUrl is not null)
+      {
+        <img src="@imagePreviewUrl" alt="Technical sketch preview"
+             class="technical-sketch-preview" height="200" @onclick="@ShowTechnicalSketch"/>
+      }
+      else
+      {
+        <FluentInputFile OnInputFileChange="OnFileSelected"
+                         Accept="image/*"
+                         MaximumFileCount="1"
+                         MaximumFileSize="@(10 * 1024 * 1024)"
+                         DragDropZoneVisible="true"
+                         Id="techSketch"
+                         Style="width: 100%; min-height: 120px;">
+          <ChildContent>
+            <br>
+            <label for="techSketch">
+              <FluentIcon Value="@(new @Icons.Regular.Size24.ArrowUpload())" />
+            </label>
+            <div>
+              To upload a file, drag it here
+              or <label for="techSketch">browse</label>
+              for it.
+            </div>
+          </ChildContent>
+        </FluentInputFile>
+      }
+    </FluentStack>
+
+    <FluentAccordion Class="fullwidth">
+      <FluentAccordionItem Expanded="@ExpandedItemBoundaryText" Heading="Item Boundary" >
+        <FluentTextArea @bind-Value="itemDefinition!.ItemBoundaryText" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="Describe the item boundaries and interfaces..."
+                        Rows="5" Class="fullwidth" />
+      </FluentAccordionItem>
+      <FluentAccordionItem Expanded="@ExpandedItemFunction" Heading="Item Functions" >
+        <FluentTextArea @bind-Value="itemDefinition!.ItemFunction" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="List the functions this item fulfills..."
+                        Rows="5" Class="fullwidth" />
+      </FluentAccordionItem>
+      <FluentAccordionItem Expanded="@ExpandedPreliminaryArchitectureText" Heading="Preliminary Architecture" >
+        <FluentTextArea @bind-Value="itemDefinition!.PreliminaryArchitectureText" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="Describe the preliminary architecture..."
+                        Rows="5" Class="fullwidth" />
+      </FluentAccordionItem>
+      <FluentAccordionItem Expanded="@ExpandedOperationalEnvironmentText" Heading="Operational Environment" >
+        <FluentTextArea @bind-Value="itemDefinition!.OperationalEnvironmentText" @bind-Value:after="ScheduleAutoSave"
+                        Placeholder="Describe the operational environment and operating conditions..."
+                        Rows="5" Class="fullwidth" />
+      </FluentAccordionItem>
+    </FluentAccordion>
+  </FluentStack>
+}
+
+@code {
+  [Parameter]
+  public long itemId { get; set; }
+
+  ItemDefinition? itemDefinition;
+  string? imagePreviewUrl;
+  string saveStatus = string.Empty;
+  bool showDeleteDialog = false;
+
+  System.Threading.Timer? saveTimer;
+
+  bool ExpandedItemBoundaryText = false;
+  bool ExpandedItemFunction = false;
+  bool ExpandedPreliminaryArchitectureText = false;
+  bool ExpandedOperationalEnvironmentText = false;
+
+  protected override async Task OnInitializedAsync()
+  {
+    itemDefinition = await ItemsService.RetrieveItemDefinitionInfoAsync(itemId);
+
+    if (itemDefinition == null)
+    {
+      NavigationManager.NavigateTo("/");
+      return;
+    }
+
+    ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
+    ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);
+    ExpandedPreliminaryArchitectureText = !string.IsNullOrEmpty(itemDefinition.PreliminaryArchitectureText);
+    ExpandedOperationalEnvironmentText = !string.IsNullOrEmpty(itemDefinition.OperationalEnvironmentText);
+
+    if (itemDefinition.TechnicalSketch?.Data != null)
+      imagePreviewUrl = $"data:image/png;base64,{Convert.ToBase64String(itemDefinition.TechnicalSketch.Data)}";
+  }
+
+  void ScheduleAutoSave()
+  {
+    saveStatus = "Unsaved changes…";
+    saveTimer?.Dispose();
+    saveTimer = new System.Threading.Timer(async _ =>
+    {
+      await InvokeAsync(SaveAsync);
+    }, null, TimeSpan.FromSeconds(2), Timeout.InfiniteTimeSpan);
+  }
+
+  async Task SaveAsync()
+  {
+    if (itemDefinition == null)
+      return;
+
+    saveStatus = "Saving...";
+    StateHasChanged();
+
+    try
+    {
+      await ItemsService.SaveItemAsync(itemDefinition);
+      saveStatus = "Saved";
+    }
+    catch
+    {
+      saveStatus = "Save failed";
+    }
+
+    StateHasChanged();
+  }
+
+  async Task OnFileSelected(InputFileChangeEventArgs fileArgs)
+  {
+    if (fileArgs.File == null || itemDefinition == null) return;
+
+    using MemoryStream ms = new();
+    await fileArgs.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(ms);
+    byte[]bytes = ms.ToArray();
+
+    imagePreviewUrl = $"data:{fileArgs.File.ContentType};base64,{Convert.ToBase64String(bytes)}";
+
+    if (itemDefinition.TechnicalSketch == null)
+      itemDefinition.TechnicalSketch = new Image(bytes) { Id = 0 };
+    else
+      itemDefinition.TechnicalSketch.Data = bytes;
+
+    ScheduleAutoSave();
+  }
+
+  async Task ShowTechnicalSketch() {
+    if (itemDefinition is null or { TechnicalSketch: null }) return;
+
+    await DialogService.ShowDialogAsync<ImageViewer>(itemDefinition.TechnicalSketch, new DialogParameters{ Title="Technical Sketch", });
+  }
+
+  void RemoveImage()
+  {
+    if (itemDefinition == null) return;
+    imagePreviewUrl = null;
+    itemDefinition.TechnicalSketch = null;
+    ScheduleAutoSave();
+  }
+
+  async Task DeleteAsync()
+  {
+    if (itemDefinition == null) return;
+    long projectId = itemDefinition.IdProject;
+    saveTimer?.Dispose();
+    await ItemsService.DeleteItemAsync(itemId);
+    NavigationManager.NavigateTo($"/Project/{projectId}");
+  }
+
+  public void Dispose() => saveTimer?.Dispose();
+}
+

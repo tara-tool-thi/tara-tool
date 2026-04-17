@@ -42,6 +42,7 @@ builder.Services
     .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<ProjectService>();
+builder.Services.AddScoped<ItemsService>();
 builder.Services.AddScoped<SessionService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
