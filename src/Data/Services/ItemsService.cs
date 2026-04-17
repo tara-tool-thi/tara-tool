@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using tara_tool.Data.Tabels;
 
 namespace tara_tool.Data.Services;
 
-public class ItemsService(ApplicationDbContext context, AccessControlService accessControlService)
+public class ItemsService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService)
 {
     public async Task<ItemDefinition?> CreateItemAsync(long projectID, string name)
     {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         if (await accessControlService.CheckUserAccessRightsWrite(projectID) == false)
         {
             return null;
@@ -28,6 +30,7 @@ public class ItemsService(ApplicationDbContext context, AccessControlService acc
 
     public async Task<ItemDefinition?> RetrieveItemDefinitionInfoAsync(long id)
     {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         ItemDefinition? itemDefinition = await context.ItemDefinitions.Include(i => i.Project).AsQueryable().FirstOrDefaultAsync(i => i.Id == id);
         if (itemDefinition is null)
         {
@@ -39,5 +42,17 @@ public class ItemsService(ApplicationDbContext context, AccessControlService acc
         }
 
         return itemDefinition;
+    }
+
+    public async Task Save(ItemDefinition itemDefinition)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        //This is done, to establish tracking of objects, so we do not add multiple data points at once
+        ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets).FirstOrDefault(i => i.Id == itemDefinition.Id);
+        if (item == null)
+        {
+            List<Asset> assets = itemDefinition.Assets.ToList();
+
+        }
     }
 }
