@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using tara_tool.Data.Tabels;
+using tara_tool.Data;
 
 namespace tara_tool.Data.Services;
 
@@ -52,7 +52,6 @@ public class ItemsService(IDbContextFactory<ApplicationDbContext> contextFactory
         if (item == null)
         {
             List<Asset> assets = itemDefinition.Assets.ToList();
-
         }
     }
 }

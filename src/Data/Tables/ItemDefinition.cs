@@ -6,8 +6,12 @@ public class ItemDefinition
 {
   public long Id { get; set; }
   public string ItemName { get; set; } = string.Empty;
+  public string ItemDescription { get; set; } = string.Empty;
+  public string ItemBoundaryText { get; set; } = string.Empty;
   public string ItemFunction { get; set; } = string.Empty;
+  public string PreliminaryArchitectureText { get; set; } = string.Empty;
   public string OperationalEnvironmentText { get; set; } = string.Empty;
+  public Image? TechnicalSketch { get; set; } = null;
   public Image? PreliminaryArchitecture { get; set; } = null;
   public Image? ItemBoundary { get; set; } = null;
   public Image? OperationalEnvironmentImage { get; set; } = null;

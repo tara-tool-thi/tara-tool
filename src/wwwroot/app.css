@@ -234,3 +234,7 @@ table th {
 .date-text {
     color: #888;
 }
+
+.fullwidth {
+    width: 100%;
+}
