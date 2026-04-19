@@ -8,40 +8,24 @@ public class AccessControlService(ApplicationDbContext context, SessionService s
     public async Task<bool> CheckUserAccessRightsRead(long ProjectId)
     {
         ApplicationUser? user = await sessionService.GetApplicationUserAsync();
-        if (user == null)
-        {
-            return false;
-        }
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.ReadAccess == true);
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.ReadAccess == true);
     }
 
     public async Task<bool> CheckUserAccessRightsWrite(long ProjectId)
     {
         ApplicationUser? user = await sessionService.GetApplicationUserAsync();
-        if (user == null)
-        {
-            return false;
-        }
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.WriteAccess == true);
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.WriteAccess == true);
     }
 
     public async Task<bool> CheckUserAccessRightsManage(long ProjectId)
     {
         ApplicationUser? user = await sessionService.GetApplicationUserAsync();
-        if (user == null)
-        {
-            return false;
-        }
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.Manage == true);
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.Manage == true);
     }
 
     public async Task<bool> CheckUserAccessRightsOwner(long ProjectId)
     {
         ApplicationUser? user = await sessionService.GetApplicationUserAsync();
-        if (user == null)
-        {
-            return false;
-        }
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.Owner == true);
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.Owner == true);
     }
 }
