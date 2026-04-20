@@ -13,5 +13,5 @@ public class AttackPath
     public Equipment Equipment { get; set; }
     public long Value { get; set; }
     public AttackFeasibilityRating AttackFeasibilityRating { get; set; }
-    public ICollection<ThreatScenario> ThreatScenarios { get; set; } = [];
+    public virtual ICollection<ThreatScenario> ThreatScenarios { get; set; } = [];
 }

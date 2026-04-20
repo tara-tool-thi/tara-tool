@@ -6,5 +6,5 @@ namespace tara_tool.Data.Tabels;
 // ApplicationUser class
 public class ApplicationUser : IdentityUser
 {
-    public ICollection<AccessControl> Projects { get; set; } = [];
+    public virtual ICollection<AccessControl> Projects { get; set; } = [];
 }

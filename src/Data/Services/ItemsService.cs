@@ -5,7 +5,7 @@ using tara_tool.Data.Tabels;
 
 namespace tara_tool.Data.Services;
 
-public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService, AssetService assetService) : IDataService<ItemDefinition>
+public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService) : IDataService<ItemDefinition>
 {
     public async Task<ItemDefinition?> CreateItemAsync(long projectID, string name)
     {
@@ -61,31 +61,40 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         }
         context.Entry(item).CurrentValues.SetValues(itemDefinition);
 
-        IQueryable<Asset> existing = item.Assets.AsQueryable();
-        List<Asset> incoming = itemDefinition.Assets.ToList();
-
-        foreach (Asset asset in incoming)
+        if (itemDefinition.TechnicalSketch is not null)
         {
-            if (!existing.Any(a => a.Id == asset.Id))
-            {
-                context.Attach(asset);
-                item.Assets.Add(asset);
-            }
+            Image trackedImage = context.Attach(itemDefinition.TechnicalSketch).Entity;
+            item.TechnicalSketch = trackedImage;
+        }
+        if (itemDefinition.PreliminaryArchitecture is not null)
+        {
+            Image trackedImage = context.Attach(itemDefinition.PreliminaryArchitecture).Entity;
+            item.TechnicalSketch = trackedImage;
+        }
+        if (itemDefinition.ItemBoundary is not null)
+        {
+            Image trackedImage = context.Attach(itemDefinition.ItemBoundary).Entity;
+            item.TechnicalSketch = trackedImage;
+        }
+        if (itemDefinition.OperationalEnvironmentImage is not null)
+        {
+            Image trackedImage = context.Attach(itemDefinition.OperationalEnvironmentImage).Entity;
+            item.OperationalEnvironmentImage = trackedImage;
         }
 
-        foreach (Asset asset in existing)
-        {
-            if (!incoming.Any(a => a.Id == asset.Id))
-            {
 
-                item.Assets.Remove(asset);
-            }
+
+        item.Assets.Clear();
+
+        foreach (Asset obj in item.Assets)
+        {
+            Asset tracked = context.Attach(obj).Entity;
+            item.Assets.Add(tracked);
         }
 
         await context.SaveChangesAsync();
 
         return item;
-
     }
 
     public async Task Delete(ItemDefinition itemDefinition)

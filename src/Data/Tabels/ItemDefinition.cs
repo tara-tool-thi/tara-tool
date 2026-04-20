@@ -11,15 +11,15 @@ public class ItemDefinition
   public string ItemFunction { get; set; } = string.Empty;
   public string PreliminaryArchitectureText { get; set; } = string.Empty;
   public string OperationalEnvironmentText { get; set; } = string.Empty;
-  public Image? TechnicalSketch { get; set; } = null;
-  public Image? PreliminaryArchitecture { get; set; } = null;
-  public Image? ItemBoundary { get; set; } = null;
-  public Image? OperationalEnvironmentImage { get; set; } = null;
+  public virtual Image? TechnicalSketch { get; set; } = null;
+  public virtual Image? PreliminaryArchitecture { get; set; } = null;
+  public virtual Image? ItemBoundary { get; set; } = null;
+  public virtual Image? OperationalEnvironmentImage { get; set; } = null;
 
   // Adding the foreign Key here explicitly -> might safe us some extra entity
   // loading, when we want to filter/search/order the ItemDefinitions by Project
   // Id
   public long IdProject { get; set; }
   public required virtual Project Project { get; set; }
-  public ICollection<Asset> Assets { get; set; } = [];
+  public virtual ICollection<Asset> Assets { get; set; } = [];
 }

@@ -11,6 +11,6 @@ public class AccessControl
   public bool Owner { get; set; } = false;
 
 
-  public required ApplicationUser ApplicationUser { get; set; }
-  public required Project Project { get; set; }
+  public virtual required ApplicationUser ApplicationUser { get; set; }
+  public virtual required Project Project { get; set; }
 }

@@ -10,7 +10,7 @@ public class ImpactRating
     public string Comment { get; set; } = string.Empty;
     public long RiskValue { get; set; }
     public ImpactCategory ImpactCategory { get; set; }
-    public TreatmentDecision? TreatmentDecision { get; set; }
+    public virtual TreatmentDecision? TreatmentDecision { get; set; }
 
     public string Description { get; set; } = string.Empty;
     public string Requirements { get; set; } = string.Empty;

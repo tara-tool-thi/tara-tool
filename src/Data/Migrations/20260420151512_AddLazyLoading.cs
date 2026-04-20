@@ -2,11 +2,10 @@
 
 #nullable disable
 
-//Part of a migration only changin relationships and not data. Here for sake of completness
 namespace tara_tool.Migrations
 {
     /// <inheritdoc />
-    public partial class AddedRequiredToImpactRatingAndTreatmentDecision : Migration
+    public partial class AddLazyLoading : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
