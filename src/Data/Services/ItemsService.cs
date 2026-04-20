@@ -100,7 +100,8 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         //Gets all the Assets which are only connected to this 
         await foreach (Asset lonelyAsset in item.Assets.Where(a => a.ItemDefinitions.Count() == 1 && a.ItemDefinitions.Any(i => i.Id == itemDefinition.Id)).ToAsyncEnumerable())
         {
-            await assetService.Delete(lonelyAsset);
+            //Needs to be reactivated, when Assets are there
+            //await assetService.Delete(lonelyAsset);
         }
 
         context.ItemDefinitions.Remove(item);
