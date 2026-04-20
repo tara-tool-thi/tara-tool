@@ -9,4 +9,5 @@ public class TreatmentDecision
     public string Description { get; set; } = string.Empty;
     public string Requirements { get; set; } = string.Empty;
     public ImpactRating? ImpactRating { get; set; }
+    public long ImpactRatingId { get; set; }
 }

@@ -20,6 +20,6 @@ public class ItemDefinition
   // loading, when we want to filter/search/order the ItemDefinitions by Project
   // Id
   public long IdProject { get; set; }
-  public virtual required Project Project { get; set; }
+  public required virtual Project Project { get; set; }
   public ICollection<Asset> Assets { get; set; } = [];
 }

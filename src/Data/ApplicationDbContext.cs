@@ -63,14 +63,16 @@ public class ApplicationDbContext(
         builder.Entity<DamageScenario>()
             .HasMany(e => e.ThreatScenarios)
             .WithMany(e => e.DamageScenarios);
-        builder.Entity<DamageScenario>()
-            .HasOne(e => e.ImpactRating)
-            .WithOne(e => e.DamageScenario);
         builder.Entity<ThreatScenario>()
             .HasMany(e => e.AttackPaths)
             .WithMany(e => e.ThreatScenarios);
         builder.Entity<ImpactRating>()
+            .HasOne(e => e.DamageScenario)
+            .WithOne(e => e.ImpactRating)
+            .HasForeignKey<ImpactRating>(e => e.DamageScenarioId);
+        builder.Entity<ImpactRating>()
             .HasOne(e => e.TreatmentDecision)
-            .WithOne(e => e.ImpactRating);
+            .WithOne(e => e.ImpactRating)
+            .HasForeignKey<TreatmentDecision>(e => e.ImpactRatingId);
     }
 }

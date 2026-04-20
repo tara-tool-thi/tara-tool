@@ -1,7 +1,7 @@
 ﻿@page "/Project/{urlId:long}"
 
 @rendermode InteractiveServer
-@inject ItemsService ItemsService
+@inject ItemDefinitionService ItemsService
 
 @attribute [Authorize]
 
@@ -54,8 +54,8 @@
 </FluentStack>
 
 <br />
-<FluentDataGrid TGridItem="ItemDefinition" Items="@FilteredItems" Pagination="@pagination" OnRowClick="onRowClick"
-                RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
+<FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@pagination"
+                OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
     <EmptyContent>
         <div style="padding:40px; text-align:center; opacity:0.7;">
             <div style="font-size:18px; margin-bottom:8px;">
@@ -68,9 +68,6 @@
     </EmptyContent>
 
     <ChildContent>
-        <TemplateColumn Title="#" Sortable="true" Width="40px">
-            @(FilteredItems.ToList().IndexOf(context) + 1)
-        </TemplateColumn>
         <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name" />
         <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function" />
         <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true"
@@ -123,16 +120,16 @@
 
     private IQueryable<ItemDefinition> itemsQuery = Enumerable.Empty<ItemDefinition>().AsQueryable();
 
-    private IQueryable<ItemDefinition> FilteredItems =>
-        string.IsNullOrWhiteSpace(searchText)
-            ? itemsQuery
-            : itemsQuery.Where(i =>
-                EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
-                EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
-                EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%"));
+    private GridItemsProvider<ItemDefinition> FilteredItemsProvider = default!;
 
     protected override async Task OnInitializedAsync()
     {
+        FilteredItemsProvider = ItemsService.GetItemsProvider(filter: e => e.Where(i => i.IdProject == urlId).Where(i =>
+            string.IsNullOrWhiteSpace(searchText) ||
+                EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
+                EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
+                EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%"))
+        );
         //New project has to be created when urlId == -1
         if (urlId == -1)
         {
@@ -169,7 +166,7 @@
 
     private async Task<Project?> retrieveProjectInfo()
     {
-        Project? retrievedProject = await ProjectService.GetProjectAsync(urlId, null);
+        Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);
 
         return retrievedProject;
     }
@@ -178,7 +175,7 @@
     {
         long.TryParse(wantedProjectID, out long parsedProjectID);
 
-        Project? retrievedProject = await ProjectService.GetProjectAsync(parsedProjectID, null);
+        Project? retrievedProject = await ProjectService.GetItemByIdAsync(parsedProjectID, null);
 
         if (retrievedProject == null)
         {

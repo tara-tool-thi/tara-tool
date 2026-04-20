@@ -5,7 +5,8 @@ using tara_tool.Data.Enums;
 public class ImpactRating
 {
     public long Id { get; set; }
-    public DamageScenario? DamageScenario { get; set; }
+    public virtual DamageScenario? DamageScenario { get; set; }
+    public long DamageScenarioId { get; set; }
     public string Comment { get; set; } = string.Empty;
     public long RiskValue { get; set; }
     public ImpactCategory ImpactCategory { get; set; }

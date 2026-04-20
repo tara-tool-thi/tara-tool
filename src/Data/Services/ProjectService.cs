@@ -1,16 +1,19 @@
+using System.Runtime.CompilerServices;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data;
 using tara_tool.Data.Services;
 using tara_tool.Data.Tabels;
 
 public class ProjectService(
-    IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService, SessionService sessionService)
+    IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService, SessionService sessionService, ItemDefinitionService itemDefinitionService) : IDataService<Project>
 {
 
     private readonly IDbContextFactory<ApplicationDbContext> _contextFactory =
         contextFactory;
 
-    public async Task<Project?> GetProjectAsync(long id, Func<DbSet<Project>, IQueryable<Project>>? extend)
+    public async Task<Project?> GetItemByIdAsync(long id, Func<IQueryable<Project>, IQueryable<Project>>? extend, CancellationToken cancellationToken = default)
     {
         bool access = await accessControlService.CheckUserAccessRightsRead(id);
         if (access == false)
@@ -24,7 +27,7 @@ public class ProjectService(
         IQueryable<Project> query = set.AsQueryable();
         if (extend != null)
         {
-            query = extend.Invoke(context.Projects);
+            query = extend(query);
         }
         return await set.FirstOrDefaultAsync(p => p.Id == id);
     }
@@ -93,7 +96,7 @@ public class ProjectService(
     public async Task AddUserToProjectAsync(long ProjectId, bool Read = true, bool Write = false, bool Manage = false, bool Owner = false)
     {
         using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
-        Project? project = await GetProjectAsync(ProjectId, (set) => set.Include(a => a.Access));
+        Project? project = await GetItemByIdAsync(ProjectId, (set) => set.Include(a => a.Access));
         ApplicationUser? user = await sessionService.GetApplicationUserAsync();
         if (user is null || project is null || await accessControlService.CheckUserAccessRightsManage(ProjectId) is false)
         {
@@ -121,5 +124,83 @@ public class ProjectService(
 
         await context.AccessControls.AddAsync(accessControl);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<Project?> Save(Project entityToSave)
+    {
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == entityToSave.Id);
+
+        if (project == null)
+        {
+            return null;
+        }
+        context.Entry(project).CurrentValues.SetValues(entityToSave);
+        await context.SaveChangesAsync();
+
+        List<ItemDefinition> incoming = entityToSave.ItemDefinitions.ToList();
+        IQueryable<ItemDefinition> existing = project.ItemDefinitions.AsQueryable();
+
+        foreach (ItemDefinition item in incoming)
+        {
+            if (item.Id == 0)
+            {
+                await context.ItemDefinitions.AddAsync(item);
+            }
+            //Item was added
+            if (!existing.Any(i => i.Id == item.Id))
+            {
+                //Establish tracking
+                context.Attach(item);
+                project.ItemDefinitions.Add(item);
+            }
+        }
+
+        foreach (ItemDefinition item in existing)
+        {
+            //Item was removed
+            if (!incoming.Any(i => i.Id == item.Id))
+            {
+                //No tracking needed due to it beeing tracked automatically
+                project.ItemDefinitions.Remove(item);
+            }
+        }
+
+        await context.SaveChangesAsync();
+        return project;
+    }
+
+    //Not yet relevant
+    public GridItemsProvider<Project> GetItemsProvider(Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task Delete(Project itemToDelete)
+    {
+        using ApplicationDbContext applicationDbContext = await _contextFactory.CreateDbContextAsync();
+
+        Project? project = await applicationDbContext.Projects.FirstOrDefaultAsync(i => i.Id == itemToDelete.Id);
+
+        if (project is null)
+        {
+            return;
+        }
+
+        await foreach (AccessControl accessControl in project.Access.ToAsyncEnumerable())
+        {
+            applicationDbContext.AccessControls.Remove(accessControl);
+        }
+
+        await applicationDbContext.SaveChangesAsync();
+
+        await foreach (ItemDefinition itemDefinition in project.ItemDefinitions.ToAsyncEnumerable())
+        {
+            await itemDefinitionService.Delete(itemDefinition);
+        }
+
+        applicationDbContext.Projects.Remove(project);
+        await applicationDbContext.SaveChangesAsync();
     }
 }

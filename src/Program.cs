@@ -32,8 +32,7 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddTransient<AccessControlService>();
-builder.Services.AddTransient<ItemsService>();
+
 
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
@@ -45,9 +44,11 @@ builder.Services
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<ProjectService>();
-builder.Services.AddScoped<ItemsService>();
-builder.Services.AddScoped<SessionService>();
+builder.Services.AddTransient<AccessControlService>();
+builder.Services.AddTransient<ProjectService>();
+builder.Services.AddTransient<ItemDefinitionService>();
+builder.Services.AddTransient<SessionService>();
+builder.Services.AddTransient<AssetService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
