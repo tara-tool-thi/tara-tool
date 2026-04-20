@@ -59,7 +59,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         {
             return null;
         }
-        context.Entry(item).CurrentValues.SetValues(item);
+        context.Entry(item).CurrentValues.SetValues(itemDefinition);
 
         IQueryable<Asset> existing = item.Assets.AsQueryable();
         List<Asset> incoming = itemDefinition.Assets.ToList();
