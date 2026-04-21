@@ -118,6 +118,28 @@ error.Description))}";
         Input ??= new();
     }
 
+    private int counter = 1;
+    private void ShowToast()
+    {
+        Random rnd = new();
+
+        ToastIntent intent = Enum.GetValues<ToastIntent>()[rnd.Next(10)];
+        string? message = $"Simple Toast #{counter++}";
+
+        ToastService.ShowToast(
+            intent,
+            message
+            //rnd.Next(3000, 15000)
+            //"Log click",
+            //EventCallback.Factory.Create<ToastResult>(this, HandleTopAction)
+        );
+    }
+
+    private void HandleTopAction(ToastResult result)
+    {
+        Logger.LogInformation("Toast clicked");
+    }
+
     public async Task RegisterUser(EditContext editContext)
     {
         ApplicationUser? user = CreateUser();
@@ -134,6 +156,9 @@ error.Description))}";
             return;
         }
 
+        ShowToast();
+        @*await Task.Delay(3000);*@
+
         Logger.LogInformation("User created a new account with password.");
 
         string? userId = await UserManager.GetUserIdAsync(user);
@@ -147,10 +172,10 @@ error.Description))}";
         await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));*@
 
 
-        RedirectManager.RedirectTo(
+        @*RedirectManager.RedirectTo(
                 "Account/Login");
 
-        
+        *@
 
         @*if (UserManager.Options.SignIn.RequireConfirmedAccount)
         {
