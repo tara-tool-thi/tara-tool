@@ -1,36 +1,43 @@
 @page "/UserManagement"
 @using Microsoft.AspNetCore.Authorization
+@using System.Security.Cryptography.Pkcs
 @rendermode InteractiveServer
 
-@inject DialogService DialogService
 @inject IDialogService _dialogService
 
 @attribute [Authorize]
 
 <PageTitle>User Management</PageTitle>
 
+<h1>User Management</h1>
+
+<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+        HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+    <FluentSearch Placeholder="Type to search for user..." Style="Width: 25%" @bind-Value=@UserSearch />
     <FluentButton OnClick="OpenDialog">
       + New User
     </FluentButton>
+</FluentStack>
 
-<h1>User Management</h1>
 
 @code {
+    private string? UserSearch;
+    string? email { get; set; } = "";
     private async Task OpenDialog()
     {
-        var text = string.Empty;
-        var dialogInstance = await _dialogService.ShowDialogAsync(@<div>
-        <FluentTextField @bind-Value=text Label="Enter email address:" />
+        IDialogReference dialogInstance = await _dialogService.ShowDialogAsync(@<div>
+        <FluentTextField @bind-Value=email Label="Enter email address:" />
+        <FluentValidationMessage For="() => email" class="text-danger" />
     </div>
     , new DialogParameters
     {
         Title = "Invite new user",
     });
 
-        var result = await dialogInstance.Result;
+        DialogResult result = await dialogInstance.Result;
         if (!result.Cancelled)
         {
-            await _dialogService.ShowSuccessAsync($"Email sent to: {text}", "Success");
+            await _dialogService.ShowSuccessAsync($"Email sent to: {email}", "Success");
         }
     }
 }
