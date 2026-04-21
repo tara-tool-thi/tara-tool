@@ -4,7 +4,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Components;
 using tara_tool.Components.Account;
 using tara_tool.Data;
-using tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
 using tara_tool.Data.Services;
 
 var builder = WebApplication.CreateBuilder(args);

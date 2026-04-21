@@ -1,4 +1,4 @@
-using tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
 namespace tara_tool.Data.Services;
 
 

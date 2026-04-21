@@ -1,6 +1,6 @@
 using tara_tool.Data.Enums;
 
-namespace tara_tool.Data.Tabels;
+namespace tara_tool.Data.Tables;
 
 public class AttackPath
 {

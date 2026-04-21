@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
 
 public class SessionService(
     AuthenticationStateProvider AuthState,

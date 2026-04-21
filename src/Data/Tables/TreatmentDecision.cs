@@ -1,4 +1,4 @@
-namespace tara_tool.Data.Tabels;
+namespace tara_tool.Data.Tables;
 
 using tara_tool.Data.Enums;
 

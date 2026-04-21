@@ -1,6 +1,6 @@
 using tara_tool.Data.Enums;
-using tara_tool.Data.Tabels;
-namespace tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
+namespace tara_tool.Data.Tables;
 
 public class ThreatScenario
 {

@@ -1,4 +1,4 @@
-namespace tara_tool.Data.Tabels;
+namespace tara_tool.Data.Tables;
 
 public class Asset
 {

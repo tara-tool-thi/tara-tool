@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data;
 using tara_tool.Data.Services;
-using tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
 
 public class ProjectService(
     IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService, SessionService sessionService, ItemDefinitionService itemDefinitionService) : IDataService<Project>

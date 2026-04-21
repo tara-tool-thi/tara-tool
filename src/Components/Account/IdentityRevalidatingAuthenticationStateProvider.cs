@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
 
 namespace tara_tool.Components.Account;
 

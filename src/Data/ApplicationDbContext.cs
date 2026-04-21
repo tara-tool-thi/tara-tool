@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
 
 
 namespace tara_tool.Data;

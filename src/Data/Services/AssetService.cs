@@ -1,5 +1,5 @@
 using Microsoft.FluentUI.AspNetCore.Components;
-using tara_tool.Data.Tabels;
+using tara_tool.Data.Tables;
 
 public class AssetService : IDataService<Asset>
 {

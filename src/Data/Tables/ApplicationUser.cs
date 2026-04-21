@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace tara_tool.Data.Tabels;
+namespace tara_tool.Data.Tables;
 
 // Add profile data for application users by adding properties to the
 // ApplicationUser class
