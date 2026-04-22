@@ -9,8 +9,48 @@
 @inject ItemDefinitionService ItemsService
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
+@inject ProjectService projectService
 
 <PageTitle>Item Definition</PageTitle>
+
+<h4>
+    <FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => projectChanged(value))">
+        @foreach (var project in allProjects)                                                         
+        {
+            if (project.Id == projectId)
+            {
+                <FluentOption Value="@project.Id.ToString()" Selected>
+                    @project.ProjectName
+                </FluentOption>
+            }
+            else
+            {
+                <FluentOption Value="@project.Id.ToString()">
+                        @project.ProjectName
+                </FluentOption>
+            }
+        }
+    </FluentSelect>
+    /
+	<FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => itemChanged(value))">
+		@foreach (var item in allItems)                                                         
+			{
+				if ( item.Id == itemDefinition!.Id)
+				{
+					<FluentOption Value="@item.Id.ToString()" Selected>
+						@item.ItemName
+					</FluentOption>
+				}
+				else
+				{
+					<FluentOption Value="@item.Id.ToString()">
+							@item.ItemName
+					</FluentOption>
+				}
+			}
+	</FluentSelect>
+    /
+</h4>
 
 <FluentStack VerticalAlignment="VerticalAlignment.Center">
 	<h2>0. Item Definition</h2>
@@ -150,6 +190,9 @@ else
 	bool ExpandedItemFunction = false;
 	bool ExpandedPreliminaryArchitectureText = false;
 	bool ExpandedOperationalEnvironmentText = false;
+	private long projectId = 0;
+	private List<Project> allProjects = default!;
+	private List<ItemDefinition> allItems = default!;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -170,6 +213,12 @@ else
 
 		if (itemDefinition.TechnicalSketch?.Data != null)
 			imagePreviewUrl = $"data:image/png;base64,{Convert.ToBase64String(itemDefinition.TechnicalSketch.Data)}";
+
+		allProjects = await projectService.GetProjectsAsync(null);
+
+		projectId = itemDefinition.IdProject;
+
+		allItems = await ItemsService.GetItemsAsync(projectId, null);
 	}
 
 	void ScheduleAutoSave()
@@ -250,5 +299,19 @@ else
 	}
 
 	public void Dispose() => saveTimer?.Dispose();
+
+	private async Task projectChanged(string newProjectId)
+    {
+        long.TryParse(newProjectId, out long newProjectIdLong);
+
+        NavigationManager.NavigateTo($"/Project/{newProjectIdLong}");
+    }
+
+	private async Task itemChanged(string newItemId)
+    {
+        long.TryParse(newItemId, out long newItemIdLong);
+
+        NavigationManager.NavigateTo($"/Item/{newItemIdLong}");
+    }
 }
 

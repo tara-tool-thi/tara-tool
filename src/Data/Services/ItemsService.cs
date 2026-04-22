@@ -5,7 +5,7 @@ using tara_tool.Data.Tables;
 
 namespace tara_tool.Data.Services;
 
-public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService) : IDataService<ItemDefinition>
+public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService, SessionService sessionService) : IDataService<ItemDefinition>
 {
     public async Task<ItemDefinition?> CreateItemAsync(long projectID, string name)
     {
@@ -48,6 +48,30 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         }
 
         return itemDefinition;
+    }
+
+    public async Task<List<ItemDefinition>> GetItemsAsync(long projectID, Func<DbSet<ItemDefinition>, IQueryable<ItemDefinition>>? extend = null)
+    {
+        using ApplicationDbContext context =
+            await contextFactory.CreateDbContextAsync();
+        DbSet<ItemDefinition> itemSet = context.ItemDefinitions;
+        IQueryable<ItemDefinition> itemQuery = itemSet.AsQueryable();
+        if (extend != null)
+        {
+            itemQuery = extend.Invoke(itemSet);
+        }
+        ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+        if (user is null)
+        {
+            return new List<ItemDefinition>();
+        }
+
+        itemQuery = itemQuery.Where(
+          p => p.IdProject == projectID
+        );
+          
+
+        return await itemQuery.ToListAsync();
     }
 
     public async Task<ItemDefinition?> Save(ItemDefinition itemDefinition)
