@@ -9,7 +9,10 @@ public class ImpactRating
     public long DamageScenarioId { get; set; }
     public string Comment { get; set; } = string.Empty;
     public long RiskValue { get; set; }
-    public ImpactCategory ImpactCategory { get; set; }
+    public ImpactStrength? FinancialImpact { get; set; }
+    public ImpactStrength? SafetyImpact { get; set; }
+    public ImpactStrength? OperationalImpact { get; set; }
+    public ImpactStrength? PrivacyImpact { get; set; }
     public virtual TreatmentDecision? TreatmentDecision { get; set; }
 
     public string Description { get; set; } = string.Empty;
