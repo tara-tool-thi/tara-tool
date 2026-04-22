@@ -4,40 +4,40 @@
 @inject ItemDefinitionService ItemsService
 @inject NavigationManager navigator
 
+@rendermode InteractiveServer
+
 @if (segments[0] == "Project" || segments[0] == "Item")
 {
 <h4>
-    <FluentSelect TOption="string" Width="min-content" ValueChanged="@(value => projectChanged(value))">
+    <FluentSelect TOption="string" Width="min-content" Value="@currentProjectIdStr" ValueChanged="@(value => projectChanged(value))">
         @foreach (var project in allProjects)                                                         
         {
             if (project.Id == currentProjectId) 
             {
-                <FluentOption Value="@project.Id.ToString()" Selected>
+                <FluentOption Value="@project.Id.ToString()">
                     @project.ProjectName
-                    @currentProjectId
                 </FluentOption>
             }
             else
             {
                 <FluentOption Value="@project.Id.ToString()">
                         @project.ProjectName
-                        @currentProjectId
                 </FluentOption>
             }
         }
     </FluentSelect>
+    /&nbsp;
 </h4>
 }
 @if (segments[0] == "Item")
 {
 <h4>
-    &nbsp;/
-	<FluentSelect TOption="string" Width="min-content" ValueChanged="@(value => itemChanged(value))">
+	<FluentSelect TOption="string" Width="min-content" Value="@currentItemIdStr" ValueChanged="@(value => itemChanged(value))">
 		@foreach (var item in allItems)                                                         
 			{
-				if ( item.Id == currentItemId)
+				if (item.Id == currentItemId)
 				{
-					<FluentOption Value="@item.Id.ToString()" Selected>
+					<FluentOption Value="@item.Id.ToString()">
 						@item.ItemName
 					</FluentOption>
 				}
@@ -49,7 +49,7 @@
 				}
 			}
 	</FluentSelect>
-
+    &nbsp;/
 </h4>
 }
 
@@ -58,38 +58,41 @@
 
     private List<Project> allProjects = default!;
 
-    private long currentProjectId;    
+    private string currentProjectIdStr = "0";
+    private long currentProjectId{
+        get 
+        { 
+            long.TryParse(currentProjectIdStr, out long currentProjectIdLong);
+            return currentProjectIdLong;
+        }
+        
+    }  
 
-    private long currentItemId = 0;
+    private string currentItemIdStr = "0";
+
+    private long currentItemId{
+        get 
+        { 
+            long.TryParse(currentItemIdStr, out long currentItemIdLong);
+            return currentItemIdLong;
+        }
+        
+    }
     private List<ItemDefinition> allItems = default!;
 
-    string[] segments = Array.Empty<string>();
+    string[] segments = new string[] { "", "" };
     
     
     protected override async Task OnInitializedAsync()
     {
-        string relativePath = navigator.ToBaseRelativePath(navigator.Uri);
+        navigator.LocationChanged += OnLocationChanged;
 
-        segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        await updateSegments();
 
-        if (segments.Length == 0)
-            segments = new string[] { "0" , "0" };
+        await updateIds();
 
+        StateHasChanged();
 
-        if (segments[0] == "Project")    
-            long.TryParse(segments[1], out currentProjectId);
-        if (segments[0] == "Item")
-        {
-            long.TryParse(segments[1], out currentItemId);
-            ItemDefinition? currentItem = await ItemsService.GetItemByIdAsync(currentItemId);
-            currentProjectId = currentItem!.IdProject;
-        }
-
-
-        allProjects = await ProjectService.GetProjectsAsync(null);
-
-        allItems = await ItemsService.GetItemsAsync(currentProjectId, null);
-        
     }
 
     private async Task projectChanged(string newProjectId)
@@ -97,8 +100,6 @@
         long.TryParse(newProjectId, out long newProjectIdLong);
 
         navigator.NavigateTo($"/Project/{newProjectIdLong}");
-
-        Console.WriteLine("haalo");
     }
 
 	private async Task itemChanged(string newItemId)
@@ -107,4 +108,47 @@
 
         navigator.NavigateTo($"/Item/{newItemIdLong}");
     }
+
+    private async Task updateSegments()
+    {
+        string relativePath = navigator.ToBaseRelativePath(navigator.Uri);
+
+        segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+    }
+
+    private async Task updateIds()
+    {
+        navigator.LocationChanged -= OnLocationChanged;
+        if (segments.Length == 0)
+            segments = new string[] { "" , "" };
+
+
+        if (segments[0] == "Project" && segments[1] != "-1") {
+            currentProjectIdStr = segments[1];
+            allProjects = await ProjectService.GetProjectsAsync(null);
+        }    
+        if (segments[0] == "Item")
+        {
+            currentItemIdStr = segments[1];
+            ItemDefinition? currentItem = await ItemsService.GetItemByIdAsync(currentItemId);
+            currentProjectIdStr = currentItem!.IdProject.ToString();
+            allProjects = await ProjectService.GetProjectsAsync(null);
+            allItems = await ItemsService.GetItemsAsync(currentProjectId, null);
+        }
+        navigator.LocationChanged += OnLocationChanged;
+    }
+
+    private async void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        await updateSegments();
+
+        await updateIds();
+
+        StateHasChanged();
+    }
+
+    public void Dispose()
+{
+    navigator.LocationChanged -= OnLocationChanged;
+}
 }
