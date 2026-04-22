@@ -1,4 +1,4 @@
-namespace tara_tool.Data;
+namespace tara_tool.Data.Tables;
 
 using System.Security.Cryptography;
 

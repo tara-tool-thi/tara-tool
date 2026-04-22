@@ -1,4 +1,4 @@
-namespace tara_tool.Data;
+namespace tara_tool.Data.Tables;
 
 public class AccessControl
 {
@@ -10,6 +10,7 @@ public class AccessControl
   public bool Manage { get; set; } = false;
   public bool Owner { get; set; } = false;
 
-  public required ApplicationUser Member { get; set; }
-  public required Project Project { get; set; }
+
+  public virtual required ApplicationUser ApplicationUser { get; set; }
+  public virtual required Project Project { get; set; }
 }

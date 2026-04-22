@@ -1,4 +1,4 @@
-namespace tara_tool.Data;
+namespace tara_tool.Data.Tables;
 
 public class Project
 {
@@ -7,6 +7,6 @@ public class Project
   public DateTime DateCreated { get; set; } = DateTime.UtcNow;
   public DateTime DateLastChanged { get; set; } = DateTime.UtcNow;
 
-  public ICollection<AccessControl> Access { get; set; } = [];
-  public ICollection<ItemDefinition> ItemDefinitions { get; set; } = [];
+  public virtual ICollection<AccessControl> Access { get; set; } = [];
+  public virtual ICollection<ItemDefinition> ItemDefinitions { get; set; } = [];
 }

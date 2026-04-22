@@ -1,25 +1,30 @@
+using tara_tool.Data.Tables;
 namespace tara_tool.Data.Services;
 
 
-public class AccessControlService(ApplicationDbContext context)
+public class AccessControlService(ApplicationDbContext context, SessionService sessionService)
 {
-    public bool CheckUserAccessRightsRead(long ProjectId, ApplicationUser user)
+    public async Task<bool> CheckUserAccessRightsRead(long ProjectId)
     {
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.ReadAccess == true);
+        ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.ReadAccess == true);
     }
 
-    public bool CheckUserAccessRightsWrite(long ProjectId, ApplicationUser user)
+    public async Task<bool> CheckUserAccessRightsWrite(long ProjectId)
     {
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.WriteAccess == true);
+        ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.WriteAccess == true);
     }
 
-    public bool CheckUserAccessRightsManage(long ProjectId, ApplicationUser user)
+    public async Task<bool> CheckUserAccessRightsManage(long ProjectId)
     {
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.Manage == true);
+        ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.Manage == true);
     }
 
-    public bool CheckUserAccessRightsOwner(long ProjectId, ApplicationUser user)
+    public async Task<bool> CheckUserAccessRightsOwner(long ProjectId)
     {
-        return context.AccessControls.Any(a => a.Project.Id == ProjectId && a.Member.Id == user.Id && a.Owner == true);
+        ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+        return user != null && context.AccessControls.Any(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.Owner == true);
     }
 }

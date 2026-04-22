@@ -1,13 +1,17 @@
 ﻿@page "/Project/{urlId:long}"
 
 @rendermode InteractiveServer
+@inject ItemDefinitionService ItemsService
 
 @attribute [Authorize]
 
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Configuration
+@using Mono.TextTemplating
 @using tara_tool.Data.Services
+@using tara_tool.Data.Tables
 
 
 <!-- Db Context has to be swapped from ApplicationDbContext to IDbContextFactory as per our guidelines -->
@@ -18,22 +22,17 @@
     builder.Services.AddDbContextFactory<ApplicationDbContext>(
     options => options.UseSqlite(connectionString)); 
     in Program.cs -->
-@inject ApplicationDbContext Db 
 
 @inject NavigationManager NavigationManager
-
-@inject UserManager<ApplicationUser> UserManager
-
-@inject AuthenticationStateProvider AuthStateProvider
-
 @inject ProjectService ProjectService
+@inject DateTimeService DateTimeService
 
 
 <PageTitle>Project</PageTitle>
 
 <br />
 <h2>
-    <FluentStack>
+    <FluentStack @key="@retrievedProjectLastModifiedDate">
         @projectName
         <FluentSpacer />
         Last Edited: @retrievedProjectLastModifiedDate
@@ -41,13 +40,8 @@
 </h2>
 <br />
 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
-    <FluentTextField Label="Search for an Item"
-                     Placeholder="Search by name, function or environment"
-                     Style="width: 250px;"
-                     @bind-Value="searchText"
-                     Immediate="true" />
-
-
+    <FluentTextField Label="Search for an Item" Placeholder="Search by name, function or environment"
+                     Style="width: 250px;" @bind-Value="searchText" Immediate="true" ImmediateDelay="500" />
     <FluentSpacer />
 
     <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
@@ -56,7 +50,9 @@
 </FluentStack>
 
 <br />
-<FluentDataGrid TGridItem="ItemDefinition" Items="@FilteredItems" Pagination="@pagination" OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
+<FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@pagination"
+                OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;"
+                @key="@searchText">
     <EmptyContent>
         <div style="padding:40px; text-align:center; opacity:0.7;">
             <div style="font-size:18px; margin-bottom:8px;">
@@ -69,20 +65,18 @@
     </EmptyContent>
 
     <ChildContent>
-        <TemplateColumn Title="#" Sortable="true" Width="40px" >
-            @(FilteredItems.ToList().IndexOf(context) + 1)
-        </TemplateColumn>
-        <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name"/>
-        <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function"/>
-        <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true" Title="Operational Environment"/>
+        <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name" />
+        <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function" />
+        <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true"
+                        Title="Operational Environment" />
     </ChildContent>
 </FluentDataGrid>
 
-<FluentPaginator State="@pagination" >
+<FluentPaginator State="@pagination">
     <SummaryTemplate>
         <FluentStack VerticalAlignment="VerticalAlignment.Center">
             <span><b>@pagination.TotalItemCount</b>&nbsp;items</span>
-            <FluentSpacer/>
+            <FluentSpacer />
             <span>Items per page:</span>
             <FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => onPageCountChange(value))">
                 <FluentOption Value="5">
@@ -113,75 +107,56 @@
 
     private DateTime retrievedProjectLastModifiedDate;
 
-    private string wantedProjectID = "";
-
-    private string retrievedProjectName = "";
-
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
-    private string searchText = string.Empty;
+    private string lastEdit = string.Empty;
 
-    private IQueryable<ItemDefinition> itemsQuery = Enumerable.Empty<ItemDefinition>().AsQueryable();
+    private string searchText
+    {
+        get => field;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                field = string.Empty;
+            }
 
-    private IQueryable<ItemDefinition> FilteredItems =>
-        string.IsNullOrWhiteSpace(searchText)
-            ? itemsQuery
-            : itemsQuery.Where(i =>
-                EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
-                EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
-                EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%"));
+            else
+            {
+                field = value;
+            }
+        }
+    } = string.Empty;
+
+    private GridItemsProvider<ItemDefinition> FilteredItemsProvider = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        AuthenticationState? authState = await AuthStateProvider.GetAuthenticationStateAsync();
-
-        System.Security.Claims.ClaimsPrincipal? principal = authState.User;
-    
-        ApplicationUser? user  = await UserManager.GetUserAsync(principal);
-
-        if (user is null)
-        {
-            NavigationManager.NavigateTo($"/Account/InvalidUser");
-            return;
-        }
-
+        FilteredItemsProvider = ItemsService.GetItemsProvider(filter: e => e.Where(i => i.IdProject == urlId).Where(i =>
+            string.IsNullOrWhiteSpace(searchText) ||
+                EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
+                EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
+                EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%"))
+        );
         //New project has to be created when urlId == -1
-        if(urlId == -1)
+        if (urlId == -1)
         {
-            Project newProject = await CreateProjectAsync("New unnamed Project");
+            Project? newProject = await ProjectService.CreateNewProjectAsync("New unnamed Project");
 
-            AccessControl newAccessControl = new AccessControl
+            if (newProject is null)
             {
-                Member = user!,
-                Project = newProject,
-                ReadAccess = true,
-                WriteAccess = true,
-                Manage = true,
-                Owner = true,
-            };
+                NavigationManager.NavigateTo("/");
+                return;
+            }
 
-            Db.AccessControls.Add(newAccessControl);
-
-            await Db.SaveChangesAsync();
-
-            NavigationManager.NavigateTo($"/Project/{newProject.Id}");
-
-            return;
-        }
-
-        // Check if user has read access to this project
-        bool userHasReadRights =  new AccessControlService(Db).CheckUserAccessRightsRead(urlId, user);
-
-        if(!userHasReadRights)
-        {
-            NavigationManager.NavigateTo("/");
+            NavigationManager.NavigateTo($"Project/{newProject.Id}");
 
             return;
         }
 
         Project? requestedProject = await retrieveProjectInfo();
 
-        if(requestedProject == null)
+        if (requestedProject == null)
         {
             NavigationManager.NavigateTo("/");
 
@@ -189,60 +164,36 @@
         }
 
         projectName = requestedProject!.ProjectName;
-
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
 
-        itemsQuery = Db.ItemDefinitions
-                        .Where(p => p.IdProject == urlId);
-
     }
 
-    private async Task createProject(string name)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await CreateProjectAsync(name);
-        
-    }
-
-    private async Task<Project> CreateProjectAsync(string name)
-    {
-        Project newProject = new Project
+        if (firstRender)
         {
-            ProjectName = name
-        };
-
-        Db.Projects.Add(newProject);
-        await Db.SaveChangesAsync();
-
-        return newProject;
+            retrievedProjectLastModifiedDate = await DateTimeService.GetLocalDateTime(retrievedProjectLastModifiedDate);
+            StateHasChanged();
+        }
     }
 
+    
     private async Task<Project?> retrieveProjectInfo()
     {
-        Project? retrievedProject = await ProjectService.GetProjectAsync(urlId, null);
+        Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);
 
         return retrievedProject;
     }
 
-    private async Task retrieveProjectInfoButton()
-    {
-        long.TryParse(wantedProjectID, out long parsedProjectID);
-
-        Project? retrievedProject = await ProjectService.GetProjectAsync(parsedProjectID, null);
-
-        if (retrievedProject == null)
-        {
-            // handle "not found"
-            // Add redirect to Invalid Project Page;
-        }
-
-        retrievedProjectName = retrievedProject!.ProjectName;
-    }
 
     private async Task addItem(string name)
     {
-        ItemsService itemsService = new ItemsService(Db);
- 
-        ItemDefinition newItem = await itemsService.CreateItemAsync(urlId, name);
+        ItemDefinition? newItem = await ItemsService.CreateItemAsync(urlId, name);
+
+        if (newItem == null)
+        {
+            return;
+        }
 
         Project? requestedProject = await retrieveProjectInfo();
 
@@ -251,12 +202,7 @@
             projectName = requestedProject.ProjectName;
             retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
         }
-
-        await Db.SaveChangesAsync();
-        // Refresh the datagrid to show new item
-        itemsQuery = Db.ItemDefinitions
-                        .Where(p => p.IdProject == urlId);
-
+        await ItemsService.Save(newItem);
         NavigationManager.NavigateTo($"/Item/{newItem.Id}");
     }
 
@@ -276,4 +222,3 @@
         await pagination.SetItemsPerPageAsync(int.Parse(newValue));
     }
 }
-
