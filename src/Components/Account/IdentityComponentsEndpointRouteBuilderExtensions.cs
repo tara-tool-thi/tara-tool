@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using tara_tool.Components.Account.Pages;
 using tara_tool.Components.Account.Pages.Manage;
-using tara_tool.Data;
+using tara_tool.Data.Tables;
 
 namespace Microsoft.AspNetCore.Routing;
 

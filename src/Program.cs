@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Components;
 using tara_tool.Components.Account;
 using tara_tool.Data;
+using tara_tool.Data.Tables;
+using tara_tool.Data.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,7 @@ builder.Services.AddFluentUIComponents();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
+builder.Services.AddScoped<DateTimeService>();
 builder.Services.AddScoped<AuthenticationStateProvider,
                            IdentityRevalidatingAuthenticationStateProvider>();
 
@@ -25,13 +27,13 @@ builder.Services
     })
     .AddIdentityCookies();
 
-var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection") ??
-    throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' not found.");
-builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlite(connectionString));
+builder.Services.AddDbContextFactory<ApplicationDbContext>(
+    options => ApplicationDbContext.GetDbConfig(options, builder),
+    ServiceLifetime.Scoped);
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+
 
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
@@ -43,6 +45,11 @@ builder.Services
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddTransient<AccessControlService>();
+builder.Services.AddTransient<ProjectService>();
+builder.Services.AddTransient<ItemDefinitionService>();
+builder.Services.AddTransient<SessionService>();
+builder.Services.AddTransient<AssetService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 

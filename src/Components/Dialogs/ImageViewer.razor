@@ -1,0 +1,50 @@
+@implements IDialogContentComponent<Image>
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+
+<script type="text/javascript" src="@Assets[" Components/Dialogs/ImageViewer.razor.js"]"></script>
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size28.Image())" />
+        <h3>@Dialog?.Instance.Parameters.Title</h3>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <div class="image-viewer" /> <!-- This helps differentiate this dialog from others in JS -->
+    <img src="@imgUrl" />
+</FluentDialogBody>
+
+<FluentDialogFooter Visible="false" />
+
+@code {
+    [Parameter]
+    public required Image Content { get; set; }
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        Dialog?.Hide();
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        JSRuntime.InvokeVoidAsync("applyControlStyles");
+        // needed because the control element styled by this function is
+        // outside the scope of ImageViewer.razor.css
+
+        Dialog?.Show();
+        return base.OnAfterRenderAsync(firstRender);
+    }
+
+    private string imgUrl => Content switch
+    {
+        { Data: not null } => $"data:image/png;base64,{Convert.ToBase64String(Content.Data)}",
+        _ => ""
+    };
+}
