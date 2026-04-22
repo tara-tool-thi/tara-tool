@@ -51,7 +51,7 @@
 
 <br />
 <FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@pagination"
-                OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;"
+                OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;"
                 @key="@searchText">
     <EmptyContent>
         <div style="padding:40px; text-align:center; opacity:0.7;">
