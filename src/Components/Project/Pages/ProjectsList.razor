@@ -11,7 +11,8 @@
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
              HorizontalAlignment="HorizontalAlignment.Left">
-    <FluentSearch Placeholder="Search projects by name…" Style="width: 25%;" @bind-Value=@TitleSearch />
+    <FluentSearch Placeholder="Search projects by name…" Style="width: 25%;" @bind-Value=@TitleSearch Immediate=true
+                  ImmediateDelay="500" />
     <FluentButton id="SelectOwnerPopoverButton" OnClick="@(() => openOwnerPopover = !openOwnerPopover)">
         @*The creation of an inline creation of the icon via ? true : false doesnt work - Ardwetha*@
         @if (openOwnerPopover)
@@ -53,9 +54,9 @@
 {
     <div @key=@TitleSearch>
         @foreach (var project in allProjectsWithAccess.Where(project => (TitleSearch == null ||
-                    project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
-                                selectedMails.Contains(project.Access?.FirstOrDefault(accessControl => accessControl.Owner ==
-                    true)?.ApplicationUser.Email ?? string.Empty))))
+                                                                                                            project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
+                                                                                                                        selectedMails.Contains(project.Access?.FirstOrDefault(accessControl => accessControl.Owner ==
+                                                                                                            true)?.ApplicationUser.Email ?? string.Empty))))
         {
             <ProjectCard Project=@project />
         }
@@ -83,6 +84,7 @@
             {
                 _titleSearchBack = value;
             }
+            StateHasChanged();
         }
     }
 

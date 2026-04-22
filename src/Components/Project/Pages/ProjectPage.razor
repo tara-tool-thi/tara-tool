@@ -46,7 +46,7 @@
 <br />
 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
     <FluentTextField Label="Search for an Item" Placeholder="Search by name, function or environment"
-                     Style="width: 250px;" @bind-Value="searchText" Immediate="true" />
+                     Style="width: 250px;" @bind-Value="searchText" Immediate="true" ImmediateDelay="500" />
     <FluentSpacer />
 
     <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
@@ -56,7 +56,8 @@
 
 <br />
 <FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@pagination"
-                OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;">
+                OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:900px; overflow:auto;"
+                @key="@searchText">
     <EmptyContent>
         <div style="padding:40px; text-align:center; opacity:0.7;">
             <div style="font-size:18px; margin-bottom:8px;">
@@ -117,7 +118,24 @@
 
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
-    private string searchText = string.Empty;
+    private string searchText
+    {
+        get => field;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                field = string.Empty;
+            }
+
+            else
+            {
+                field = value;
+            }
+
+            StateHasChanged();
+        }
+    } = string.Empty;
 
     private IQueryable<ItemDefinition> itemsQuery = Enumerable.Empty<ItemDefinition>().AsQueryable();
 
