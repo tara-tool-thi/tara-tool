@@ -60,7 +60,8 @@ public class ApplicationDbContext(
             .HasMany(e => e.AssetGroup);
         builder.Entity<Asset>()
             .HasMany(e => e.DamageScenarios)
-            .WithMany(e => e.Assets);
+            .WithOne(e => e.Asset)
+            .HasForeignKey(e => e.AssetId);
         builder.Entity<DamageScenario>()
             .HasMany(e => e.ThreatScenarios)
             .WithMany(e => e.DamageScenarios);

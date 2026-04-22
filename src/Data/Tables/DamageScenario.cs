@@ -3,7 +3,8 @@ namespace tara_tool.Data.Tables;
 public class DamageScenario
 {
     public long Id { get; set; }
-    public virtual ICollection<Asset> Assets { get; set; } = [];
+    public long AssetId { get; set; }
+    public virtual Asset? Asset { get; set; }
     public string Description { get; set; } = string.Empty;
     public bool ConfidentialityImpact { get; set; } = false;
     public bool IntegrityImpact { get; set; } = false;
