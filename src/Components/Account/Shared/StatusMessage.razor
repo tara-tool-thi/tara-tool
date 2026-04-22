@@ -1,12 +1,26 @@
-﻿@if (!string.IsNullOrEmpty(DisplayMessage))
+@if (!string.IsNullOrEmpty(DisplayMessage))
 {
     var statusMessageClass = DisplayMessage.StartsWith("Error") ? "danger" : "success";
     <div class="alert alert-@statusMessageClass" role="alert">
-        @DisplayMessage
+        @if (Message is not null and not "")
+        {
+            @DisplayMessage
+        }
+        else if (messages is { Length: > 0 })
+        {
+            @messages[0]
+            @foreach (string message in messages[1..])
+            {
+                <br/>
+                @message
+            }
+        }
     </div>
 }
 
 @code {
+    private string[] messages = [];
+
     private string? messageFromCookie;
 
     [Parameter]
@@ -24,6 +38,8 @@
         if (messageFromCookie is not null)
         {
             HttpContext.Response.Cookies.Delete(IdentityRedirectManager.StatusCookieName);
+            messages = messageFromCookie.Split((string[])["\n", "\r", "\r\n"], StringSplitOptions.RemoveEmptyEntries);
         }
+
     }
 }
