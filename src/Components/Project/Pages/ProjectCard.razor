@@ -1,0 +1,39 @@
+@inject NavigationManager navigator
+
+<FluentCard @onclick=@(() => navigator.NavigateTo($"Project/{Project!.Id}"))>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <h4>@Project.ProjectName</h4>
+        <FluentSpacer />
+        <p class="date-text">
+            @Project.DateLastChanged.ToShortDateString()
+        </p>
+    </FluentStack>
+    <p class="tiny-text">@GetUpdatedString()</p>
+</FluentCard>
+
+<br />
+
+
+@code {
+    [Parameter]
+    public required Project Project { get; set; }
+
+    private string GetUpdatedString()
+    {
+        string ret = string.Empty;
+        TimeSpan span = DateTime.UtcNow - Project.DateLastChanged;
+        ret = span switch
+        {
+            { Days: > 0 } => $"Updated {span.Days} days ago -  ",
+            { Hours: > 0 } => $"Updated {span.Hours} hours ago -  ",
+            { Minutes: > 0 } => $"Updated {span.Minutes} minutes ago - ",
+            _ => $"Updated {span.Seconds} seconds ago - "
+        };
+
+
+        ret += $"Owner: {Project!.Access?.Where(a => a.Owner == true).FirstOrDefault()?.ApplicationUser.Email ?? "null"}";
+        return ret;
+    }
+}
+

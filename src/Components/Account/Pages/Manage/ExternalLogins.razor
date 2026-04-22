@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using tara_tool.Data
+@using tara_tool.Data.Tables
 
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -29,7 +30,9 @@
                                 <div>
                                     <input type="hidden" name="@nameof(LoginProvider)" value="@login.LoginProvider" />
                                     <input type="hidden" name="@nameof(ProviderKey)" value="@login.ProviderKey" />
-                                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Title="@($"Remove this {login.ProviderDisplayName} login from your account")">Remove</FluentButton>
+                                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent"
+                                                  Title="@($"Remove this {login.ProviderDisplayName} login from your account")">Remove
+                                    </FluentButton>
                                 </div>
                             </form>
                         }
@@ -53,7 +56,8 @@
             <p>
                 @foreach (var provider in otherLogins)
                 {
-                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Name="Provider" Value="@provider.Name" Title="@($"Log in using your {provider.DisplayName} account")">
+                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Name="Provider" Value="@provider.Name"
+                                  Title="@($"Log in using your {provider.DisplayName} account")">
                         @provider.DisplayName
                     </FluentButton>
                 }

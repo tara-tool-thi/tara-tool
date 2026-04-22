@@ -2,6 +2,7 @@
 
 @using Microsoft.AspNetCore.Identity
 @using tara_tool.Data
+@using tara_tool.Data.Tables
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityRedirectManager RedirectManager
@@ -26,7 +27,8 @@ else
         </p>
         <p>
             Generating new recovery codes does not change the keys used in authenticator apps. If you wish to change the key
-            used in an authenticator app you should <a href="Account/Manage/ResetAuthenticator">reset your authenticator keys.</a>
+            used in an authenticator app you should <a href="Account/Manage/ResetAuthenticator">reset your authenticator
+            keys.</a>
         </p>
     </div>
     <div>
