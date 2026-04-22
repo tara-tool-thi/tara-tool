@@ -8,6 +8,8 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.EntityFrameworkCore
+@using System.Configuration
+@using Mono.TextTemplating
 @using tara_tool.Data.Services
 @using tara_tool.Data.Tables
 
@@ -20,24 +22,17 @@
     builder.Services.AddDbContextFactory<ApplicationDbContext>(
     options => options.UseSqlite(connectionString)); 
     in Program.cs -->
-@inject ApplicationDbContext Db
 
 @inject NavigationManager NavigationManager
-
-@inject UserManager<ApplicationUser> UserManager
-@inject ProjectService projectService
-@inject AccessControlService AccessControlService
-
-@inject AuthenticationStateProvider AuthStateProvider
-
 @inject ProjectService ProjectService
+@inject DateTimeService DateTimeService
 
 
 <PageTitle>Project</PageTitle>
 
 <br />
 <h2>
-    <FluentStack>
+    <FluentStack @key="@retrievedProjectLastModifiedDate">
         @projectName
         <FluentSpacer />
         Last Edited: @retrievedProjectLastModifiedDate
@@ -112,11 +107,9 @@
 
     private DateTime retrievedProjectLastModifiedDate;
 
-    private string wantedProjectID = "";
-
-    private string retrievedProjectName = "";
-
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
+
+    private string lastEdit = string.Empty;
 
     private string searchText
     {
@@ -135,8 +128,6 @@
         }
     } = string.Empty;
 
-    private IQueryable<ItemDefinition> itemsQuery = Enumerable.Empty<ItemDefinition>().AsQueryable();
-
     private GridItemsProvider<ItemDefinition> FilteredItemsProvider = default!;
 
     protected override async Task OnInitializedAsync()
@@ -150,8 +141,8 @@
         //New project has to be created when urlId == -1
         if (urlId == -1)
         {
-            Project? newProject = await projectService.CreateNewProjectAsync("New unnamed Project");
-            
+            Project? newProject = await ProjectService.CreateNewProjectAsync("New unnamed Project");
+
             if (newProject is null)
             {
                 NavigationManager.NavigateTo("/");
@@ -173,14 +164,20 @@
         }
 
         projectName = requestedProject!.ProjectName;
-
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
-
-        itemsQuery = Db.ItemDefinitions
-                        .Where(p => p.IdProject == urlId);
 
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            retrievedProjectLastModifiedDate = await DateTimeService.GetLocalDateTime(retrievedProjectLastModifiedDate);
+            StateHasChanged();
+        }
+    }
+
+    
     private async Task<Project?> retrieveProjectInfo()
     {
         Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);
@@ -188,20 +185,6 @@
         return retrievedProject;
     }
 
-    private async Task retrieveProjectInfoButton()
-    {
-        long.TryParse(wantedProjectID, out long parsedProjectID);
-
-        Project? retrievedProject = await ProjectService.GetItemByIdAsync(parsedProjectID, null);
-
-        if (retrievedProject == null)
-        {
-            // handle "not found"
-            // Add redirect to Invalid Project Page;
-        }
-
-        retrievedProjectName = retrievedProject!.ProjectName;
-    }
 
     private async Task addItem(string name)
     {
@@ -219,12 +202,7 @@
             projectName = requestedProject.ProjectName;
             retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
         }
-
-        await Db.SaveChangesAsync();
-        // Refresh the datagrid to show new item
-        itemsQuery = Db.ItemDefinitions
-                        .Where(p => p.IdProject == urlId);
-
+        await ItemsService.Save(newItem);
         NavigationManager.NavigateTo($"/Item/{newItem.Id}");
     }
 

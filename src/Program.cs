@@ -15,6 +15,7 @@ builder.Services.AddFluentUIComponents();
 
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
+builder.Services.AddScoped<DateTimeService>();
 builder.Services.AddScoped<AuthenticationStateProvider,
                            IdentityRevalidatingAuthenticationStateProvider>();
 
