@@ -17,10 +17,10 @@
 <!-- Db Context has to be swapped from ApplicationDbContext to IDbContextFactory as per our guidelines -->
 <!-- for IDbContextFactory to work I would have to swap
     builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlite(connectionString));
-    for
+    options => options.UseSqlite(connectionString)); 
+    for 
     builder.Services.AddDbContextFactory<ApplicationDbContext>(
-    options => options.UseSqlite(connectionString));
+    options => options.UseSqlite(connectionString)); 
     in Program.cs -->
 
 @inject NavigationManager NavigationManager
@@ -38,26 +38,6 @@
         Last Edited: @retrievedProjectLastModifiedDate
     </FluentStack>
 </h2>
-<h4>
-    <FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => projectChanged(value))">
-        @foreach (var project in allProjects)
-        {
-            if (project.Id == urlId)
-            {
-                <FluentOption Value="@project.Id.ToString()" Selected>
-                    @project.ProjectName
-                </FluentOption>
-            }
-            else
-            {
-                <FluentOption Value="@project.Id.ToString()">
-                        @project.ProjectName
-                </FluentOption>
-            }
-        }
-    </FluentSelect>
-    /
-</h4>
 <br />
 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
     <FluentTextField Label="Search for an Item" Placeholder="Search by name, function or environment"
@@ -150,8 +130,6 @@
 
     private GridItemsProvider<ItemDefinition> FilteredItemsProvider = default!;
 
-    private List<Project> allProjects = default!;
-
     protected override async Task OnInitializedAsync()
     {
         FilteredItemsProvider = ItemsService.GetItemsProvider(filter: e => e.Where(i => i.IdProject == urlId).Where(i =>
@@ -188,8 +166,6 @@
         projectName = requestedProject!.ProjectName;
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
 
-        allProjects = await ProjectService.GetProjectsAsync(null);
-
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -201,7 +177,7 @@
         }
     }
 
-
+    
     private async Task<Project?> retrieveProjectInfo()
     {
         Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);
@@ -244,12 +220,5 @@
     private async Task onPageCountChange(string newValue)
     {
         await pagination.SetItemsPerPageAsync(int.Parse(newValue));
-    }
-
-    private async Task projectChanged(string newProjectId)
-    {
-        long.TryParse(newProjectId, out long newProjectIdLong);
-
-        NavigationManager.NavigateTo($"/Project/{newProjectIdLong}");
     }
 }
