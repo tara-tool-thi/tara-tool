@@ -1,4 +1,4 @@
-﻿@page "/Project/{urlId:long}"
+@page "/Project/{urlId:long}"
 
 @rendermode InteractiveServer
 @inject ItemDefinitionService ItemsService
@@ -17,14 +17,15 @@
 <!-- Db Context has to be swapped from ApplicationDbContext to IDbContextFactory as per our guidelines -->
 <!-- for IDbContextFactory to work I would have to swap
     builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlite(connectionString));
-    for
+    options => options.UseSqlite(connectionString)); 
+    for 
     builder.Services.AddDbContextFactory<ApplicationDbContext>(
-    options => options.UseSqlite(connectionString));
+    options => options.UseSqlite(connectionString)); 
     in Program.cs -->
 
 @inject NavigationManager NavigationManager
 @inject ProjectService ProjectService
+@inject AccessControlService AccessControlService
 @inject DateTimeService DateTimeService
 
 
@@ -35,7 +36,15 @@
     <FluentStack @key="@retrievedProjectLastModifiedDate">
         @projectName
         <FluentSpacer />
-        Last Edited: @retrievedProjectLastModifiedDate
+        <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
+        @if (isOwner)
+        {
+            <FluentButton Appearance="Appearance.Outline"
+                          OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))">
+                <FluentIcon Value="@(new Icons.Regular.Size20.Settings())" Slot="start" />
+                Einstellungen
+            </FluentButton>
+        }
     </FluentStack>
 </h2>
 <br />
@@ -104,6 +113,7 @@
     public long urlId { get; set; }
 
     private string projectName = "";
+    private bool isOwner = false;
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
@@ -167,6 +177,7 @@
         projectName = requestedProject!.ProjectName;
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
         localDateTimeUpdatePending = true;
+        isOwner = await AccessControlService.CheckUserAccessRightsOwner(urlId);
 
     }
 
@@ -180,7 +191,7 @@
         }
     }
 
-
+    
     private async Task<Project?> retrieveProjectInfo()
     {
         Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);
