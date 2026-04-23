@@ -177,6 +177,142 @@ public class ProjectService(
         throw new NotImplementedException();
     }
 
+    public async Task<List<AccessControl>> GetProjectMembersAsync(long projectId)
+    {
+        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
+        if (!isOwner)
+        {
+            return [];
+        }
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+        return await context.AccessControls
+            .Where(a => a.Project.Id == projectId)
+            .Include(a => a.ApplicationUser)
+            .ToListAsync();
+    }
+
+    public async Task UpdateMemberRoleAsync(long projectId, long accessControlId, bool read, bool write, bool manage)
+    {
+        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
+        if (!isOwner)
+        {
+            return;
+        }
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+        AccessControl? ac = await context.AccessControls
+            .FirstOrDefaultAsync(a => a.Id == accessControlId && a.Project.Id == projectId);
+
+        if (ac == null || ac.Owner)
+        {
+            return;
+        }
+
+        ac.ReadAccess = read;
+        ac.WriteAccess = write;
+        ac.Manage = manage;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task RemoveMemberFromProjectAsync(long projectId, long accessControlId)
+    {
+        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
+        if (!isOwner)
+        {
+            return;
+        }
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+        AccessControl? ac = await context.AccessControls
+            .FirstOrDefaultAsync(a => a.Id == accessControlId && a.Project.Id == projectId);
+
+        if (ac == null || ac.Owner)
+        {
+            return;
+        }
+
+        context.AccessControls.Remove(ac);
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<bool> TransferOwnershipAsync(long projectId, long newOwnerAccessControlId)
+    {
+        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
+        if (!isOwner)
+        {
+            return false;
+        }
+
+        ApplicationUser? currentUser = await sessionService.GetApplicationUserAsync();
+        if (currentUser == null)
+        {
+            return false;
+        }
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        AccessControl? currentOwnerAc = await context.AccessControls
+            .FirstOrDefaultAsync(a => a.Project.Id == projectId && a.ApplicationUser.Id == currentUser.Id && a.Owner);
+
+        AccessControl? newOwnerAc = await context.AccessControls
+            .FirstOrDefaultAsync(a => a.Id == newOwnerAccessControlId && a.Project.Id == projectId && !a.Owner);
+
+        if (currentOwnerAc == null || newOwnerAc == null)
+        {
+            return false;
+        }
+
+        currentOwnerAc.Owner = false;
+        newOwnerAc.Owner = true;
+        newOwnerAc.Manage = true;
+        newOwnerAc.WriteAccess = true;
+        newOwnerAc.ReadAccess = true;
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task UpdateProjectNameAsync(long projectId, string newName)
+    {
+        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
+        if (!isOwner)
+        {
+            return;
+        }
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+        Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null)
+        {
+            return;
+        }
+
+        project.ProjectName = newName;
+        project.DateLastChanged = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+    }
+
+    public async Task ArchiveProjectAsync(long projectId)
+    {
+        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
+        if (!isOwner)
+        {
+            return;
+        }
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+        Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null)
+        {
+            return;
+        }
+
+        project.IsArchived = true;
+        project.DateLastChanged = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+    }
+
     public async Task Delete(Project itemToDelete)
     {
         using ApplicationDbContext applicationDbContext = await _contextFactory.CreateDbContextAsync();

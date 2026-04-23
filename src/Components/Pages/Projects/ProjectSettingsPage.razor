@@ -1,0 +1,392 @@
+@page "/Project/{urlId:long}/Settings"
+
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using tara_tool.Data.Services
+@using tara_tool.Data.Tables
+
+@implements IDisposable
+
+@inject ProjectService ProjectService
+@inject AccessControlService AccessControlService
+@inject NavigationManager NavigationManager
+
+@attribute [Authorize]
+
+<PageTitle>Projekt Einstellungen</PageTitle>
+
+@if (project == null)
+{
+    <FluentProgressRing />
+}
+else
+{
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <h1>Einstellungen</h1>
+        @if (!string.IsNullOrEmpty(saveStatus))
+        {
+            <span class="tiny-text">&nbsp;@saveStatus</span>
+        }
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Outline"
+                      OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}"))">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ArrowLeft())" Slot="start" />
+            Zurück zum Projekt
+        </FluentButton>
+    </FluentStack>
+
+    <br />
+
+    <span class="tiny-text">Projektname</span>
+    <div class="fullwidth">
+        <FluentTextField @bind-Value="projectName"
+                         @bind-Value:after="ScheduleAutoSave"
+                         Placeholder="Projektname eingeben..."
+                         Class="fullwidth" />
+    </div>
+
+    <br />
+
+    <span class="tiny-text">Mitglieder</span>
+    <br />
+    <FluentDataGrid TGridItem="AccessControl"
+                    Items="@projectMembers.AsQueryable()"
+                    @key="@membersVersion">
+        <PropertyColumn Property="@(ac => ac.ApplicationUser.UserName)" Title="Name" />
+        <PropertyColumn Property="@(ac => ac.ApplicationUser.Email)" Title="E-Mail" />
+        <TemplateColumn Title="Rolle">
+            @if (context.Owner)
+            {
+                <span>Owner</span>
+            }
+            else
+            {
+                <FluentSelect TOption="string"
+                              Value="@GetRoleLabel(context)"
+                              ValueChanged="@(async (string value) => await UpdateRoleAsync(context, value))">
+                    <FluentOption Value="Project-Admin">Project-Admin</FluentOption>
+                    <FluentOption Value="Editor">Editor</FluentOption>
+                    <FluentOption Value="Viewer">Viewer</FluentOption>
+                </FluentSelect>
+            }
+        </TemplateColumn>
+        <TemplateColumn Title="">
+            @if (!context.Owner)
+            {
+                <FluentButton Appearance="Appearance.Outline"
+                              OnClick="@(async () => await RemoveMemberAsync(context))"
+                              Color="var(--error)">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())"
+                                Color="Color.Error"
+                                Slot="start" />
+                    Entfernen
+                </FluentButton>
+            }
+        </TemplateColumn>
+    </FluentDataGrid>
+
+    <br />
+
+    <span class="tiny-text">Aktionen</span>
+    <br />
+    <FluentStack Orientation="Orientation.Horizontal">
+        <FluentButton Appearance="Appearance.Outline"
+                      OnClick="@(() => showArchiveDialog = true)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Archive())" Slot="start" />
+            Projekt archivieren
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Outline"
+                      OnClick="@(() => showExportDialog = true)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportLtr())" Slot="start" />
+            Projekt exportieren
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Outline"
+                      Disabled="@(!projectMembers.Any(m => !m.Owner))"
+                      OnClick="@(() => showTransferOwnerDialog = true)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.PersonSwap())" Slot="start" />
+            Owner-Transfer
+        </FluentButton>
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Outline"
+                      OnClick="@(() => showDeleteDialog = true)"
+                      Color="var(--error)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
+            Projekt löschen
+        </FluentButton>
+    </FluentStack>
+
+    <!-- Archive Dialog -->
+    <FluentDialog Hidden="@(!showArchiveDialog)" Modal="true" TrapFocus="true" aria-label="Projekt archivieren">
+        <FluentDialogHeader>
+            <h3>Projekt archivieren</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            Soll das Projekt <strong>@project.ProjectName</strong> wirklich archiviert werden?
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline"
+                              OnClick="@(() => showArchiveDialog = false)">
+                    Abbrechen
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="ArchiveAsync">
+                    Archivieren
+                </FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
+
+    <!-- Export Dialog -->
+    <FluentDialog Hidden="@(!showExportDialog)" Modal="true" TrapFocus="true" aria-label="Projekt exportieren">
+        <FluentDialogHeader>
+            <h3>Projekt exportieren</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            <FluentStack Orientation="Orientation.Vertical">
+                <span>Format auswählen:</span>
+                <FluentSelect @bind-Value="selectedExportFormat" TOption="string">
+                    <FluentOption Value="PDF">PDF</FluentOption>
+                    <FluentOption Value="DOCX">Word (.docx)</FluentOption>
+                    <FluentOption Value="JSON">JSON</FluentOption>
+                    <FluentOption Value="CSV">CSV</FluentOption>
+                </FluentSelect>
+            </FluentStack>
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline"
+                              OnClick="@(() => showExportDialog = false)">
+                    Abbrechen
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="ExportAsync">
+                    Exportieren
+                </FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
+
+    <!-- Delete Dialog -->
+    <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Projekt löschen">
+        <FluentDialogHeader>
+            <h3>Projekt löschen</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            <FluentStack Orientation="Orientation.Vertical">
+                <span>
+                    Das Löschen kann nicht rückgängig gemacht werden.
+                    Bitte gib den Projektnamen zur Bestätigung ein:
+                </span>
+                <strong>@project.ProjectName</strong>
+                <FluentTextField @bind-Value="deleteConfirmText"
+                                 Placeholder="Projektnamen eingeben..."
+                                 Class="fullwidth" />
+            </FluentStack>
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline"
+                              OnClick="@(() => { showDeleteDialog = false; deleteConfirmText = string.Empty; })">
+                    Abbrechen
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Accent"
+                              BackgroundColor="var(--error)"
+                              Disabled="@(deleteConfirmText != project.ProjectName)"
+                              OnClick="DeleteAsync">
+                    Löschen
+                </FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
+
+    <!-- Owner Transfer Dialog -->
+    <FluentDialog Hidden="@(!showTransferOwnerDialog)" Modal="true" TrapFocus="true" aria-label="Owner-Transfer">
+        <FluentDialogHeader>
+            <h3>Owner-Transfer</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            <FluentStack Orientation="Orientation.Vertical">
+                <span>Neuen Owner auswählen:</span>
+                <FluentSelect @bind-Value="selectedTransferAccessControlId" TOption="string">
+                    @foreach (AccessControl member in projectMembers.Where(m => !m.Owner))
+                    {
+                        <FluentOption Value="@member.Id.ToString()">
+                            @member.ApplicationUser.UserName (@member.ApplicationUser.Email)
+                        </FluentOption>
+                    }
+                </FluentSelect>
+            </FluentStack>
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline"
+                              OnClick="@(() => showTransferOwnerDialog = false)">
+                    Abbrechen
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="TransferOwnershipAsync">
+                    Übertragen
+                </FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
+}
+
+@code {
+    [Parameter]
+    public long urlId { get; set; }
+
+    private Project? project;
+    private string projectName = string.Empty;
+    private List<AccessControl> projectMembers = [];
+    private int membersVersion = 0;
+
+    private string saveStatus = string.Empty;
+    private System.Threading.Timer? saveTimer;
+
+    private bool showArchiveDialog = false;
+    private bool showExportDialog = false;
+    private bool showDeleteDialog = false;
+    private bool showTransferOwnerDialog = false;
+
+    private string selectedExportFormat = "PDF";
+    private string deleteConfirmText = string.Empty;
+    private string selectedTransferAccessControlId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        bool isOwner = await AccessControlService.CheckUserAccessRightsOwner(urlId);
+        if (!isOwner)
+        {
+            NavigationManager.NavigateTo($"/Project/{urlId}");
+            return;
+        }
+
+        project = await ProjectService.GetItemByIdAsync(urlId, null);
+        if (project == null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        projectName = project.ProjectName;
+        projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
+
+        AccessControl? firstNonOwner = projectMembers.FirstOrDefault(m => !m.Owner);
+        if (firstNonOwner != null)
+        {
+            selectedTransferAccessControlId = firstNonOwner.Id.ToString();
+        }
+    }
+
+    private string GetRoleLabel(AccessControl ac)
+    {
+        if (ac.Owner) return "Owner";
+        if (ac.Manage) return "Project-Admin";
+        if (ac.WriteAccess) return "Editor";
+        return "Viewer";
+    }
+
+    private void ScheduleAutoSave()
+    {
+        saveStatus = "Unsaved changes…";
+        saveTimer?.Dispose();
+        saveTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(SaveProjectNameAsync);
+        }, null, TimeSpan.FromSeconds(2), Timeout.InfiniteTimeSpan);
+    }
+
+    private async Task SaveProjectNameAsync()
+    {
+        if (project == null)
+        {
+            return;
+        }
+
+        saveStatus = "Saving...";
+        StateHasChanged();
+
+        try
+        {
+            await ProjectService.UpdateProjectNameAsync(urlId, projectName);
+            project.ProjectName = projectName;
+            saveStatus = "Saved";
+        }
+        catch
+        {
+            saveStatus = "Save failed";
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task UpdateRoleAsync(AccessControl ac, string role)
+    {
+        bool write = role is "Project-Admin" or "Editor";
+        bool manage = role == "Project-Admin";
+        await ProjectService.UpdateMemberRoleAsync(urlId, ac.Id, true, write, manage);
+        projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
+        membersVersion++;
+        StateHasChanged();
+    }
+
+    private async Task RemoveMemberAsync(AccessControl ac)
+    {
+        await ProjectService.RemoveMemberFromProjectAsync(urlId, ac.Id);
+        projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
+        membersVersion++;
+
+        AccessControl? firstNonOwner = projectMembers.FirstOrDefault(m => !m.Owner);
+        selectedTransferAccessControlId = firstNonOwner?.Id.ToString() ?? string.Empty;
+
+        StateHasChanged();
+    }
+
+    private async Task ArchiveAsync()
+    {
+        showArchiveDialog = false;
+        await ProjectService.ArchiveProjectAsync(urlId);
+        NavigationManager.NavigateTo("/Projects");
+    }
+
+    private async Task ExportAsync()
+    {
+        showExportDialog = false;
+        // TODO: Export-Implementierung für Format: selectedExportFormat
+    }
+
+    private async Task DeleteAsync()
+    {
+        if (project == null || deleteConfirmText != project.ProjectName)
+        {
+            return;
+        }
+
+        showDeleteDialog = false;
+        await ProjectService.Delete(project);
+        NavigationManager.NavigateTo("/Projects");
+    }
+
+    private async Task TransferOwnershipAsync()
+    {
+        showTransferOwnerDialog = false;
+
+        if (!long.TryParse(selectedTransferAccessControlId, out long accessControlId))
+        {
+            return;
+        }
+
+        bool success = await ProjectService.TransferOwnershipAsync(urlId, accessControlId);
+        if (success)
+        {
+            NavigationManager.NavigateTo($"/Project/{urlId}");
+        }
+    }
+
+    public void Dispose() => saveTimer?.Dispose();
+}
