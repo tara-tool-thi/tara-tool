@@ -545,6 +545,9 @@ namespace tara_tool.Migrations
                     b.Property<DateTime>("DateLastChanged")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ProjectName")
                         .IsRequired()
                         .HasColumnType("TEXT");
