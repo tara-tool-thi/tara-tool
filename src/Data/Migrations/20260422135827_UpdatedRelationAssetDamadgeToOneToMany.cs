@@ -5,7 +5,7 @@
 namespace tara_tool.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdatedRelationAssetDamadgeToOneToMany : Migration
+    public partial class UpdatedRelationAssetDamageToOneToMany : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
