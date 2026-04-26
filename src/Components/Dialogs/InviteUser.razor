@@ -1,0 +1,28 @@
+@implements IDialogContentComponent<InviteUser>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
+        <h3>Invite new user</h3>
+    </FluentStack>
+</FluentDialogHeader>
+
+
+<FluentDialogBody>
+
+</FluentDialogBody>
+
+
+<FluentDialogFooter>
+
+</FluentDialogFooter>
+
+
+@code {
+    [Parameter]
+    public InviteUser Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+}

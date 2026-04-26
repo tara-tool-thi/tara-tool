@@ -1,4 +1,5 @@
 @page "/UserManagement"
+@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
 @using System.Security.Cryptography.Pkcs
 @rendermode InteractiveServer
@@ -22,13 +23,25 @@
 
 @code {
     private string? UserSearch;
-    string? email { get; set; } = "";
+
+    private InputModel Input { get; set; } = new InputModel(); 
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+    }
     private async Task OpenDialog()
     {
-        IDialogReference dialogInstance = await _dialogService.ShowDialogAsync(@<div>
-        <FluentTextField @bind-Value=email Label="Enter email address:" />
-        <FluentValidationMessage For="() => email" class="text-danger" />
-    </div>
+        IDialogReference dialogInstance = await _dialogService.ShowDialogAsync(
+            @<div>
+                <EditForm Model="Input" method="post" OnSubmit="submit" FormName="addUser">
+                    <DataAnnotationsValidator />
+                    <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" />
+                    <FluentValidationMessage For="() => Input.Email" class="text-danger" />
+                </EditForm>
+            </div>
     , new DialogParameters
     {
         Title = "Invite new user",
@@ -37,7 +50,22 @@
         DialogResult result = await dialogInstance.Result;
         if (!result.Cancelled)
         {
-            await _dialogService.ShowSuccessAsync($"Email sent to: {email}", "Success");
         }
     }
+
+    public async Task createLink()
+    {
+        await _dialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
+    }
+
+    public async Task invalidSubmit()
+    {
+
+    }
+
+    public async Task submit()
+    {
+        await _dialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
+    }
+
 }
