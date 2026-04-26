@@ -1,3 +1,4 @@
+@using System.ComponentModel.DataAnnotations
 @implements IDialogContentComponent<InviteUser>
 @rendermode InteractiveServer
 
@@ -10,12 +11,17 @@
 
 
 <FluentDialogBody>
-
+    <EditForm Model="Input" method="post" FormName="addUser">
+        <DataAnnotationsValidator />
+        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" />
+        <FluentValidationMessage For="() => Input.Email" class="text-danger" />
+    </EditForm>
+ 
 </FluentDialogBody>
 
 
 <FluentDialogFooter>
-
+    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">OK</FluentButton>
 </FluentDialogFooter>
 
 
@@ -25,4 +31,39 @@
 
     [CascadingParameter]
     public FluentDialog? Dialog { get; set; }
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new InputModel(); 
+
+    public class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string? Email;
+    }
+
+    @* public InviteUser Content { get; set; } = new InviteUser();  *@
+
+    @* public sealed class InviteUser
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+    }
+  *@
+    @* public async Task createLink()
+    {
+        await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
+    }
+
+    public async Task invalidSubmit()
+    {
+
+    }
+
+    public async Task submit()
+    {
+        await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
+    } *@
+
 }

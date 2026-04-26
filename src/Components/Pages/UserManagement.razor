@@ -2,9 +2,10 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
 @using System.Security.Cryptography.Pkcs
+@using tara_tool.Components.Dialogs
 @rendermode InteractiveServer
 
-@inject IDialogService _dialogService
+@inject IDialogService DialogService
 
 @attribute [Authorize]
 
@@ -24,9 +25,9 @@
 @code {
     private string? UserSearch;
 
-    private InputModel Input { get; set; } = new InputModel(); 
+    @* private InviteUser Input { get; set; } = new InviteUser();  *@
 
-    private sealed class InputModel
+    private sealed class InviteUser
     {
         [Required]
         [EmailAddress]
@@ -34,7 +35,9 @@
     }
     private async Task OpenDialog()
     {
-        IDialogReference dialogInstance = await _dialogService.ShowDialogAsync(
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        @* IDialogReference dialogInstance = await _dialogService.ShowDialogAsync(
             @<div>
                 <EditForm Model="Input" method="post" OnSubmit="submit" FormName="addUser">
                     <DataAnnotationsValidator />
@@ -50,22 +53,7 @@
         DialogResult result = await dialogInstance.Result;
         if (!result.Cancelled)
         {
-        }
-    }
-
-    public async Task createLink()
-    {
-        await _dialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
-    }
-
-    public async Task invalidSubmit()
-    {
-
-    }
-
-    public async Task submit()
-    {
-        await _dialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
+        } *@
     }
 
 }
