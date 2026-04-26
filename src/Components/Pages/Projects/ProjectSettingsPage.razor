@@ -149,7 +149,6 @@ else
                 <span>Format auswählen:</span>
                 <FluentSelect @bind-Value="selectedExportFormat" TOption="string">
                     <FluentOption Value="PDF">PDF</FluentOption>
-                    <FluentOption Value="DOCX">Word (.docx)</FluentOption>
                     <FluentOption Value="JSON">JSON</FluentOption>
                     <FluentOption Value="CSV">CSV</FluentOption>
                 </FluentSelect>
@@ -351,7 +350,7 @@ else
     {
         showArchiveDialog = false;
         await ProjectService.ArchiveProjectAsync(urlId);
-        NavigationManager.NavigateTo("/Projects");
+        NavigationManager.NavigateTo("/");
     }
 
     private async Task ExportAsync()
@@ -369,7 +368,7 @@ else
 
         showDeleteDialog = false;
         await ProjectService.Delete(project);
-        NavigationManager.NavigateTo("/Projects");
+        NavigationManager.NavigateTo("/");
     }
 
     private async Task TransferOwnershipAsync()
