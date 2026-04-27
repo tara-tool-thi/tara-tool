@@ -1,0 +1,59 @@
+@typeparam TEntity where TEntity : class
+@implements IDisposable
+
+<FluentIcon Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus />
+
+@code {
+
+    [Parameter, EditorRequired]
+    public required TEntity Entity { get; set; }
+
+    [Parameter, EditorRequired]
+    public required IDataService<TEntity> SaveService { get; set; } = default!;
+
+    private System.Threading.Timer? saveTimer;
+    private SaveStatus saveStatus = SaveStatus.Saved;
+
+
+    public void ScheduleAutoSave()
+    {
+        saveStatus = SaveStatus.Unsaved;
+        saveTimer?.Dispose();
+        saveTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(SaveAsync);
+        }, null, TimeSpan.FromSeconds(2), Timeout.InfiniteTimeSpan);
+    }
+
+    private async void SaveAsync()
+    {
+        saveStatus = SaveStatus.Saving;
+        StateHasChanged();
+        await SaveService.Save(Entity);
+        saveStatus = SaveStatus.Saved;
+        StateHasChanged();
+    }
+
+    private Icon GetIcon => saveStatus switch
+    {
+        SaveStatus.Saved => new Icons.Regular.Size20.CloudCheckmark(),
+        SaveStatus.Saving => new Icons.Regular.Size20.CloudSync(),
+        SaveStatus.Unsaved => new Icons.Regular.Size20.CloudDismiss(),
+        _ => new Icons.Regular.Size20.CloudCheckmark(),
+    };
+
+    public void Dispose()
+    {
+        if (saveTimer is not null)
+        {
+            saveTimer.Dispose();
+        }
+    }
+
+    private enum SaveStatus
+    {
+        Saved,
+        Saving,
+        Unsaved,
+    }
+}
