@@ -15,7 +15,7 @@
 
 @attribute [Authorize]
 
-<PageTitle>Projekt Einstellungen</PageTitle>
+<PageTitle>Project Settings</PageTitle>
 
 @if (project == null)
 {
@@ -33,7 +33,7 @@ else
         <FluentButton Appearance="Appearance.Outline"
                       OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}"))">
             <FluentIcon Value="@(new Icons.Regular.Size20.ArrowLeft())" Slot="start" />
-            Zurück zum Projekt
+            Back to Project
         </FluentButton>
     </FluentStack>
 
@@ -43,17 +43,17 @@ else
     <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
         <FluentTextField @bind-Value="projectName"
                          @bind-Value:after="ScheduleAutoSave"
-                         Placeholder="Projektname eingeben..."
+                         Placeholder="Enter project name..."
                          Style="flex:1" />
-        <FluentButton Appearance="Appearance.Outline" Title="Exportieren"
+        <FluentButton Appearance="Appearance.Outline" Title="Export"
                       OnClick="@(() => showExportDialog = true)">
             <FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportLtr())" />
         </FluentButton>
-        <FluentButton Appearance="Appearance.Outline" Title="Archivieren"
+        <FluentButton Appearance="Appearance.Outline" Title="Archive"
                       OnClick="@(() => showArchiveDialog = true)">
             <FluentIcon Value="@(new Icons.Regular.Size20.Archive())" />
         </FluentButton>
-        <FluentButton Appearance="Appearance.Outline" Title="Löschen"
+        <FluentButton Appearance="Appearance.Outline" Title="Delete"
                       OnClick="@(() => showDeleteDialog = true)">
             <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
         </FluentButton>
@@ -66,12 +66,12 @@ else
     <FluentCard Style="padding:16px; overflow:visible">
         <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
             <FluentSearch @bind-Value="searchMemberText"
-                          Placeholder="Mitglieder suchen..."
+                          Placeholder="Search members..."
                           Immediate="true"
                           ImmediateDelay="300"
                           Style="flex:1" />
             <FluentSelect @bind-Value="roleFilter" TOption="string" Style="width:175px">
-                <FluentOption Value="">Alle Rollen</FluentOption>
+                <FluentOption Value="">All Roles</FluentOption>
                 <FluentOption Value="Owner">Owner</FluentOption>
                 <FluentOption Value="Project-Admin">Project-Admin</FluentOption>
                 <FluentOption Value="Editor">Editor</FluentOption>
@@ -131,7 +131,7 @@ else
         @if (!filteredMembers.Any())
         {
             <div style="padding:16px; text-align:center; opacity:0.6">
-                Keine Mitglieder gefunden.
+                No members found.
             </div>
         }
 
@@ -139,7 +139,7 @@ else
         {
             <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="padding-top:8px; gap:8px">
                 <FluentTextField @bind-Value="inviteEmail"
-                                 Placeholder="E-Mail des Benutzers..."
+                                 Placeholder="User email..."
                                  Style="flex:1" />
                 <FluentSelect @bind-Value="inviteRole" TOption="string" Style="width:160px">
                     <FluentOption Value="Project-Admin">Project-Admin</FluentOption>
@@ -179,35 +179,35 @@ else
     }
 
     <!-- Archive Dialog -->
-    <FluentDialog Hidden="@(!showArchiveDialog)" Modal="true" TrapFocus="true" aria-label="Projekt archivieren">
+    <FluentDialog Hidden="@(!showArchiveDialog)" Modal="true" TrapFocus="true" aria-label="Archive project">
         <FluentDialogHeader>
-            <h3>Projekt archivieren</h3>
+            <h3>Archive project</h3>
         </FluentDialogHeader>
         <FluentDialogBody>
-            Soll das Projekt <strong>@project.ProjectName</strong> wirklich archiviert werden?
+            Do you really want to archive the project <strong>@project.ProjectName</strong>?
         </FluentDialogBody>
         <FluentDialogFooter>
             <FluentStack Orientation="Orientation.Horizontal" Width="100%">
                 <FluentSpacer />
                 <FluentButton Appearance="Appearance.Outline"
                               OnClick="@(() => showArchiveDialog = false)">
-                    Abbrechen
+                    Cancel
                 </FluentButton>
                 <FluentButton Appearance="Appearance.Accent" OnClick="ArchiveAsync">
-                    Archivieren
+                    Archive
                 </FluentButton>
             </FluentStack>
         </FluentDialogFooter>
     </FluentDialog>
 
     <!-- Export Dialog -->
-    <FluentDialog Hidden="@(!showExportDialog)" Modal="true" TrapFocus="true" aria-label="Projekt exportieren">
+    <FluentDialog Hidden="@(!showExportDialog)" Modal="true" TrapFocus="true" aria-label="Export project">
         <FluentDialogHeader>
-            <h3>Projekt exportieren</h3>
+            <h3>Export project</h3>
         </FluentDialogHeader>
         <FluentDialogBody>
             <FluentStack Orientation="Orientation.Vertical">
-                <span>Format auswählen:</span>
+                <span>Select format:</span>
                 <FluentSelect @bind-Value="selectedExportFormat" TOption="string">
                     <FluentOption Value="PDF">PDF</FluentOption>
                     <FluentOption Value="JSON">JSON</FluentOption>
@@ -220,29 +220,29 @@ else
                 <FluentSpacer />
                 <FluentButton Appearance="Appearance.Outline"
                               OnClick="@(() => showExportDialog = false)">
-                    Abbrechen
+                    Cancel
                 </FluentButton>
                 <FluentButton Appearance="Appearance.Accent" OnClick="ExportAsync">
-                    Exportieren
+                    Export
                 </FluentButton>
             </FluentStack>
         </FluentDialogFooter>
     </FluentDialog>
 
     <!-- Delete Dialog -->
-    <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Projekt löschen">
+    <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete project">
         <FluentDialogHeader>
-            <h3>Projekt löschen</h3>
+            <h3>Delete project</h3>
         </FluentDialogHeader>
         <FluentDialogBody>
             <FluentStack Orientation="Orientation.Vertical">
                 <span>
-                    Das Löschen kann nicht rückgängig gemacht werden.
-                    Bitte gib den Projektnamen zur Bestätigung ein:
+                    Deleting cannot be undone.
+                    Please enter the project name to confirm:
                 </span>
                 <strong>@project.ProjectName</strong>
                 <FluentTextField @bind-Value="deleteConfirmText"
-                                 Placeholder="Projektnamen eingeben..."
+                                 Placeholder="Enter project name..."
                                  Class="fullwidth" />
             </FluentStack>
         </FluentDialogBody>
@@ -251,13 +251,13 @@ else
                 <FluentSpacer />
                 <FluentButton Appearance="Appearance.Outline"
                               OnClick="@(() => { showDeleteDialog = false; deleteConfirmText = string.Empty; })">
-                    Abbrechen
+                    Cancel
                 </FluentButton>
                 <FluentButton Appearance="Appearance.Accent"
                               BackgroundColor="var(--error)"
                               Disabled="@(deleteConfirmText != project.ProjectName)"
                               OnClick="DeleteAsync">
-                    Löschen
+                    Delete
                 </FluentButton>
             </FluentStack>
         </FluentDialogFooter>
@@ -381,7 +381,7 @@ else
         bool write = role is "Project-Admin" or "Editor";
         bool manage = role == "Project-Admin";
         bool success = await ProjectService.UpdateMemberRoleAsync(urlId, ac.Id, true, write, manage);
-        saveStatus = success ? "Rolle gespeichert" : "Fehler: Rolle konnte nicht geändert werden";
+        saveStatus = success ? "Role saved" : "Error: role could not be changed";
         StateHasChanged();
     }
 
@@ -401,7 +401,7 @@ else
     {
         if (string.IsNullOrWhiteSpace(inviteEmail))
         {
-            inviteStatus = "Fehler: Bitte E-Mail eingeben.";
+            inviteStatus = "Error: please enter an email.";
             return;
         }
 
@@ -411,7 +411,7 @@ else
 
         if (error != null)
         {
-            inviteStatus = $"Fehler: {error}";
+            inviteStatus = $"Error: {error}";
         }
         else
         {
@@ -438,7 +438,7 @@ else
     private async Task ExportAsync()
     {
         showExportDialog = false;
-        // TODO: Export-Implementierung für Format: selectedExportFormat
+        // TODO: Implement export for format: selectedExportFormat
     }
 
     private async Task DeleteAsync()

@@ -344,20 +344,20 @@ public class ProjectService(
     public async Task<string?> InviteMemberByEmailAsync(long projectId, string email, bool read, bool write, bool manage)
     {
         bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
-        if (!hasManage) return "Keine Berechtigung.";
+        if (!hasManage) return "No permission.";
 
         using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
 
         ApplicationUser? targetUser = await context.ApplicationUsers
             .FirstOrDefaultAsync(u => u.Email == email);
-        if (targetUser == null) return "Benutzer nicht gefunden.";
+        if (targetUser == null) return "User not found.";
 
         bool alreadyMember = await context.AccessControls
             .AnyAsync(a => a.Project.Id == projectId && a.ApplicationUser.Id == targetUser.Id);
-        if (alreadyMember) return "Benutzer ist bereits Mitglied.";
+        if (alreadyMember) return "User is already a member.";
 
         Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
-        if (project == null) return "Projekt nicht gefunden.";
+        if (project == null) return "Project not found.";
 
         AccessControl accessControl = new AccessControl
         {
