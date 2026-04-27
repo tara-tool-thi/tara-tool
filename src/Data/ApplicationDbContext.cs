@@ -77,5 +77,10 @@ public class ApplicationDbContext(
             .WithOne(e => e.TreatmentDecision)
             .HasForeignKey<TreatmentDecision>(e => e.ImpactRatingId)
             .IsRequired(true);
+        builder.Entity<Tag>()
+            .HasOne(e => e.Project)
+            .WithMany(e => e.Tags)
+            .HasForeignKey(e => e.IdProject)
+            .IsRequired(true);
     }
 }
