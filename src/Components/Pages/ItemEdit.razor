@@ -153,23 +153,31 @@ else
 
 	protected override async Task OnInitializedAsync()
 	{
-		itemDefinition = await ItemsService.GetItemByIdAsync(itemId, include: e => e.Include(i => i.TechnicalSketch).Include(i
-	=> i.PreliminaryArchitecture).Include(i => i.ItemBoundary).Include(i => i.OperationalEnvironmentImage).Include(i =>
-	i.Project));
-
-		if (itemDefinition == null)
+		try
 		{
-			NavigationManager.NavigateTo("/");
-			return;
+			itemDefinition = await ItemsService.GetItemByIdAsync(itemId, include: e => e.Include(i => i.TechnicalSketch).Include(i
+		=> i.PreliminaryArchitecture).Include(i => i.ItemBoundary).Include(i => i.OperationalEnvironmentImage).Include(i =>
+		i.Project));
+
+			if (itemDefinition == null)
+			{
+				NavigationManager.NavigateTo("/");
+				return;
+			}
+
+			ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
+			ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);
+			ExpandedPreliminaryArchitectureText = !string.IsNullOrEmpty(itemDefinition.PreliminaryArchitectureText);
+			ExpandedOperationalEnvironmentText = !string.IsNullOrEmpty(itemDefinition.OperationalEnvironmentText);
+
+			if (itemDefinition.TechnicalSketch?.Data != null)
+				imagePreviewUrl = $"data:image/png;base64,{Convert.ToBase64String(itemDefinition.TechnicalSketch.Data)}";
 		}
-
-		ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
-		ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);
-		ExpandedPreliminaryArchitectureText = !string.IsNullOrEmpty(itemDefinition.PreliminaryArchitectureText);
-		ExpandedOperationalEnvironmentText = !string.IsNullOrEmpty(itemDefinition.OperationalEnvironmentText);
-
-		if (itemDefinition.TechnicalSketch?.Data != null)
-			imagePreviewUrl = $"data:image/png;base64,{Convert.ToBase64String(itemDefinition.TechnicalSketch.Data)}";
+		catch (Exception ex)
+		{
+			saveStatus = $"Error loading item: {ex.Message}";
+			NavigationManager.NavigateTo("/");
+		}
 	}
 
 	void ScheduleAutoSave()
@@ -195,9 +203,10 @@ else
 			await ItemsService.Save(itemDefinition);
 			saveStatus = "Saved";
 		}
-		catch
+		catch (Exception ex)
 		{
-			saveStatus = "Save failed";
+			Console.Error.WriteLine($"Error saving item: {ex.Message}");
+			saveStatus = "Save failed - " + ex.Message;
 		}
 
 		StateHasChanged();

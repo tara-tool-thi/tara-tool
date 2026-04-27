@@ -72,49 +72,59 @@
 
     private async Task LoadDataFromUrl()
     {
-        string relativePath = Navigator.ToBaseRelativePath(Navigator.Uri);
-        string[] segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-        // Reset local state to prevent "ghost" data from previous routes
-        currentProject = null;
-        currentItem = null;
-        allItems.Clear();
-        allProjects.Clear();
-
-        if (segments.Length == 0) return;
-
-        allProjects = await ProjectService.GetProjectsAsync();
-
-        string primaryType = segments[0].ToLower();
-
-        // CASE 1: URL is /Project/{id}
-        if (primaryType == "project" && segments.Length >= 2)
+        try
         {
-            if (long.TryParse(segments[1], out long pId))
-            {
-                currentProjectId = pId;
-                currentProject = await ProjectService.GetItemByIdAsync(pId, null);
-            }
-        }
-        // CASE 2: URL is /Item/{id}
-        else if (primaryType == "item" && segments.Length >= 2)
-        {
-            if (long.TryParse(segments[1], out long iId))
-            {
-                currentItemId = iId;
-                currentItem = await ItemService.GetItemByIdAsync(iId);
+            string relativePath = Navigator.ToBaseRelativePath(Navigator.Uri);
+            string[] segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-                if (currentItem != null)
+            // Reset local state to prevent "ghost" data from previous routes
+            currentProject = null;
+            currentItem = null;
+            allItems.Clear();
+            allProjects.Clear();
+
+            if (segments.Length == 0) return;
+
+            allProjects = await ProjectService.GetProjectsAsync();
+
+            string primaryType = segments[0].ToLower();
+
+            // CASE 1: URL is /Project/{id}
+            if (primaryType == "project" && segments.Length >= 2)
+            {
+                if (long.TryParse(segments[1], out long pId))
                 {
-                    // Derive the project from the item itself
-                    long parentProjectId = currentItem.IdProject;
-                    currentProjectId = parentProjectId;
-                    currentProject = await ProjectService.GetItemByIdAsync(parentProjectId, null);
-
-                    // Fetch items for this project so the second dropdown is populated
-                    allItems = await ItemService.GetItemsAsync(parentProjectId, null);
+                    currentProjectId = pId;
+                    currentProject = await ProjectService.GetItemByIdAsync(pId, null);
                 }
             }
+            // CASE 2: URL is /Item/{id}
+            else if (primaryType == "item" && segments.Length >= 2)
+            {
+                if (long.TryParse(segments[1], out long iId))
+                {
+                    currentItemId = iId;
+                    currentItem = await ItemService.GetItemByIdAsync(iId);
+
+                    if (currentItem != null)
+                    {
+                        // Derive the project from the item itself
+                        long parentProjectId = currentItem.IdProject;
+                        currentProjectId = parentProjectId;
+                        currentProject = await ProjectService.GetItemByIdAsync(parentProjectId, null);
+
+                        // Fetch items for this project so the second dropdown is populated
+                        allItems = await ItemService.GetItemsAsync(parentProjectId, null);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading breadcrumb data: {ex.Message}");
+            // Gracefully handle error - breadcrumb will show empty state
+            currentProject = null;
+            currentItem = null;
         }
     }
 
