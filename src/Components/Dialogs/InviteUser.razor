@@ -1,5 +1,6 @@
 @using System.ComponentModel.DataAnnotations
-@implements IDialogContentComponent<InviteUser>
+@using tara_tool.Components.Account.Pages.Manage
+@implements IDialogContentComponent<string>
 @rendermode InteractiveServer
 
 <FluentDialogHeader ShowDismiss="true">
@@ -10,24 +11,23 @@
 </FluentDialogHeader>
 
 
-<FluentDialogBody>
-    <EditForm Model="Input" method="post" FormName="addUser">
+<EditForm Model="Input" method="post" FormName="addUser" OnValidSubmit="submit">
+    <FluentDialogBody>
         <DataAnnotationsValidator />
-        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" />
+        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" Immediate=true/>
         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
-    </EditForm>
- 
-</FluentDialogBody>
+    </FluentDialogBody>
 
 
-<FluentDialogFooter>
-    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">OK</FluentButton>
-</FluentDialogFooter>
+    <FluentDialogFooter>
+        <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">OK</FluentButton>
+    </FluentDialogFooter>
+</EditForm>
 
 
 @code {
     [Parameter]
-    public InviteUser Content { get; set; } = default!;
+    public string Content { get; set; } = default!;
 
     [CascadingParameter]
     public FluentDialog? Dialog { get; set; }
@@ -42,20 +42,6 @@
         public string? Email;
     }
 
-    @* public InviteUser Content { get; set; } = new InviteUser();  *@
-
-    @* public sealed class InviteUser
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
-    }
-  *@
-    @* public async Task createLink()
-    {
-        await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
-    }
-
     public async Task invalidSubmit()
     {
 
@@ -63,7 +49,11 @@
 
     public async Task submit()
     {
-        await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
-    } *@
+        if (!string.IsNullOrWhiteSpace(Input.Email))
+        {
+            Content = Input.Email;
+            await Dialog?.CloseAsync(Content);
+        }
+    }
 
 }

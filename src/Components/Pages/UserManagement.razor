@@ -16,44 +16,30 @@
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
         HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <FluentSearch Placeholder="Type to search for user..." Style="Width: 25%" @bind-Value=@UserSearch />
-    <FluentButton OnClick="OpenDialog">
-      + New User
+    <FluentButton OnClick="OpenDialog" IconStart=@(new Icons.Regular.Size20.Add())>
+      New User
     </FluentButton>
+
 </FluentStack>
 
 
 @code {
     private string? UserSearch;
 
-    @* private InviteUser Input { get; set; } = new InviteUser();  *@
+    private string? email = "";
 
-    private sealed class InviteUser
-    {
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = "";
-    }
-    private async Task OpenDialog()
+
+   private async Task OpenDialog()
     {
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
         DialogResult? result = await dialog.Result;
-        @* IDialogReference dialogInstance = await _dialogService.ShowDialogAsync(
-            @<div>
-                <EditForm Model="Input" method="post" OnSubmit="submit" FormName="addUser">
-                    <DataAnnotationsValidator />
-                    <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" />
-                    <FluentValidationMessage For="() => Input.Email" class="text-danger" />
-                </EditForm>
-            </div>
-    , new DialogParameters
-    {
-        Title = "Invite new user",
-    });
-
-        DialogResult result = await dialogInstance.Result;
-        if (!result.Cancelled)
-        {
-        } *@
+        email = (string?)result?.Data;
+        @* await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success"); *@
     }
+
+    @* public async Task createLink()
+    {
+        await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
+    } *@
 
 }
