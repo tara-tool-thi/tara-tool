@@ -179,8 +179,8 @@ public class ProjectService(
 
     public async Task<List<AccessControl>> GetProjectMembersAsync(long projectId)
     {
-        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
-        if (!isOwner)
+        bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
+        if (!hasManage)
         {
             return [];
         }
@@ -192,33 +192,34 @@ public class ProjectService(
             .ToListAsync();
     }
 
-    public async Task UpdateMemberRoleAsync(long projectId, long accessControlId, bool read, bool write, bool manage)
+    public async Task<bool> UpdateMemberRoleAsync(long projectId, long accessControlId, bool read, bool write, bool manage)
     {
-        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
-        if (!isOwner)
+        bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
+        if (!hasManage)
         {
-            return;
+            return false;
         }
 
         using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
         AccessControl? ac = await context.AccessControls
-            .FirstOrDefaultAsync(a => a.Id == accessControlId && a.Project.Id == projectId);
+            .FirstOrDefaultAsync(a => a.Id == accessControlId);
 
         if (ac == null || ac.Owner)
         {
-            return;
+            return false;
         }
 
         ac.ReadAccess = read;
         ac.WriteAccess = write;
         ac.Manage = manage;
         await context.SaveChangesAsync();
+        return true;
     }
 
     public async Task RemoveMemberFromProjectAsync(long projectId, long accessControlId)
     {
-        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
-        if (!isOwner)
+        bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
+        if (!hasManage)
         {
             return;
         }
@@ -275,8 +276,8 @@ public class ProjectService(
 
     public async Task UpdateProjectNameAsync(long projectId, string newName)
     {
-        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
-        if (!isOwner)
+        bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
+        if (!hasManage)
         {
             return;
         }
@@ -295,8 +296,8 @@ public class ProjectService(
 
     public async Task ArchiveProjectAsync(long projectId)
     {
-        bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);
-        if (!isOwner)
+        bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
+        if (!hasManage)
         {
             return;
         }
@@ -338,5 +339,38 @@ public class ProjectService(
 
         applicationDbContext.Projects.Remove(project);
         await applicationDbContext.SaveChangesAsync();
+    }
+
+    public async Task<string?> InviteMemberByEmailAsync(long projectId, string email, bool read, bool write, bool manage)
+    {
+        bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
+        if (!hasManage) return "Keine Berechtigung.";
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        ApplicationUser? targetUser = await context.ApplicationUsers
+            .FirstOrDefaultAsync(u => u.Email == email);
+        if (targetUser == null) return "Benutzer nicht gefunden.";
+
+        bool alreadyMember = await context.AccessControls
+            .AnyAsync(a => a.Project.Id == projectId && a.ApplicationUser.Id == targetUser.Id);
+        if (alreadyMember) return "Benutzer ist bereits Mitglied.";
+
+        Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null) return "Projekt nicht gefunden.";
+
+        AccessControl accessControl = new AccessControl
+        {
+            ReadAccess = read,
+            WriteAccess = write,
+            Manage = manage,
+            Owner = false,
+            Project = project,
+            ApplicationUser = targetUser,
+        };
+
+        await context.AccessControls.AddAsync(accessControl);
+        await context.SaveChangesAsync();
+        return null;
     }
 }

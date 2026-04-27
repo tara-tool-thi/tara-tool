@@ -37,12 +37,11 @@
         @projectName
         <FluentSpacer />
         <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
-        @if (isOwner)
+        @if (canManage)
         {
             <FluentButton Appearance="Appearance.Outline"
                           OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))">
                 <FluentIcon Value="@(new Icons.Regular.Size20.Settings())" Slot="start" />
-                Einstellungen
             </FluentButton>
         }
     </FluentStack>
@@ -113,7 +112,7 @@
     public long urlId { get; set; }
 
     private string projectName = "";
-    private bool isOwner = false;
+    private bool canManage = false;
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
@@ -177,7 +176,7 @@
         projectName = requestedProject!.ProjectName;
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
         localDateTimeUpdatePending = true;
-        isOwner = await AccessControlService.CheckUserAccessRightsOwner(urlId);
+        canManage = await AccessControlService.CheckUserAccessRightsManage(urlId);
 
     }
 

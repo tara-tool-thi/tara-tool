@@ -24,7 +24,7 @@
 else
 {
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
-        <h1>Einstellungen</h1>
+        <h1>Project Settings</h1>
         @if (!string.IsNullOrEmpty(saveStatus))
         {
             <span class="tiny-text">&nbsp;@saveStatus</span>
@@ -39,83 +39,144 @@ else
 
     <br />
 
-    <span class="tiny-text">Projektname</span>
-    <div class="fullwidth">
+    <span class="tiny-text">Project Name</span>
+    <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
         <FluentTextField @bind-Value="projectName"
                          @bind-Value:after="ScheduleAutoSave"
                          Placeholder="Projektname eingeben..."
-                         Class="fullwidth" />
-    </div>
+                         Style="flex:1" />
+        <FluentButton Appearance="Appearance.Outline" Title="Exportieren"
+                      OnClick="@(() => showExportDialog = true)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportLtr())" />
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Outline" Title="Archivieren"
+                      OnClick="@(() => showArchiveDialog = true)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Archive())" />
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Outline" Title="Löschen"
+                      OnClick="@(() => showDeleteDialog = true)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
+        </FluentButton>
+    </FluentStack>
 
     <br />
 
-    <span class="tiny-text">Mitglieder</span>
+    <span class="tiny-text">Member Settings</span>
     <br />
-    <FluentDataGrid TGridItem="AccessControl"
-                    Items="@projectMembers.AsQueryable()"
-                    @key="@membersVersion">
-        <PropertyColumn Property="@(ac => ac.ApplicationUser.UserName)" Title="Name" />
-        <PropertyColumn Property="@(ac => ac.ApplicationUser.Email)" Title="E-Mail" />
-        <TemplateColumn Title="Rolle">
-            @if (context.Owner)
-            {
-                <span>Owner</span>
-            }
-            else
-            {
-                <FluentSelect TOption="string"
-                              Value="@GetRoleLabel(context)"
-                              ValueChanged="@(async (string value) => await UpdateRoleAsync(context, value))">
+    <FluentCard Style="padding:16px; overflow:visible">
+        <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
+            <FluentSearch @bind-Value="searchMemberText"
+                          Placeholder="Mitglieder suchen..."
+                          Immediate="true"
+                          ImmediateDelay="300"
+                          Style="flex:1" />
+            <FluentSelect @bind-Value="roleFilter" TOption="string" Style="width:175px">
+                <FluentOption Value="">Alle Rollen</FluentOption>
+                <FluentOption Value="Owner">Owner</FluentOption>
+                <FluentOption Value="Project-Admin">Project-Admin</FluentOption>
+                <FluentOption Value="Editor">Editor</FluentOption>
+                <FluentOption Value="Viewer">Viewer</FluentOption>
+            </FluentSelect>
+            <FluentButton Appearance="Appearance.Outline"
+                          OnClick="@(() => { showInviteRow = !showInviteRow; inviteStatus = string.Empty; })">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Add())" Slot="start" />
+                Add
+            </FluentButton>
+        </FluentStack>
+
+        <FluentDivider Style="margin:12px 0" />
+
+        @{
+            var filteredMembers = FilteredMembers.ToList();
+        }
+        @foreach (AccessControl member in filteredMembers)
+        {
+            <FluentStack VerticalAlignment="VerticalAlignment.Center"
+                         Style="padding:6px 0; gap:8px"
+                         @key="member.Id">
+                <div style="width:32px; height:32px; border-radius:50%; background:var(--accent-fill-rest); color:var(--foreground-on-accent-rest); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; flex-shrink:0">
+                    @(member.ApplicationUser.UserName?.Length > 0 ? char.ToUpper(member.ApplicationUser.UserName[0]).ToString() : "?")
+                </div>
+                <span style="flex:1">@member.ApplicationUser.UserName</span>
+                @if (member.Owner)
+                {
+                    <span style="background:var(--accent-fill-rest); color:var(--foreground-on-accent-rest); padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600">Owner</span>
+                    <div style="width:168px"></div>
+                }
+                else
+                {
+                    <FluentSelect TOption="string"
+                                  Items="@_roleOptions"
+                                  OptionValue="@(o => o)"
+                                  OptionText="@(o => o)"
+                                  Value="@roleSelections.GetValueOrDefault(member.Id)"
+                                  ValueChanged="@(async (string value) => await UpdateRoleAsync(member, value))"
+                                  Style="width:160px" />
+                }
+                @if (!member.Owner)
+                {
+                    <FluentButton Appearance="Appearance.Outline"
+                                  OnClick="@(async () => await RemoveMemberAsync(member))">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Dismiss())" />
+                    </FluentButton>
+                }
+                else
+                {
+                    <div style="width:32px"></div>
+                }
+            </FluentStack>
+            <FluentDivider Style="margin:4px 0" />
+        }
+
+        @if (!filteredMembers.Any())
+        {
+            <div style="padding:16px; text-align:center; opacity:0.6">
+                Keine Mitglieder gefunden.
+            </div>
+        }
+
+        @if (showInviteRow)
+        {
+            <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="padding-top:8px; gap:8px">
+                <FluentTextField @bind-Value="inviteEmail"
+                                 Placeholder="E-Mail des Benutzers..."
+                                 Style="flex:1" />
+                <FluentSelect @bind-Value="inviteRole" TOption="string" Style="width:160px">
                     <FluentOption Value="Project-Admin">Project-Admin</FluentOption>
                     <FluentOption Value="Editor">Editor</FluentOption>
                     <FluentOption Value="Viewer">Viewer</FluentOption>
                 </FluentSelect>
-            }
-        </TemplateColumn>
-        <TemplateColumn Title="">
-            @if (!context.Owner)
-            {
-                <FluentButton Appearance="Appearance.Outline"
-                              OnClick="@(async () => await RemoveMemberAsync(context))"
-                              Color="var(--error)">
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())"
-                                Color="Color.Error"
-                                Slot="start" />
-                    Entfernen
+                <FluentButton Appearance="Appearance.Accent" OnClick="InviteMemberAsync">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Add())" />
                 </FluentButton>
+            </FluentStack>
+            @if (!string.IsNullOrEmpty(inviteStatus))
+            {
+                <span class="tiny-text">@inviteStatus</span>
             }
-        </TemplateColumn>
-    </FluentDataGrid>
+        }
+    </FluentCard>
 
-    <br />
-
-    <span class="tiny-text">Aktionen</span>
-    <br />
-    <FluentStack Orientation="Orientation.Horizontal">
-        <FluentButton Appearance="Appearance.Outline"
-                      OnClick="@(() => showArchiveDialog = true)">
-            <FluentIcon Value="@(new Icons.Regular.Size20.Archive())" Slot="start" />
-            Projekt archivieren
-        </FluentButton>
-        <FluentButton Appearance="Appearance.Outline"
-                      OnClick="@(() => showExportDialog = true)">
-            <FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportLtr())" Slot="start" />
-            Projekt exportieren
-        </FluentButton>
-        <FluentButton Appearance="Appearance.Outline"
-                      Disabled="@(!projectMembers.Any(m => !m.Owner))"
-                      OnClick="@(() => showTransferOwnerDialog = true)">
-            <FluentIcon Value="@(new Icons.Regular.Size20.PersonSwap())" Slot="start" />
-            Owner-Transfer
-        </FluentButton>
-        <FluentSpacer />
-        <FluentButton Appearance="Appearance.Outline"
-                      OnClick="@(() => showDeleteDialog = true)"
-                      Color="var(--error)">
-            <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
-            Projekt löschen
-        </FluentButton>
-    </FluentStack>
+    @if (isOwner && projectMembers.Any(m => !m.Owner))
+    {
+        <br />
+        <span class="tiny-text">Transfer Ownership</span>
+        <br />
+        <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
+            <FluentSelect @bind-Value="selectedTransferAccessControlId" TOption="string" Style="flex:1; max-width:400px">
+                @foreach (AccessControl member in projectMembers.Where(m => !m.Owner))
+                {
+                    <FluentOption Value="@member.Id.ToString()">
+                        @member.ApplicationUser.UserName (@member.ApplicationUser.Email)
+                    </FluentOption>
+                }
+            </FluentSelect>
+            <FluentButton Appearance="Appearance.Outline" OnClick="TransferOwnershipAsync">
+                <FluentIcon Value="@(new Icons.Regular.Size20.PersonSwap())" Slot="start" />
+                Transfer
+            </FluentButton>
+        </FluentStack>
+    }
 
     <!-- Archive Dialog -->
     <FluentDialog Hidden="@(!showArchiveDialog)" Modal="true" TrapFocus="true" aria-label="Projekt archivieren">
@@ -201,38 +262,6 @@ else
             </FluentStack>
         </FluentDialogFooter>
     </FluentDialog>
-
-    <!-- Owner Transfer Dialog -->
-    <FluentDialog Hidden="@(!showTransferOwnerDialog)" Modal="true" TrapFocus="true" aria-label="Owner-Transfer">
-        <FluentDialogHeader>
-            <h3>Owner-Transfer</h3>
-        </FluentDialogHeader>
-        <FluentDialogBody>
-            <FluentStack Orientation="Orientation.Vertical">
-                <span>Neuen Owner auswählen:</span>
-                <FluentSelect @bind-Value="selectedTransferAccessControlId" TOption="string">
-                    @foreach (AccessControl member in projectMembers.Where(m => !m.Owner))
-                    {
-                        <FluentOption Value="@member.Id.ToString()">
-                            @member.ApplicationUser.UserName (@member.ApplicationUser.Email)
-                        </FluentOption>
-                    }
-                </FluentSelect>
-            </FluentStack>
-        </FluentDialogBody>
-        <FluentDialogFooter>
-            <FluentStack Orientation="Orientation.Horizontal" Width="100%">
-                <FluentSpacer />
-                <FluentButton Appearance="Appearance.Outline"
-                              OnClick="@(() => showTransferOwnerDialog = false)">
-                    Abbrechen
-                </FluentButton>
-                <FluentButton Appearance="Appearance.Accent" OnClick="TransferOwnershipAsync">
-                    Übertragen
-                </FluentButton>
-            </FluentStack>
-        </FluentDialogFooter>
-    </FluentDialog>
 }
 
 @code {
@@ -242,24 +271,39 @@ else
     private Project? project;
     private string projectName = string.Empty;
     private List<AccessControl> projectMembers = [];
-    private int membersVersion = 0;
+    private Dictionary<long, string> roleSelections = [];
 
     private string saveStatus = string.Empty;
     private System.Threading.Timer? saveTimer;
 
+    private bool isOwner = false;
+    private string searchMemberText = string.Empty;
+    private string roleFilter = string.Empty;
+    private bool showInviteRow = false;
+    private string inviteEmail = string.Empty;
+    private string inviteRole = "Editor";
+    private string inviteStatus = string.Empty;
+
     private bool showArchiveDialog = false;
     private bool showExportDialog = false;
     private bool showDeleteDialog = false;
-    private bool showTransferOwnerDialog = false;
+
+    private static readonly string[] _roleOptions = ["Project-Admin", "Editor", "Viewer"];
 
     private string selectedExportFormat = "PDF";
     private string deleteConfirmText = string.Empty;
     private string selectedTransferAccessControlId = string.Empty;
 
+    private IEnumerable<AccessControl> FilteredMembers => projectMembers
+        .Where(m => string.IsNullOrWhiteSpace(searchMemberText) ||
+                    (m.ApplicationUser.UserName?.Contains(searchMemberText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (m.ApplicationUser.Email?.Contains(searchMemberText, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Where(m => string.IsNullOrEmpty(roleFilter) || GetRoleLabel(m) == roleFilter);
+
     protected override async Task OnInitializedAsync()
     {
-        bool isOwner = await AccessControlService.CheckUserAccessRightsOwner(urlId);
-        if (!isOwner)
+        bool hasManage = await AccessControlService.CheckUserAccessRightsManage(urlId);
+        if (!hasManage)
         {
             NavigationManager.NavigateTo($"/Project/{urlId}");
             return;
@@ -274,6 +318,9 @@ else
 
         projectName = project.ProjectName;
         projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
+        BuildRoleSelections();
+
+        isOwner = await AccessControlService.CheckUserAccessRightsOwner(urlId);
 
         AccessControl? firstNonOwner = projectMembers.FirstOrDefault(m => !m.Owner);
         if (firstNonOwner != null)
@@ -290,6 +337,13 @@ else
         return "Viewer";
     }
 
+    private void BuildRoleSelections()
+    {
+        roleSelections = projectMembers
+            .Where(m => !m.Owner)
+            .ToDictionary(m => m.Id, m => GetRoleLabel(m));
+    }
+
     private void ScheduleAutoSave()
     {
         saveStatus = "Unsaved changes…";
@@ -302,10 +356,7 @@ else
 
     private async Task SaveProjectNameAsync()
     {
-        if (project == null)
-        {
-            return;
-        }
+        if (project == null) return;
 
         saveStatus = "Saving...";
         StateHasChanged();
@@ -326,11 +377,11 @@ else
 
     private async Task UpdateRoleAsync(AccessControl ac, string role)
     {
+        roleSelections[ac.Id] = role;
         bool write = role is "Project-Admin" or "Editor";
         bool manage = role == "Project-Admin";
-        await ProjectService.UpdateMemberRoleAsync(urlId, ac.Id, true, write, manage);
-        projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
-        membersVersion++;
+        bool success = await ProjectService.UpdateMemberRoleAsync(urlId, ac.Id, true, write, manage);
+        saveStatus = success ? "Rolle gespeichert" : "Fehler: Rolle konnte nicht geändert werden";
         StateHasChanged();
     }
 
@@ -338,10 +389,41 @@ else
     {
         await ProjectService.RemoveMemberFromProjectAsync(urlId, ac.Id);
         projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
-        membersVersion++;
+        BuildRoleSelections();
 
         AccessControl? firstNonOwner = projectMembers.FirstOrDefault(m => !m.Owner);
         selectedTransferAccessControlId = firstNonOwner?.Id.ToString() ?? string.Empty;
+
+        StateHasChanged();
+    }
+
+    private async Task InviteMemberAsync()
+    {
+        if (string.IsNullOrWhiteSpace(inviteEmail))
+        {
+            inviteStatus = "Fehler: Bitte E-Mail eingeben.";
+            return;
+        }
+
+        bool write = inviteRole is "Project-Admin" or "Editor";
+        bool manage = inviteRole == "Project-Admin";
+        string? error = await ProjectService.InviteMemberByEmailAsync(urlId, inviteEmail, true, write, manage);
+
+        if (error != null)
+        {
+            inviteStatus = $"Fehler: {error}";
+        }
+        else
+        {
+            inviteStatus = string.Empty;
+            inviteEmail = string.Empty;
+            showInviteRow = false;
+            projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
+            BuildRoleSelections();
+
+            AccessControl? firstNonOwner = projectMembers.FirstOrDefault(m => !m.Owner);
+            selectedTransferAccessControlId = firstNonOwner?.Id.ToString() ?? string.Empty;
+        }
 
         StateHasChanged();
     }
@@ -361,10 +443,7 @@ else
 
     private async Task DeleteAsync()
     {
-        if (project == null || deleteConfirmText != project.ProjectName)
-        {
-            return;
-        }
+        if (project == null || deleteConfirmText != project.ProjectName) return;
 
         showDeleteDialog = false;
         await ProjectService.Delete(project);
@@ -373,12 +452,7 @@ else
 
     private async Task TransferOwnershipAsync()
     {
-        showTransferOwnerDialog = false;
-
-        if (!long.TryParse(selectedTransferAccessControlId, out long accessControlId))
-        {
-            return;
-        }
+        if (!long.TryParse(selectedTransferAccessControlId, out long accessControlId)) return;
 
         bool success = await ProjectService.TransferOwnershipAsync(urlId, accessControlId);
         if (success)
