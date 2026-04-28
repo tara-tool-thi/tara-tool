@@ -1,4 +1,4 @@
-﻿﻿﻿@page "/Account/Register"
+﻿@page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -6,7 +6,6 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.WebUtilities
 @using tara_tool.Data
-@using tara_tool.Data.Tables
 
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -15,7 +14,6 @@
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
-@inject IToastService ToastService
 
 
 <PageTitle>Register</PageTitle>
@@ -42,63 +40,20 @@
 
                 <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password" Label="Password" Placeholder="*******" Required="true" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.Password" class="text-danger" />
-                
+
                 <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword" Label="Confirm Password" Placeholder="*******" Required="true" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-                
+
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%" >Register</FluentButton>
             </FluentStack>
         </EditForm>
     </FluentGridItem>
-    
-    @*<FluentGridItem xs="12" sm="8">
-        <h3>Use another service to log in.</h3>
-        <hr />
-        <ExternalLoginPicker />
-    </FluentGridItem>*@
 </FluentGrid>
 
-
-
-
-@*<PageTitle>Register</PageTitle>
-
-<h1>Register</h1>
-
-<FluentGrid>
-    <FluentGridItem xs="8" sm="4">
-        <StatusMessage Message="@Message" />
-        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser"
-                  FormName="register">
-            <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
-            <hr />
-            <FluentValidationSummary class="text-danger" role="alert" />
-            <FluentStack Orientation="Orientation.Vertical">
-                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true"
-                                 Placeholder="name@example.com" Label="Email" Style="width: 100%" />
-                <FluentValidationMessage For="() => Input.Email" class="text-danger" />
-                <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password"
-                                 AutoComplete="new-password" Required="true" Placeholder="password" Label="Password"
-                                 Style="width: 100%" />
-                <FluentValidationMessage For="() => Input.Password" class="text-danger" />
-                <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword"
-                                 AutoComplete="new-password" Required="true" Placeholder="password" Label="Confirm Password"
-                                 Style="width: 100%" />
-                <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%">Log in
-                </FluentButton>
-            </FluentStack>
-        </EditForm>
-    </FluentGridItem>
-    <FluentGridItem xs="12" sm="8">
-        <h3>Use another service to log in.</h3>
-        <hr />
-        <ExternalLoginPicker />
-    </FluentGridItem>
-</FluentGrid>*@
-
 @code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     private string? Username;
 
     private string? Organization;
@@ -110,34 +65,11 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error =>
-error.Description))}";
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
     protected override void OnInitialized()
     {
         Input ??= new();
-    }
-
-    private int counter = 1;
-    private void ShowToast()
-    {
-        Random rnd = new();
-
-        ToastIntent intent = Enum.GetValues<ToastIntent>()[rnd.Next(10)];
-        string? message = $"Simple Toast #{counter++}";
-
-        ToastService.ShowToast(
-            intent,
-            message
-            //rnd.Next(3000, 15000)
-            //"Log click",
-            //EventCallback.Factory.Create<ToastResult>(this, HandleTopAction)
-        );
-    }
-
-    private void HandleTopAction(ToastResult result)
-    {
-        Logger.LogInformation("Toast clicked");
     }
 
     public async Task RegisterUser(EditContext editContext)
@@ -156,38 +88,20 @@ error.Description))}";
             return;
         }
 
-        ShowToast();
-        @*await Task.Delay(3000);*@
+        HttpContext.Response.Cookies.Append
+        (
+            IdentityRedirectManager.StatusCookieName,
+            "Successfully Registered.\nPlease log in using your new credentials."
+        );
 
         Logger.LogInformation("User created a new account with password.");
 
         string? userId = await UserManager.GetUserIdAsync(user);
         string? code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        @*string? callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/Login").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
-          
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));*@
-
-
-        @*RedirectManager.RedirectTo(
+        RedirectManager.RedirectTo(
                 "Account/Login");
-
-        *@
-
-        @*if (UserManager.Options.SignIn.RequireConfirmedAccount)
-        {
-            RedirectManager.RedirectTo(
-                "Account/RegisterConfirmation",
-                new Dictionary<string, object?>() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
-        }
-        else
-        {
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            RedirectManager.RedirectTo(ReturnUrl);
-        }*@
     }
 
     private ApplicationUser CreateUser()
@@ -211,8 +125,6 @@ error.Description))}";
         }
         return (IUserEmailStore<ApplicationUser>)UserStore;
     }
-
-
 
     private sealed class InputModel
     {
