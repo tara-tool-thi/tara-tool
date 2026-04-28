@@ -2,6 +2,8 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authorization
 @using System.Security.Cryptography.Pkcs
+@using System.Security.Cryptography
+@using Microsoft.EntityFrameworkCore.Storage.ValueConversion
 @using tara_tool.Components.Dialogs
 @rendermode InteractiveServer
 
@@ -37,9 +39,12 @@
         @* await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success"); *@
     }
 
-    @* public async Task createLink()
+    public async Task CreateId()
     {
-        await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success");
-    } *@
+        RandomNumberGenerator rng = RandomNumberGenerator.Create();
+        byte[] id = byte[16];
+        rng.GetBytes(id);
+        return id;
+    }
 
 }
