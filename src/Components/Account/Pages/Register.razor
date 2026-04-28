@@ -1,4 +1,4 @@
-@page "/Account/Register"
+﻿@page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -7,6 +7,7 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using tara_tool.Data
 
+@inject PendingRegistrationService PendingRegistration
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
 @inject SignInManager<ApplicationUser> SignInManager
@@ -23,6 +24,7 @@
 <FluentGrid>
     <FluentGridItem xs="12" sm="4">
         <StatusMessage Message="@Message" />
+        <StatusMessage Message="@errorMessage" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
             <h2>Create a new Account</h2>
@@ -54,9 +56,6 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
-    private string? Username;
-
-    private string? Organization;
     private IEnumerable<IdentityError>? identityErrors;
 
     [SupplyParameterFromForm]
@@ -67,13 +66,31 @@
 
     private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
+    private string? errorMessage;
     protected override void OnInitialized()
     {
         Input ??= new();
     }
 
+    
     public async Task RegisterUser(EditContext editContext)
     {
+        string path = HttpContext.Request.Path;
+        Console.WriteLine(path);
+
+        // string? url = @ReturnUrl;
+        // Console.WriteLine(url);
+
+        Uri uri = new Uri(path);
+        string parameter = uri.Query; 
+        string id = parameter.Split('=')[1];
+        Console.WriteLine(id);
+
+        if(!await PendingRegistration.Check(Input.Email,id)){
+            errorMessage = "Error: Needs to be the same E-Mail address you received the invation link";
+            return;
+        }
+        
         ApplicationUser? user = CreateUser();
 
         await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
