@@ -1,4 +1,4 @@
-﻿@page "/Account/Register"
+@page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -81,6 +81,8 @@
         IUserEmailStore<ApplicationUser>? emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         IdentityResult? result = await UserManager.CreateAsync(user, Input.Password);
+        user.Organization = Input.Organization;
+        await UserManager.UpdateAsync(user);
 
         if (!result.Succeeded)
         {
