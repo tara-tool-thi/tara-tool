@@ -12,6 +12,7 @@ public class ApplicationDbContext(
     // DbSets
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<AccessControl> AccessControls { get; set; }
+    public DbSet<PendingRegistration> PendingRegistrations { get; set; }
     public DbSet<Project> Projects { get; set; }
     public DbSet<ItemDefinition> ItemDefinitions { get; set; }
     public DbSet<Image> Images { get; set; }

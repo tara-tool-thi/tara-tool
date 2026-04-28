@@ -46,6 +46,7 @@ builder.Services
     .AddDefaultTokenProviders();
 
 builder.Services.AddTransient<AccessControlService>();
+builder.Services.AddTransient<PendingRegistrationService>();
 builder.Services.AddTransient<ProjectService>();
 builder.Services.AddTransient<ItemDefinitionService>();
 builder.Services.AddTransient<SessionService>();
