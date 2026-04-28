@@ -45,6 +45,25 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
         }
 
         return tag;
+    }
 
+    public async Task<List<Tag>> GetAllTagsInProject(long idProject)
+    {
+        if (await accessControlService.CheckUserAccessRightsRead(idProject) is false)
+        {
+            return [];
+        }
+
+
+        using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
+
+        Project? project = await context.Projects.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == idProject);
+
+        if (project is null)
+        {
+            return [];
+        }
+
+        return project.Tags.ToList();
     }
 }

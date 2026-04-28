@@ -33,7 +33,7 @@ public class ApplicationDbContext(
             throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' not found.");
 
-        databaseBuilder.UseSqlite(connectionString).UseLazyLoadingProxies();
+        databaseBuilder.UseSqlite(connectionString);
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -54,10 +54,12 @@ public class ApplicationDbContext(
             .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
         builder.Entity<Asset>()
-            .HasMany(e => e.ItemDefinitions)
-            .WithMany(e => e.Assets);
+            .HasOne(e => e.ItemDefinition)
+            .WithMany(e => e.Assets)
+            .HasForeignKey(e => e.IdItemDefinition)
+            .IsRequired(true);
         builder.Entity<Asset>()
-            .HasMany(e => e.AssetGroup);
+            .HasOne(e => e.Tag);
         builder.Entity<Asset>()
             .HasMany(e => e.DamageScenarios)
             .WithMany(e => e.Assets);

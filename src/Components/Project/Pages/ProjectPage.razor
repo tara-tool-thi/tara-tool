@@ -17,10 +17,10 @@
 <!-- Db Context has to be swapped from ApplicationDbContext to IDbContextFactory as per our guidelines -->
 <!-- for IDbContextFactory to work I would have to swap
     builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlite(connectionString)); 
-    for 
+    options => options.UseSqlite(connectionString));
+    for
     builder.Services.AddDbContextFactory<ApplicationDbContext>(
-    options => options.UseSqlite(connectionString)); 
+    options => options.UseSqlite(connectionString));
     in Program.cs -->
 
 @inject NavigationManager NavigationManager
@@ -132,7 +132,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        FilteredItemsProvider = ItemsService.GetItemsProvider(filter: e => e.Where(i => i.IdProject == urlId).Where(i =>
+        FilteredItemsProvider = ItemsService.GetItemsProvider(ProjectId: urlId, filter: e => e.Where(i => i.IdProject ==
+urlId).Where(i =>
             string.IsNullOrWhiteSpace(searchText) ||
                 EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
                 EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
@@ -177,7 +178,7 @@
         }
     }
 
-    
+
     private async Task<Project?> retrieveProjectInfo()
     {
         Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);

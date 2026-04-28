@@ -92,7 +92,7 @@ public class ProjectService(
 
     }
 
-    //This feature is here to prevent 
+    //This feature is here to prevent
     public async Task AddUserToProjectAsync(long ProjectId, bool Read = true, bool Write = false, bool Manage = false, bool Owner = false)
     {
         using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
@@ -172,7 +172,7 @@ public class ProjectService(
     }
 
     //Not yet relevant
-    public GridItemsProvider<Project> GetItemsProvider(Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    public GridItemsProvider<Project> GetItemsProvider(long ProjectId, Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
     {
         throw new NotImplementedException();
     }
