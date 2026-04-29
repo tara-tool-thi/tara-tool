@@ -25,6 +25,11 @@
                 <span>@(context.Tag?.Name ?? "None")</span>
             </ChildContent>
         </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@numberDamadgeScenarioSort" Title="Nr. of Damage Scenarios">
+            <ChildContent>
+                <span>@context.DamageScenarios.Count()</span>
+            </ChildContent>
+        </TemplateColumn>
     </FluentDataGrid>
 }
 
@@ -44,6 +49,7 @@
     private PaginationUI paginationUI { get; set; } = default!;
 
     private GridSort<Asset> tagSort = GridSort<Asset>.ByAscending(e => e.Tag!.Name);
+    private GridSort<Asset> numberDamadgeScenarioSort = GridSort<Asset>.ByAscending(e => e.DamageScenarios.Count());
 
     private FluentDataGrid<Asset> grid = default!;
 

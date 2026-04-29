@@ -41,7 +41,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         Project? project = await context.Projects.Include(a => a.ItemDefinitions).ThenInclude(i => i.Assets).FirstOrDefaultAsync(p => p.Id == itemDefinition.IdProject);
         if (project is null) return null;
 
-        long number = project.ItemDefinitions.SelectMany(a => a.Assets.Select(i => i.AssetNumber)).OrderBy(a => a).First() + 1;
+        long number = project.ItemDefinitions.SelectMany(a => a.Assets.Select(i => i.AssetNumber)).OrderBy(a => a).FirstOrDefault() + 1;
         Asset newAsset = new Asset
         {
             AssetNumber = number,
@@ -87,8 +87,6 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
             {
                 Asset = filter(Asset);
             }
-
-
 
             int total = await Asset.CountAsync();
             List<Asset> items = await request.ApplySorting(Asset).Skip(request.StartIndex).Take(request.Count ?? 20).ToListAsync(request.CancellationToken);
