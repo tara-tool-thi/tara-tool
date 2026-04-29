@@ -24,7 +24,7 @@ public class ProjectService(
             await _contextFactory.CreateDbContextAsync();
 
         DbSet<Project> set = context.Projects;
-        IQueryable<Project> query = set.AsQueryable();
+        IQueryable<Project> query = set.AsNoTracking().AsQueryable();
         if (extend != null)
         {
             query = extend(query);
@@ -38,7 +38,7 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
         DbSet<Project> set = context.Projects;
-        IQueryable<Project> projectQuery = set.AsQueryable();
+        IQueryable<Project> projectQuery = set.AsNoTracking().AsQueryable();
         if (extend != null)
         {
             projectQuery = extend.Invoke(set);

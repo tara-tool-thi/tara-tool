@@ -33,7 +33,7 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
     public async Task<Tag?> GetItemByIdAsync(long id)
     {
         using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
-        Tag? tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id);
+        Tag? tag = await context.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
         if (tag is null)
         {
             return null;
@@ -57,7 +57,7 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
 
         using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
 
-        Project? project = await context.Projects.Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == idProject);
+        Project? project = await context.Projects.AsNoTracking().Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == idProject);
 
         if (project is null)
         {

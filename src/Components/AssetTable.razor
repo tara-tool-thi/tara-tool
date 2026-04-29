@@ -63,6 +63,14 @@
         NavigationManager.NavigateTo($"Asset/{row.Item.Id}");
     }
 
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         FilteredItemsProvider = AssetService.GetItemsProvider(ProjectId, e => e.Include(a => a.Tag), e => Filters(e).Where(a =>

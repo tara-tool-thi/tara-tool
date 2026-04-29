@@ -63,7 +63,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
             {
                 return GridItemsProviderResult.From(new List<Asset>(), 0);
             }
-            IQueryable<Asset> Asset = context.Assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
+            IQueryable<Asset> Asset = context.Assets.AsNoTracking().Where(a => a.ItemDefinition!.IdProject == ProjectId);
 
             if (include != null)
             {
@@ -91,11 +91,9 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         }
         context.Entry(asset).CurrentValues.SetValues(entityToSave);
 
-        if (entityToSave.Tag is not null)
+        if (entityToSave.IdTag is not null)
         {
-            context.Attach(entityToSave.Tag);
-            asset.Tag = entityToSave.Tag;
-            asset.IdTag = entityToSave.Tag.Id;
+            asset.IdTag = entityToSave.IdTag;
         }
         else
         {
@@ -111,7 +109,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
     public async Task<Asset?> GetItemByIdAsync(long Id, Func<IQueryable<Asset>, IQueryable<Asset>>? include = null, CancellationToken cancellationToken = default)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        IQueryable<Asset> assets = context.Assets;
+        IQueryable<Asset> assets = context.Assets.AsQueryable();
         if (include is not null)
         {
             assets = include(assets);

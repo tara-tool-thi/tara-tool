@@ -37,14 +37,14 @@
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <div class="fullwidth">
-        <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
-                         @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Style="width: 100%;" Immediate=true
-                         ImmediateDelay="500" />
+            <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
+                             @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Style="width: 100%;" Immediate=true
+                             ImmediateDelay="500" />
         </div>
         <div>
-        <FluentCombobox OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" : t.Name)
-                        TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)" Label="Select Tag"
-                        Placeholder="Type to search..." Items=@GroupOptions />
+            <FluentCombobox OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" : t.Name)
+                            TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)" Label="Select Tag"
+                            Placeholder="Type to search..." Items=@GroupOptions />
         </div>
     </FluentStack>
     <div style="height: 1rem;"></div>
@@ -75,19 +75,20 @@
             if (string.IsNullOrWhiteSpace(value) || value.Equals("None"))
             {
                 _selectionBackingField = string.Empty;
-                asset.Tag = null;
+                asset.IdTag = null;
             }
             else
             {
                 if (GroupOptions.Any(t => t.Name.Equals(value)))
                 {
-                    asset.Tag = GroupOptions.FirstOrDefault(t => t.Name.Equals(value));
+                    asset.IdTag = GroupOptions.FirstOrDefault(t => t.Name.Equals(value))!.Id;
                 }
                 else
                 {
                     Tag? newTag = TagService.CreateTag(asset!.ItemDefinition!.IdProject, value).Result;
                     if (newTag is null) return;
-                    asset.Tag = newTag;
+                    asset.IdTag = newTag.Id;
+                    GroupOptions.Add(newTag);
                 }
             }
             genericAutosave.ScheduleAutoSave();

@@ -33,7 +33,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
     public async Task<ItemDefinition?> GetItemByIdAsync(long id, Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>>? include = null, CancellationToken cancellationToken = default)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        IQueryable<ItemDefinition> itemDefinitions = context.ItemDefinitions.AsQueryable();
+        IQueryable<ItemDefinition> itemDefinitions = context.ItemDefinitions.AsNoTracking().AsQueryable();
         if (include is not null)
         {
             itemDefinitions = include(itemDefinitions);
@@ -123,7 +123,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             {
                 return GridItemsProviderResult.From(new List<ItemDefinition>(), 0);
             }
-            IQueryable<ItemDefinition> itemDefinitions = context.ItemDefinitions;
+            IQueryable<ItemDefinition> itemDefinitions = context.ItemDefinitions.AsNoTracking();
 
             if (include != null)
             {
