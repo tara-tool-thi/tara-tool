@@ -1,15 +1,23 @@
-@using System.Configuration
-@using System.Data.SqlTypes
-@using SQLitePCL
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 @inject AssetService AssetService
 
 @if (paginationUI is not null)
 {
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <div>
+            <FluentSearch Immediate=true ImmediateDelay="500" @bind-Value="@searchText" Label="Free text search"
+                          Placeholder="Free text search..." />
+        </div>
+        <FluentSpacer />
+        <div>
+            <FluentCheckbox Label="Show Assets with no Damage Scenarios" @bind-Value="@showAssetsWithNoDamageScenario" />
+        </div>
+    </FluentStack>
     <FluentDataGrid TGridItem="Asset" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
                     OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;"
-                    @key="@searchText">
+                    @key="@rerenderKey">
         <PropertyColumn Property="@(p => p.AssetName)" Title="Name" Sortable="true" />
         <PropertyColumn Property="@(p => p.Description)" Title="Description" Sortable="true" />
         <TemplateColumn Sortable="true" SortBy="@tagSort" Title="Group">
@@ -36,6 +44,14 @@
     private PaginationUI paginationUI { get; set; } = default!;
 
     private GridSort<Asset> tagSort = GridSort<Asset>.ByAscending(e => e.Tag!.Name);
+
+    private bool showAssetsWithNoDamageScenario { get; set; } = false;
+
+    //Needed to rerender the DataGrid if necessary
+    private long rerenderKey
+    {
+        get => searchText.GetHashCode() ^ showAssetsWithNoDamageScenario.GetHashCode();
+    }
 
     private string searchText
     {
@@ -75,6 +91,8 @@
     {
         FilteredItemsProvider = AssetService.GetItemsProvider(ProjectId, e => e.Include(a => a.Tag), e => Filters(e).Where(a =>
             string.IsNullOrWhiteSpace(searchText) || a.AssetName.Contains(searchText) || a.Description.Contains(searchText) ||
-            a.Tag!.Name.Contains(searchText)));
+            a.Tag!.Name.Contains(searchText) || (a.Tag == null && "None".Contains(searchText))).Where(a =>
+showAssetsWithNoDamageScenario == false || a.DamageScenarios.Count() ==
+0));
     }
 }
