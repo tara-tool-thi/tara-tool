@@ -37,7 +37,8 @@
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
-                         @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Style="width: 75%;" />
+                         @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Style="width: 75%;" Immediate=true
+                         ImmediateDelay="500" />
         <FluentCombobox OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" : t.Name)
                         TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)" Label="Select Tag"
                         Placeholder="Type to search..." Items=@GroupOptions />
