@@ -16,8 +16,7 @@
         </div>
     </FluentStack>
     <FluentDataGrid TGridItem="Asset" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
-                    OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;"
-                    @key="@rerenderKey">
+                    OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
         <PropertyColumn Property="@(p => p.AssetNumber)" Title="Nr." Sortable="true" />
         <PropertyColumn Property="@(p => p.AssetName)" Title="Name" Sortable="true" />
         <PropertyColumn Property="@(p => p.Description)" Title="Description" Sortable="true" />
@@ -46,30 +45,36 @@
 
     private GridSort<Asset> tagSort = GridSort<Asset>.ByAscending(e => e.Tag!.Name);
 
-    private bool showAssetsWithNoDamageScenario { get; set; } = false;
+    private FluentDataGrid<Asset> grid = default!;
 
-    //Needed to rerender the DataGrid if necessary
-    private long rerenderKey
-    {
-        get => searchText.GetHashCode() ^ showAssetsWithNoDamageScenario.GetHashCode();
-    }
-
+    private string _searchText = string.Empty;
     private string searchText
     {
-        get => field;
+        get => _searchText;
         set
         {
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                field = string.Empty;
-            }
-
-            else
-            {
-                field = value;
-            }
+            _searchText = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+            RefreshGrid();
         }
-    } = string.Empty;
+    }
+
+    private bool _showAssetsWithNoDamageScenario = false;
+    private bool showAssetsWithNoDamageScenario
+    {
+        get => _showAssetsWithNoDamageScenario;
+        set
+        {
+            _showAssetsWithNoDamageScenario = value;
+            RefreshGrid();
+        }
+    }
+
+    private void RefreshGrid()
+    {
+        // grid may be null during initial render
+        if (grid is not null)
+            InvokeAsync(() => grid.RefreshDataAsync());
+    }
 
     private void onRowClick(FluentDataGridRow<Asset> row)
     {

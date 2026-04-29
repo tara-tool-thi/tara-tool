@@ -88,8 +88,10 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
                 Asset = filter(Asset);
             }
 
+
+
             int total = await Asset.CountAsync();
-            List<Asset> items = await Asset.Skip(request.StartIndex).Take(request.Count ?? 20).ToListAsync(request.CancellationToken);
+            List<Asset> items = await request.ApplySorting(Asset).Skip(request.StartIndex).Take(request.Count ?? 20).ToListAsync(request.CancellationToken);
             return GridItemsProviderResult.From(items, total);
         };
     }

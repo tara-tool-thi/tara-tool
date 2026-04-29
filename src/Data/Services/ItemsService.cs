@@ -136,7 +136,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             }
 
             int total = await itemDefinitions.CountAsync();
-            List<ItemDefinition> items = await itemDefinitions.Skip(request.StartIndex).Take(request.Count ?? 20).ToListAsync(request.CancellationToken);
+            List<ItemDefinition> items = await request.ApplySorting(itemDefinitions).Skip(request.StartIndex).Take(request.Count ?? 20).ToListAsync(request.CancellationToken);
             return GridItemsProviderResult.From(items, total);
         };
     }
