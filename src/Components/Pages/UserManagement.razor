@@ -5,26 +5,29 @@
 @using System.Security.Cryptography
 @using Microsoft.EntityFrameworkCore.Storage.ValueConversion
 @using tara_tool.Components.Dialogs
+@using System.Security.Claims
 @rendermode InteractiveServer
 
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
 @inject PendingRegistrationService PendingRegistrationService
 
-@attribute [Authorize]
+<AuthorizeView Roles="Admin">
+    <PageTitle>User Management</PageTitle>
 
-<PageTitle>User Management</PageTitle>
+    <h1>User Management</h1>
 
-<h1>User Management</h1>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+            HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <FluentSearch Placeholder="Type to search for user..." Style="Width: 25%" @bind-Value=@UserSearch />
+        <FluentButton OnClick="OpenDialog" IconStart=@(new Icons.Regular.Size20.Add())>
+          New User
+        </FluentButton>
 
-<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
-        HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-    <FluentSearch Placeholder="Type to search for user..." Style="Width: 25%" @bind-Value=@UserSearch />
-    <FluentButton OnClick="OpenDialog" IconStart=@(new Icons.Regular.Size20.Add())>
-      New User
-    </FluentButton>
-
-</FluentStack>
+    </FluentStack>
+</AuthorizeView>
 
 <div>
     <FluentDialog @ref="copyLink" @bind-Hidden="@Hidden" @ondialogdismiss=CloseCopyLink>
@@ -46,11 +49,18 @@
     private FluentDialog? copyLink;
     private bool Hidden { get; set; } = true;
 
+    private ClaimsPrincipal? user { get; set; }
 
-   private async Task OpenDialog()
+    protected override async Task OnInitializedAsync() {
+        user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
+        if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
+    }
+
+    private async Task OpenDialog()
     {
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
         DialogResult? result = await dialog.Result;
+        if (user is null || !user.IsInRole("Admin")) return;
         email = (string?)result?.Data;
         if(email == null)
             return;
