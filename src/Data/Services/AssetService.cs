@@ -104,9 +104,9 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         }
         context.Entry(asset).CurrentValues.SetValues(entityToSave);
 
-        if (entityToSave.IdTag is not null)
+        if (entityToSave.Tag is not null)
         {
-            asset.IdTag = entityToSave.IdTag;
+            asset.Tag = entityToSave.Tag;
         }
         else
         {
