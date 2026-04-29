@@ -38,8 +38,13 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
             return null;
         }
 
+        Project? project = await context.Projects.Include(a => a.ItemDefinitions).ThenInclude(i => i.Assets).FirstOrDefaultAsync(p => p.Id == itemDefinition.IdProject);
+        if (project is null) return null;
+
+        long number = project.ItemDefinitions.SelectMany(a => a.Assets.Select(i => i.AssetNumber)).OrderBy(a => a).First() + 1;
         Asset newAsset = new Asset
         {
+            AssetNumber = number,
             AssetName = "New Asset",
             IdItemDefinition = IdItemDefinition //Adding ForeignKey
         };

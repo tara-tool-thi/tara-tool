@@ -18,6 +18,7 @@
     <FluentDataGrid TGridItem="Asset" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
                     OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;"
                     @key="@rerenderKey">
+        <PropertyColumn Property="@(p => p.AssetNumber)" Title="Nr." Sortable="true" />
         <PropertyColumn Property="@(p => p.AssetName)" Title="Name" Sortable="true" />
         <PropertyColumn Property="@(p => p.Description)" Title="Description" Sortable="true" />
         <TemplateColumn Sortable="true" SortBy="@tagSort" Title="Group">
