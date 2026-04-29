@@ -4,7 +4,7 @@ using tara_tool.Data;
 using tara_tool.Data.Services;
 using tara_tool.Data.Tables;
 
-public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService) : IDataService<Asset>
+public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService, TagService tagService) : IDataService<Asset>
 {
     //Needs to be implemented by the Person creating the assets
     public async Task Delete(Asset itemToDelete)
@@ -16,8 +16,16 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         {
             return;
         }
+        List<Tag> tags = await tagService.GetAllTagsInProject(asset.ItemDefinition.IdProject);
 
         context.Remove(asset);
+        await context.SaveChangesAsync();
+
+        foreach (Tag tag in tags.Where(t => !context.Assets.Any(a => a.Tag == t)))
+        {
+            await tagService.Delete(tag);
+        }
+
         await context.SaveChangesAsync();
     }
 

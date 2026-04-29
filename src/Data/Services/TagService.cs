@@ -66,4 +66,16 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
 
         return project.Tags.ToList();
     }
+
+    public async Task Delete(Tag tag)
+    {
+        using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
+
+        Tag? foundTag = await context.Tags.FirstOrDefaultAsync(t => t.Id == tag.Id);
+
+        if (foundTag is null) return;
+
+        context.Tags.Remove(foundTag);
+        await context.SaveChangesAsync();
+    }
 }

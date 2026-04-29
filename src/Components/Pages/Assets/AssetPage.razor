@@ -1,4 +1,5 @@
 @page "/Asset/{IdAsset:long}"
+@using tara_tool.Components.Dialogs
 @using System.Text.RegularExpressions
 @using System.Runtime.CompilerServices
 
@@ -6,7 +7,7 @@
 @inject AssetService AssetService
 @inject TagService TagService
 @inject NavigationManager NavigationManager
-
+@inject IDialogService DialogService
 
 
 @if (asset is not null)
@@ -26,7 +27,7 @@
         <FluentSpacer />
         <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
             <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
-            Delete Item
+            Delete Asset
         </FluentButton>
     </FluentStack>
     <p class="tiny-text">Asset, CIA Properties and damage scenarios</p>
@@ -42,9 +43,16 @@
                              ImmediateDelay="500" />
         </div>
         <div>
-            <FluentCombobox OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" : t.Name)
-                            TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)" Label="Select Tag"
-                            Placeholder="Type to search..." Items=@GroupOptions />
+            <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
+                <div>
+                    <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" : t.Name)
+                                    TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)" Label="Select Group"
+                                    Items=@GroupOptions />
+                </div>
+                <FluentButton IconStart="@(new Icons.Regular.Size20.Add())" Appearance="Appearance.Accent"
+                    OnClick="CreateTag" Id="AddGroupButton"/>
+                <FluentTooltip Anchor="AddGroupButton" Position="TooltipPosition.Start">Add new group</FluentTooltip>
+            </FluentStack>
         </div>
     </FluentStack>
     <div style="height: 1rem;"></div>
@@ -61,11 +69,9 @@
     private Asset? asset { get; set; }
 
 
-    private string _selectionBackingField = string.Empty;
-
     private string selectedTagName
     {
-        get => _selectionBackingField;
+        get => asset?.Tag?.Name ?? "None";
         set
         {
             if (asset is null)
@@ -74,23 +80,13 @@
             }
             if (string.IsNullOrWhiteSpace(value) || value.Equals("None"))
             {
-                _selectionBackingField = string.Empty;
-                asset.IdTag = null;
+                asset.Tag = null;
             }
-            else
+            else if (GroupOptions.Any(t => t.Name.Equals(value)))
             {
-                if (GroupOptions.Any(t => t.Name.Equals(value)))
-                {
-                    asset.IdTag = GroupOptions.FirstOrDefault(t => t.Name.Equals(value))!.Id;
-                }
-                else
-                {
-                    Tag? newTag = TagService.CreateTag(asset!.ItemDefinition!.IdProject, value).Result;
-                    if (newTag is null) return;
-                    asset.IdTag = newTag.Id;
-                    GroupOptions.Add(newTag);
-                }
+                asset.Tag = GroupOptions.FirstOrDefault(t => t.Name.Equals(value));
             }
+
             genericAutosave.ScheduleAutoSave();
         }
     }
@@ -115,8 +111,6 @@
 
         GroupOptions.Add(new Tag { Name = "None" });
         GroupOptions.AddRange(await TagService.GetAllTagsInProject(asset!.ItemDefinition!.IdProject));
-
-        _selectionBackingField = asset.Tag?.Name ?? "None";
     }
 
     protected async Task OnDelete()
@@ -125,5 +119,22 @@
         {
             await AssetService.Delete(asset);
         }
+    }
+
+    private async Task CreateTag()
+    {
+        IDialogReference dialog = await DialogService.ShowDialogAsync<AddAssetGroup>("", new DialogParameters());
+        DialogResult result = await dialog.Result;
+        if (result is { Cancelled: true } or { Data: null or "" }) return;
+        string newGroup = (string)result.Data;
+        if (newGroup.IsWhiteSpace()) return;
+        Tag? newTag = TagService.CreateTag(asset!.ItemDefinition!.IdProject, newGroup).Result;
+        if (newTag is null) return;
+        asset.Tag = newTag;
+
+        GroupOptions.Add(newTag);
+
+        genericAutosave.ScheduleAutoSave();
+        StateHasChanged();
     }
 }
