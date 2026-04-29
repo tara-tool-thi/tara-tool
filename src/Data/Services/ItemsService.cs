@@ -120,10 +120,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         ItemDefinition? item = context.ItemDefinitions.FirstOrDefault(i => i.Id == itemDefinition.Id);
-        if (item is null)
-        {
-            return;
-        }
+        if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return;
 
         //Gets all the Assets which are only connected to this
 <<<<<<< HEAD

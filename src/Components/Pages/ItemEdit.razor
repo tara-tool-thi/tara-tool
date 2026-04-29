@@ -30,9 +30,14 @@
         <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Style="margin-right:4px" />
         Archived
     </FluentBadge>
-} else {
+} else if (itemDefinition != null && itemDefinition.Project != null && hasWriteAccess){
     <GenericAutosave TEntity="ItemDefinition" Entity="@itemDefinition" SaveService="@ItemsService"
                      @ref=@genericAutosave />
+} else {
+    <FluentBadge Appearance="Appearance.Neutral" Style="margin-left:8px; align-self:center">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Style="margin-right:4px" />
+        You are not allowed to write on this project, changes will not be saved!
+    </FluentBadge>
 }
     <FluentSpacer />
     <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
@@ -165,6 +170,7 @@ else
     bool ExpandedItemFunction = false;
     bool ExpandedPreliminaryArchitectureText = false;
     bool ExpandedOperationalEnvironmentText = false;
+    bool hasWriteAccess = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,6 +187,11 @@ else
                 NavigationManager.NavigateTo("/");
                 return;
             }
+
+        if (itemDefinition.Project != null)
+        {
+            hasWriteAccess = await AccessControlService.CheckUserAccessRightsWrite(itemDefinition.Project.Id);
+        }
 
             ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
             ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);

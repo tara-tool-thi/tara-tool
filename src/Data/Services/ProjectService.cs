@@ -132,7 +132,7 @@ public class ProjectService(
 
         Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == entityToSave.Id);
 
-        if (project == null)
+        if (project == null || !await accessControlService.CheckUserAccessRightsWrite(project.Id))
         {
             return null;
         }
