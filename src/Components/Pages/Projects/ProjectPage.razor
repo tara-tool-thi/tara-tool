@@ -35,6 +35,13 @@
 <h2>
     <FluentStack @key="@retrievedProjectLastModifiedDate">
         @projectName
+        @if (isArchived)
+        {
+            <FluentBadge Appearance="Appearance.Neutral" Style="margin-left:8px; align-self:center">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Style="margin-right:4px" />
+                Archived
+            </FluentBadge>
+        }
         <FluentSpacer />
         <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
         @if (canManage)
@@ -46,15 +53,24 @@
         }
     </FluentStack>
 </h2>
+@if (isArchived)
+{
+    <FluentMessageBar Intent="MessageIntent.Warning" Style="margin-bottom:12px">
+        This project is archived and cannot be edited.
+    </FluentMessageBar>
+}
 <br />
 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
     <FluentTextField Label="Search for an Item" Placeholder="Search by name, function or environment"
                      Style="width: 250px;" @bind-Value="searchText" Immediate="true" ImmediateDelay="500" />
     <FluentSpacer />
 
-    <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
-        New Item
-    </FluentButton>
+    @if (!isArchived)
+    {
+        <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
+            New Item
+        </FluentButton>
+    }
 </FluentStack>
 
 <br />
@@ -113,6 +129,7 @@
 
     private string projectName = "";
     private bool canManage = false;
+    private bool isArchived = false;
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
@@ -175,6 +192,7 @@
 
         projectName = requestedProject!.ProjectName;
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+        isArchived = requestedProject.IsArchived;
         localDateTimeUpdatePending = true;
         canManage = await AccessControlService.CheckUserAccessRightsManage(urlId);
 

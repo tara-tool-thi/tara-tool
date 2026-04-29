@@ -4,6 +4,13 @@
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <h4>@Project.ProjectName</h4>
+        @if (Project.IsArchived)
+        {
+            <FluentBadge Appearance="Appearance.Neutral" Style="margin-left:8px; align-self:center">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Style="margin-right:4px" />
+                Archived
+            </FluentBadge>
+        }
         <FluentSpacer />
         <p class="date-text">
             @Project.DateLastChanged.ToShortDateString()

@@ -237,6 +237,26 @@ public class ProjectService(
         await context.SaveChangesAsync();
     }
 
+    public async Task UnarchiveProjectAsync(long projectId)
+    {
+        bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);
+        if (!hasManage)
+        {
+            return;
+        }
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+        Project? project = await context.Projects.FirstOrDefaultAsync(p => p.Id == projectId);
+        if (project == null)
+        {
+            return;
+        }
+
+        project.IsArchived = false;
+        project.DateLastChanged = DateTime.UtcNow;
+        await context.SaveChangesAsync();
+    }
+
     public async Task<bool> TransferOwnershipAsync(long projectId, long newOwnerAccessControlId)
     {
         bool isOwner = await accessControlService.CheckUserAccessRightsOwner(projectId);

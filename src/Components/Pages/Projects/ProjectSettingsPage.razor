@@ -39,20 +39,38 @@ else
 
     <br />
 
+    @if (project.IsArchived)
+    {
+        <FluentMessageBar Intent="MessageIntent.Warning" Style="margin-bottom:12px">
+            This project is archived. It is read-only and cannot be edited.
+        </FluentMessageBar>
+    }
+
     <span class="tiny-text">Project Name</span>
     <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
         <FluentTextField @bind-Value="projectName"
                          @bind-Value:after="ScheduleAutoSave"
                          Placeholder="Enter project name..."
-                         Style="flex:1" />
+                         Style="flex:1"
+                         Disabled="@project.IsArchived" />
         <FluentButton Appearance="Appearance.Outline" Title="Export"
                       OnClick="@(() => showExportDialog = true)">
             <FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportLtr())" />
         </FluentButton>
-        <FluentButton Appearance="Appearance.Outline" Title="Archive"
-                      OnClick="@(() => showArchiveDialog = true)">
-            <FluentIcon Value="@(new Icons.Regular.Size20.Archive())" />
-        </FluentButton>
+        @if (project.IsArchived)
+        {
+            <FluentButton Appearance="Appearance.Outline" Title="Unarchive"
+                          OnClick="@(() => showUnarchiveDialog = true)">
+                <FluentIcon Value="@(new Icons.Regular.Size20.ArrowUndo())" />
+            </FluentButton>
+        }
+        else
+        {
+            <FluentButton Appearance="Appearance.Outline" Title="Archive"
+                          OnClick="@(() => showArchiveDialog = true)">
+                <FluentIcon Value="@(new Icons.Regular.Size20.Archive())" />
+            </FluentButton>
+        }
         <FluentButton Appearance="Appearance.Outline" Title="Delete"
                       OnClick="@(() => showDeleteDialog = true)">
             <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
@@ -178,6 +196,28 @@ else
         </FluentStack>
     }
 
+    <!-- Unarchive Dialog -->
+    <FluentDialog Hidden="@(!showUnarchiveDialog)" Modal="true" TrapFocus="true" aria-label="Unarchive project">
+        <FluentDialogHeader>
+            <h3>Unarchive project</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            Do you want to restore <strong>@project.ProjectName</strong> and allow editing again?
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline"
+                              OnClick="@(() => showUnarchiveDialog = false)">
+                    Cancel
+                </FluentButton>
+                <FluentButton Appearance="Appearance.Accent" OnClick="UnarchiveAsync">
+                    Unarchive
+                </FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
+
     <!-- Archive Dialog -->
     <FluentDialog Hidden="@(!showArchiveDialog)" Modal="true" TrapFocus="true" aria-label="Archive project">
         <FluentDialogHeader>
@@ -285,6 +325,7 @@ else
     private string inviteStatus = string.Empty;
 
     private bool showArchiveDialog = false;
+    private bool showUnarchiveDialog = false;
     private bool showExportDialog = false;
     private bool showDeleteDialog = false;
 
@@ -433,6 +474,14 @@ else
         showArchiveDialog = false;
         await ProjectService.ArchiveProjectAsync(urlId);
         NavigationManager.NavigateTo("/");
+    }
+
+    private async Task UnarchiveAsync()
+    {
+        showUnarchiveDialog = false;
+        await ProjectService.UnarchiveProjectAsync(urlId);
+        project = await ProjectService.GetItemByIdAsync(urlId, null);
+        StateHasChanged();
     }
 
     private async Task ExportAsync()
