@@ -7,8 +7,6 @@
 @using tara_tool.Data.Services
 @using tara_tool.Data.Tables
 
-@implements IDisposable
-
 @inject ProjectService ProjectService
 @inject AccessControlService AccessControlService
 @inject NavigationManager NavigationManager
@@ -27,14 +25,18 @@ else
         <h1>Project Settings</h1>
         @if (!string.IsNullOrEmpty(saveStatus))
         {
-            <span class="tiny-text">&nbsp;@saveStatus</span>
+            @if (saveStatus == "Saved")
+            {
+                <FluentIcon Value="@(new Icons.Regular.Size20.CloudCheckmark())"
+                            Color="Color.Success"
+                            Title="Saved"
+                            Style="margin-left:8px" />
+            }
+            else
+            {
+                <span class="tiny-text">&nbsp;@saveStatus</span>
+            }
         }
-        <FluentSpacer />
-        <FluentButton Appearance="Appearance.Outline"
-                      OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}"))">
-            <FluentIcon Value="@(new Icons.Regular.Size20.ArrowLeft())" Slot="start" />
-            Back to Project
-        </FluentButton>
     </FluentStack>
 
     <br />
@@ -46,10 +48,9 @@ else
         </FluentMessageBar>
     }
 
-    <span class="tiny-text">Project Name</span>
+    <FluentLabel Typo="Typography.H5" Style="margin-bottom:6px">Project Name</FluentLabel>
     <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
         <FluentTextField @bind-Value="projectName"
-                         @bind-Value:after="ScheduleAutoSave"
                          Placeholder="Enter project name..."
                          Style="flex:1"
                          Disabled="@project.IsArchived" />
@@ -78,10 +79,10 @@ else
     </FluentStack>
 
     <br />
-
-    <span class="tiny-text">Member Settings</span>
     <br />
-    <FluentCard Style="padding:16px; overflow:visible">
+
+    <FluentLabel Typo="Typography.H5" Style="margin-bottom:6px">Member Settings</FluentLabel>
+    <FluentCard Style="padding:12px; overflow:auto; max-height:320px">
         <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
             <FluentSearch @bind-Value="searchMemberText"
                           Placeholder="Search members..."
@@ -181,8 +182,8 @@ else
     @if (isOwner && projectMembers.Any(m => !m.Owner))
     {
         <br />
-        <span class="tiny-text">Transfer Ownership</span>
         <br />
+        <FluentLabel Typo="Typography.H5" Style="margin-bottom:6px">Transfer Ownership</FluentLabel>
         <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
             <FluentSelect @bind-Value="selectedTransferAccessControlId" TOption="string" Style="flex:1; max-width:400px">
                 @foreach (AccessControl member in projectMembers.Where(m => !m.Owner))
@@ -305,6 +306,21 @@ else
             </FluentStack>
         </FluentDialogFooter>
     </FluentDialog>
+
+    <FluentStack Orientation="Orientation.Horizontal"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween"
+                 VerticalAlignment="VerticalAlignment.Center"
+                 Style="margin-top:24px; width:100%">
+        <FluentButton Appearance="Appearance.Outline"
+                      OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}"))">
+            Back to Project
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Accent"
+                      OnClick="SaveProjectNameAsync"
+                      Disabled="@project.IsArchived">
+            Save
+        </FluentButton>
+    </FluentStack>
 }
 
 @code {
@@ -317,7 +333,7 @@ else
     private Dictionary<long, string> roleSelections = [];
 
     private string saveStatus = string.Empty;
-    private System.Threading.Timer? saveTimer;
+    private System.Threading.CancellationTokenSource? saveStatusResetCts;
 
     private bool isOwner = false;
     private string searchMemberText = string.Empty;
@@ -388,19 +404,13 @@ else
             .ToDictionary(m => m.Id, m => GetRoleLabel(m));
     }
 
-    private void ScheduleAutoSave()
-    {
-        saveStatus = "Unsaved changes…";
-        saveTimer?.Dispose();
-        saveTimer = new System.Threading.Timer(async _ =>
-        {
-            await InvokeAsync(SaveProjectNameAsync);
-        }, null, TimeSpan.FromSeconds(2), Timeout.InfiniteTimeSpan);
-    }
-
     private async Task SaveProjectNameAsync()
     {
         if (project == null) return;
+
+        saveStatusResetCts?.Cancel();
+        saveStatusResetCts?.Dispose();
+        saveStatusResetCts = null;
 
         saveStatus = "Saving...";
         StateHasChanged();
@@ -410,6 +420,9 @@ else
             await ProjectService.UpdateProjectNameAsync(urlId, projectName);
             project.ProjectName = projectName;
             saveStatus = "Saved";
+
+            saveStatusResetCts = new System.Threading.CancellationTokenSource();
+            _ = ClearSavedStatusAsync(saveStatusResetCts.Token);
         }
         catch
         {
@@ -521,5 +534,24 @@ else
         }
     }
 
-    public void Dispose() => saveTimer?.Dispose();
+    private async Task ClearSavedStatusAsync(System.Threading.CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+
+        if (cancellationToken.IsCancellationRequested || saveStatus != "Saved")
+        {
+            return;
+        }
+
+        saveStatus = string.Empty;
+        StateHasChanged();
+    }
+
 }
