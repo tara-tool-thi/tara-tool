@@ -40,9 +40,9 @@
         @if (canManage)
         {
             <FluentButton Appearance="Appearance.Outline"
-                          OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))">
-                <FluentIcon Value="@(new Icons.Regular.Size20.Settings())" Slot="start" />
-            </FluentButton>
+                          Title="Project Settings"
+                          IconStart="@(new Icons.Regular.Size20.Settings())"
+                          OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
         }
     </FluentStack>
 </h2>
