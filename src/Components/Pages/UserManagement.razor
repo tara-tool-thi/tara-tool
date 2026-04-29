@@ -6,6 +6,7 @@
 @using Microsoft.EntityFrameworkCore.Storage.ValueConversion
 @using tara_tool.Components.Dialogs
 @using System.Security.Claims
+@using Microsoft.JSInterop;
 @rendermode InteractiveServer
 
 @inject NavigationManager NavigationManager
@@ -13,6 +14,8 @@
 @inject IDialogService DialogService
 @inject NavigationManager NavigationManager
 @inject PendingRegistrationService PendingRegistrationService
+@inject IJSRuntime JSRuntime
+@inject IToastService ToastService
 
 <AuthorizeView Roles="Admin">
     <PageTitle>User Management</PageTitle>
@@ -32,9 +35,16 @@
 <div>
     <FluentDialog @ref="copyLink" @bind-Hidden="@Hidden" @ondialogdismiss=CloseCopyLink>
         <FluentDialogHeader Visible="false" />
-        <p>This is the register link for the new user: </p>
-        <p>@link</p>
-        <p>Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+        <FluentDialogBody>
+            <FluentStack Orientation="Orientation.Vertical">
+                <p>This is the register link for the new user: </p>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentTextField ReadOnly="true" @bind-Value="link" style="width: 100%;"></FluentTextField>
+                    <FluentButton OnClick=@CopyToClipboard IconStart=@(new Icons.Regular.Size20.Copy()) />
+                </FluentStack>
+                <p>Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+            </FluentStack>
+        </FluentDialogBody>
     </FluentDialog>
 </div>
 
@@ -51,6 +61,8 @@
 
     private ClaimsPrincipal? user { get; set; }
 
+    @* private readonly IJSRuntime _jsRuntime; *@
+
     protected override async Task OnInitializedAsync() {
         user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
         if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
@@ -65,7 +77,7 @@
         if(email == null)
             return;
         string? id = await PendingRegistrationService.Create(email);
-        link = NavigationManager.BaseUri + "/Account/Register?id=" + id;
+        link = NavigationManager.BaseUri + "Account/Register?id=" + id;
         await DialogService.CloseAsync(dialog);
         copyLink!.Show();
     }
@@ -73,6 +85,12 @@
     private void CloseCopyLink()
     {
         copyLink!.Hide();
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", link);
+        ToastService.ShowSuccess("Link copied to clipboard");
     }
 
 }
