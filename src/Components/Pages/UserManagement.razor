@@ -8,6 +8,8 @@
 @rendermode InteractiveServer
 
 @inject IDialogService DialogService
+@inject NavigationManager NavigationManager
+@inject PendingRegistrationService PendingRegistrationService
 
 @attribute [Authorize]
 
@@ -24,11 +26,25 @@
 
 </FluentStack>
 
+<div>
+    <FluentDialog @ref="copyLink" @bind-Hidden="@Hidden" @ondialogdismiss=CloseCopyLink>
+        <FluentDialogHeader Visible="false" />
+        <p>This is the register link for the new user: </p>
+        <p>@link</p>
+        <p>Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+    </FluentDialog>
+</div>
+
 
 @code {
     private string? UserSearch;
 
     private string? email = "";
+
+    private string? link;
+
+    private FluentDialog? copyLink;
+    private bool Hidden { get; set; } = true;
 
 
    private async Task OpenDialog()
@@ -36,15 +52,17 @@
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
         DialogResult? result = await dialog.Result;
         email = (string?)result?.Data;
-        @* await DialogService.ShowSuccessAsync($"Email sent to: {Input.Email}", "Success"); *@
+        if(email == null)
+            return;
+        string? id = await PendingRegistrationService.Create(email);
+        link = NavigationManager.BaseUri + "/Account/Register?id=" + id;
+        await DialogService.CloseAsync(dialog);
+        copyLink!.Show();
     }
 
-    public async Task CreateId()
+    private void CloseCopyLink()
     {
-        RandomNumberGenerator rng = RandomNumberGenerator.Create();
-        byte[] id = byte[16];
-        rng.GetBytes(id);
-        return id;
+        copyLink!.Hide();
     }
 
 }

@@ -16,6 +16,7 @@
         <DataAnnotationsValidator />
         <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" Immediate=true/>
         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
+        <p>The email address is used for verification.</p>
     </FluentDialogBody>
 
 
@@ -32,7 +33,7 @@
     [CascadingParameter]
     public FluentDialog? Dialog { get; set; }
 
-    private InputModel Input { get; set; } = new InputModel(); 
+    private InputModel Input { get; set; } = new InputModel();
 
     public class InputModel
     {
@@ -51,7 +52,7 @@
         if (!string.IsNullOrWhiteSpace(Input.Email))
         {
             Content = Input.Email;
-            await Dialog?.CloseAsync(Content);
+            await Dialog!.CloseAsync(Content);
         }
     }
 
