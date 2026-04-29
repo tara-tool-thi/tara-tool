@@ -7,7 +7,7 @@ public class Asset
     public string AssetName { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 
-    public long IdTag { get; set; }
+    public long? IdTag { get; set; }
     public virtual Tag? Tag { get; set; }
     public virtual ICollection<DamageScenario> DamageScenarios { get; set; } = [];
 

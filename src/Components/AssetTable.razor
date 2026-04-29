@@ -12,7 +12,7 @@
                     @key="@searchText">
         <PropertyColumn Property="@(p => p.AssetName)" Title="Name" Sortable="true" />
         <PropertyColumn Property="@(p => p.Description)" Title="Description" Sortable="true" />
-        <TemplateColumn Sortable="true" SortBy="@tagSort">
+        <TemplateColumn Sortable="true" SortBy="@tagSort" Title="Group">
             <ChildContent>
                 <span>@(context.Tag?.Name ?? "None")</span>
             </ChildContent>

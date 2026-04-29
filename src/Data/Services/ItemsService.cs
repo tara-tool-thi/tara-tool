@@ -56,7 +56,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         //This is done, to establish tracking of objects, so we do not add multiple data points at once
         ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets).FirstOrDefault(i => i.Id == itemDefinition.Id);
-        if (item == null)
+        if (item is null || await accessControlService.CheckUserAccessRightsWrite(item.IdProject) is false)
         {
             return null;
         }

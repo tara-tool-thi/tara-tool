@@ -59,7 +59,10 @@ public class ApplicationDbContext(
             .HasForeignKey(e => e.IdItemDefinition)
             .IsRequired(true);
         builder.Entity<Asset>()
-            .HasOne(e => e.Tag);
+            .HasOne(e => e.Tag)
+            .WithMany()
+            .HasForeignKey(e => e.IdTag)
+            .IsRequired(false);
         builder.Entity<Asset>()
             .HasMany(e => e.DamageScenarios)
             .WithMany(e => e.Assets);

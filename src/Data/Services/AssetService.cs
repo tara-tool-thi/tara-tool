@@ -32,6 +32,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
 
         Asset newAsset = new Asset
         {
+            AssetName = "New Asset",
             IdItemDefinition = IdItemDefinition //Adding ForeignKey
         };
 
@@ -94,6 +95,13 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         {
             context.Attach(entityToSave.Tag);
             asset.Tag = entityToSave.Tag;
+            asset.IdTag = entityToSave.Tag.Id;
+        }
+        else
+        {
+            //Update Relation explicitly
+            asset.Tag = null;
+            asset.IdTag = null;
         }
 
         await context.SaveChangesAsync();
@@ -103,7 +111,12 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
     public async Task<Asset?> GetItemByIdAsync(long Id, Func<IQueryable<Asset>, IQueryable<Asset>>? include = null, CancellationToken cancellationToken = default)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        Asset? asset = context.Assets.Include(e => e.ItemDefinition).FirstOrDefault(a => a.Id == Id);
+        IQueryable<Asset> assets = context.Assets;
+        if (include is not null)
+        {
+            assets = include(assets);
+        }
+        Asset? asset = assets.FirstOrDefault(a => a.Id == Id);
         if (asset is null || await accessControlService.CheckUserAccessRightsRead(asset.ItemDefinition!.IdProject) is false)
         {
             return null;
