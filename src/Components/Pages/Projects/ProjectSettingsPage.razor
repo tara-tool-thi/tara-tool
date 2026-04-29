@@ -105,7 +105,7 @@ else
         <FluentDivider Style="margin:12px 0" />
 
         @{
-            var filteredMembers = FilteredMembers.ToList();
+            List<AccessControl> filteredMembers = FilteredMembers.ToList();
         }
         @foreach (AccessControl member in filteredMembers)
         {
