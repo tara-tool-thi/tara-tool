@@ -167,6 +167,9 @@ else
                 <FluentButton Appearance="Appearance.Outline" OnClick="InviteMemberAsync">
                     <FluentIcon Value="@(new Icons.Regular.Size16.Add())" />
                 </FluentButton>
+                <FluentButton Appearance="Appearance.Outline" OnClick="CancelInviteMemberAsync">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Dismiss())" />
+                </FluentButton>
             </FluentStack>
             @if (!string.IsNullOrEmpty(inviteStatus))
             {
@@ -466,6 +469,14 @@ else
             selectedTransferAccessControlId = firstNonOwner?.Id.ToString() ?? string.Empty;
         }
 
+        StateHasChanged();
+    }
+
+    private async Task CancelInviteMemberAsync()
+    {
+        inviteStatus = string.Empty;
+        inviteEmail = string.Empty;
+        showInviteRow = false;
         StateHasChanged();
     }
 
