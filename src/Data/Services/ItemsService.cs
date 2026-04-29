@@ -76,10 +76,8 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         //This is done, to establish tracking of objects, so we do not add multiple data points at once
         ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets).FirstOrDefault(i => i.Id == itemDefinition.Id);
-        if (item is null || await accessControlService.CheckUserAccessRightsWrite(item.IdProject) is false)
-        {
-            return null;
-        }
+        if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return null;
+
         context.Entry(item).CurrentValues.SetValues(itemDefinition);
 
         if (itemDefinition.TechnicalSketch is not null)
@@ -128,7 +126,15 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         }
 
         //Gets all the Assets which are only connected to this
+<<<<<<< HEAD
 
+=======
+        await foreach (Asset lonelyAsset in item.Assets.Where(a => a.ItemDefinitions.Count() == 1 && a.ItemDefinitions.Any(i => i.Id == itemDefinition.Id)).ToAsyncEnumerable())
+        {
+            //Needs to be reactivated, when Assets are there
+            //await assetService.Delete(lonelyAsset);
+        }
+>>>>>>> ce068f5 (Add check to Save in ItemService and hide GenericAutosave on ItemEdit-Page for archived projects)
 
         context.ItemDefinitions.Remove(item);
         await context.SaveChangesAsync();

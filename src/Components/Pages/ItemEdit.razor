@@ -9,6 +9,7 @@
 @inject NavigationManager NavigationManager
 @inject AssetService AssetService
 @inject IDialogService DialogService
+@inject AccessControlService AccessControlService
 
 <PageTitle>Item Definition</PageTitle>
 
@@ -23,8 +24,16 @@
             <li><strong>Placeholder:</strong> Placeholder</li>
         </ul>
     </FluentTooltip>
+@if (itemDefinition != null && itemDefinition.Project != null && itemDefinition.Project.IsArchived)
+{
+    <FluentBadge Appearance="Appearance.Neutral" Style="margin-left:8px; align-self:center">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Style="margin-right:4px" />
+        Archived
+    </FluentBadge>
+} else {
     <GenericAutosave TEntity="ItemDefinition" Entity="@itemDefinition" SaveService="@ItemsService"
                      @ref=@genericAutosave />
+}
     <FluentSpacer />
     <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
