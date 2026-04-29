@@ -36,12 +36,16 @@
     <DeletionDialog ItemName="@asset.AssetName" OnDelete="@OnDelete" @ref=@deletionDialog />
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <div class="fullwidth">
         <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
-                         @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Style="width: 75%;" Immediate=true
+                         @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Style="width: 100%;" Immediate=true
                          ImmediateDelay="500" />
+        </div>
+        <div>
         <FluentCombobox OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" : t.Name)
                         TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)" Label="Select Tag"
                         Placeholder="Type to search..." Items=@GroupOptions />
+        </div>
     </FluentStack>
     <div style="height: 1rem;"></div>
     <FluentTextArea Immediate=true ImmediateDelay="500" @bind-Value="@asset.Description"
