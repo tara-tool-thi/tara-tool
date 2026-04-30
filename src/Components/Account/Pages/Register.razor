@@ -97,9 +97,9 @@
 
         Logger.LogInformation("User created a new account with password.");
 
-        string? userId = await UserManager.GetUserIdAsync(user);
-        string? code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        
+        
+        
 
         RedirectManager.RedirectTo(
                 "Account/Login");
