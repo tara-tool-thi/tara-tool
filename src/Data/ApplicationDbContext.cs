@@ -41,6 +41,7 @@ public class ApplicationDbContext(
     {
         base.OnModelCreating(builder);
         // Build the Model, by defining its relations
+        builder.Entity<ApplicationUser>().Ignore(e => e.EmailConfirmed);
         builder.Entity<AccessControl>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Access)
