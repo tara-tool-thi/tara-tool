@@ -10,6 +10,7 @@
 @inject ProjectService ProjectService
 @inject AccessControlService AccessControlService
 @inject NavigationManager NavigationManager
+@inject IToastService ToastService
 
 @attribute [Authorize]
 
@@ -23,20 +24,6 @@ else
 {
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
         <h1>Project Settings</h1>
-        @if (!string.IsNullOrEmpty(saveStatus))
-        {
-            @if (saveStatus == "Saved")
-            {
-                <FluentIcon Value="@(new Icons.Regular.Size20.CloudCheckmark())"
-                            Color="Color.Success"
-                            Title="Saved"
-                            Style="margin-left:8px" />
-            }
-            else
-            {
-                <span class="tiny-text">&nbsp;@saveStatus</span>
-            }
-        }
     </FluentStack>
 
     <br />
@@ -332,9 +319,6 @@ else
     private List<AccessControl> projectMembers = [];
     private Dictionary<long, string> roleSelections = [];
 
-    private string saveStatus = string.Empty;
-    private System.Threading.CancellationTokenSource? saveStatusResetCts;
-
     private bool isOwner = false;
     private string searchMemberText = string.Empty;
     private string roleFilter = string.Empty;
@@ -408,25 +392,15 @@ else
     {
         if (project == null) return;
 
-        saveStatusResetCts?.Cancel();
-        saveStatusResetCts?.Dispose();
-        saveStatusResetCts = null;
-
-        saveStatus = "Saving...";
-        StateHasChanged();
-
         try
         {
             await ProjectService.UpdateProjectNameAsync(urlId, projectName);
             project.ProjectName = projectName;
-            saveStatus = "Saved";
-
-            saveStatusResetCts = new System.Threading.CancellationTokenSource();
-            _ = ClearSavedStatusAsync(saveStatusResetCts.Token);
+            ToastService.ShowSuccess("Project name saved.");
         }
         catch
         {
-            saveStatus = "Save failed";
+            ToastService.ShowError("Failed to save project name.");
         }
 
         StateHasChanged();
@@ -438,7 +412,14 @@ else
         bool write = role is "Project-Admin" or "Editor";
         bool manage = role == "Project-Admin";
         bool success = await ProjectService.UpdateMemberRoleAsync(urlId, ac.Id, true, write, manage);
-        saveStatus = success ? "Role saved" : "Error: role could not be changed";
+        if (success)
+        {
+            ToastService.ShowSuccess("Role updated.");
+        }
+        else
+        {
+            ToastService.ShowError("Failed to update role.");
+        }
         StateHasChanged();
     }
 
@@ -533,25 +514,4 @@ else
             NavigationManager.NavigateTo($"/Project/{urlId}");
         }
     }
-
-    private async Task ClearSavedStatusAsync(System.Threading.CancellationToken cancellationToken)
-    {
-        try
-        {
-            await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
-        }
-        catch (TaskCanceledException)
-        {
-            return;
-        }
-
-        if (cancellationToken.IsCancellationRequested || saveStatus != "Saved")
-        {
-            return;
-        }
-
-        saveStatus = string.Empty;
-        StateHasChanged();
-    }
-
 }
