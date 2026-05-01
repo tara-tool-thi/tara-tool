@@ -273,8 +273,10 @@ else
                 </span>
                 <strong>@project.ProjectName</strong>
                 <FluentTextField @bind-Value="deleteConfirmText"
-                                 Placeholder="Enter project name..."
-                                 Class="fullwidth" />
+                                Placeholder="Enter project name..."
+                                Class="fullwidth"
+                                Immediate=true
+                                ImmediateDelay="500"/>
             </FluentStack>
         </FluentDialogBody>
         <FluentDialogFooter>
