@@ -69,7 +69,7 @@ else
     <br />
 
     <FluentLabel Typo="Typography.H5" Style="margin-bottom:6px">Member Settings</FluentLabel>
-    <FluentCard Style="padding:12px; overflow:auto; max-height:320px">
+    <FluentCard Style="overflow:auto; max-height:320px">
         <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
             <FluentSearch @bind-Value="searchMemberText"
                           Placeholder="Search members..."
@@ -100,14 +100,14 @@ else
             <FluentStack VerticalAlignment="VerticalAlignment.Center"
                          Style="padding:6px 0; gap:8px"
                          @key="member.Id">
-                <div style="width:32px; height:32px; border-radius:50%; background:var(--accent-fill-rest); color:var(--foreground-on-accent-rest); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; flex-shrink:0">
+                <FluentBadge Appearance="Appearance.Accent" Style="border-radius:50%">
                     @(member.ApplicationUser.UserName?.Length > 0 ? char.ToUpper(member.ApplicationUser.UserName[0]).ToString() : "?")
-                </div>
+                </FluentBadge>
                 <span style="flex:1">@member.ApplicationUser.UserName</span>
                 @if (member.Owner)
                 {
-                    <span style="background:var(--accent-fill-rest); color:var(--foreground-on-accent-rest); padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600">Owner</span>
-                    <div style="width:168px"></div>
+                    <FluentBadge Appearance="Appearance.Accent">Owner</FluentBadge>
+                    <FluentSpacer Width="168" />
                 }
                 else
                 {
@@ -116,19 +116,19 @@ else
                                   OptionValue="@(o => o)"
                                   OptionText="@(o => o)"
                                   Value="@roleSelections.GetValueOrDefault(member.Id)"
-                                  ValueChanged="@(async (string value) => await UpdateRoleAsync(member, value))"
+                                  ValueChanged="@((string value) => StageRoleChange(member, value))"
                                   Style="width:160px" />
                 }
                 @if (!member.Owner)
                 {
                     <FluentButton Appearance="Appearance.Outline"
-                                  OnClick="@(async () => await RemoveMemberAsync(member))">
+                                  OnClick="@(() => StageRemoveMember(member))">
                         <FluentIcon Value="@(new Icons.Regular.Size16.Dismiss())" />
                     </FluentButton>
                 }
                 else
                 {
-                    <div style="width:32px"></div>
+                    <FluentSpacer Width="32" />
                 }
             </FluentStack>
             <FluentDivider Style="margin:4px 0" />
@@ -136,7 +136,7 @@ else
 
         @if (!filteredMembers.Any())
         {
-            <div style="padding:16px; text-align:center; opacity:0.6">
+            <div class="no-members">
                 No members found.
             </div>
         }
@@ -166,23 +166,24 @@ else
         }
     </FluentCard>
 
-    @if (isOwner && projectMembers.Any(m => !m.Owner))
+    @if (isOwner && TransferableMembers.Any())
     {
         <br />
         <br />
         <FluentLabel Typo="Typography.H5" Style="margin-bottom:6px">Transfer Ownership</FluentLabel>
         <FluentStack VerticalAlignment="VerticalAlignment.Center" Style="gap:8px">
             <FluentSelect @bind-Value="selectedTransferAccessControlId" TOption="string" Style="flex:1; max-width:400px">
-                @foreach (AccessControl member in projectMembers.Where(m => !m.Owner))
+                @foreach (AccessControl member in TransferableMembers)
                 {
                     <FluentOption Value="@member.Id.ToString()">
                         @member.ApplicationUser.UserName (@member.ApplicationUser.Email)
                     </FluentOption>
                 }
             </FluentSelect>
-            <FluentButton Appearance="Appearance.Outline" OnClick="TransferOwnershipAsync">
+            <FluentButton Appearance="@(pendingTransfer ? Appearance.Accent : Appearance.Outline)"
+                          OnClick="StageTransfer">
                 <FluentIcon Value="@(new Icons.Regular.Size20.PersonSwap())" Slot="start" />
-                Transfer
+                @(pendingTransfer ? "Save to confirm" : "Transfer")
             </FluentButton>
         </FluentStack>
     }
@@ -305,7 +306,7 @@ else
             Back to Project
         </FluentButton>
         <FluentButton Appearance="Appearance.Accent"
-                      OnClick="SaveProjectNameAsync"
+                      OnClick="SaveAsync"
                       Disabled="@project.IsArchived">
             Save
         </FluentButton>
@@ -320,6 +321,9 @@ else
     private string projectName = string.Empty;
     private List<AccessControl> projectMembers = [];
     private Dictionary<long, string> roleSelections = [];
+    private Dictionary<long, string> pendingRoleChanges = [];
+    private HashSet<long> pendingRemovals = [];
+    private bool pendingTransfer = false;
 
     private bool isOwner = false;
     private string searchMemberText = string.Empty;
@@ -341,10 +345,14 @@ else
     private string selectedTransferAccessControlId = string.Empty;
 
     private IEnumerable<AccessControl> FilteredMembers => projectMembers
+        .Where(m => !pendingRemovals.Contains(m.Id))
         .Where(m => string.IsNullOrWhiteSpace(searchMemberText) ||
                     (m.ApplicationUser.UserName?.Contains(searchMemberText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                     (m.ApplicationUser.Email?.Contains(searchMemberText, StringComparison.OrdinalIgnoreCase) ?? false))
-        .Where(m => string.IsNullOrEmpty(roleFilter) || GetRoleLabel(m) == roleFilter);
+        .Where(m => string.IsNullOrEmpty(roleFilter) || GetEffectiveRole(m) == roleFilter);
+
+    private IEnumerable<AccessControl> TransferableMembers =>
+        projectMembers.Where(m => !m.Owner && !pendingRemovals.Contains(m.Id));
 
     protected override async Task OnInitializedAsync()
     {
@@ -383,6 +391,12 @@ else
         return "Viewer";
     }
 
+    private string GetEffectiveRole(AccessControl ac)
+    {
+        if (ac.Owner) return "Owner";
+        return roleSelections.GetValueOrDefault(ac.Id, GetRoleLabel(ac));
+    }
+
     private void BuildRoleSelections()
     {
         roleSelections = projectMembers
@@ -390,51 +404,85 @@ else
             .ToDictionary(m => m.Id, m => GetRoleLabel(m));
     }
 
-    private async Task SaveProjectNameAsync()
+    private async Task SaveAsync()
     {
         if (project == null) return;
 
         try
         {
-            await ProjectService.UpdateProjectNameAsync(urlId, projectName);
-            project.ProjectName = projectName;
-            ToastService.ShowSuccess("Project name saved.");
+            if (projectName != project.ProjectName)
+            {
+                await ProjectService.UpdateProjectNameAsync(urlId, projectName);
+                project.ProjectName = projectName;
+            }
+
+            foreach (var (id, role) in pendingRoleChanges)
+            {
+                bool write = role is "Project-Admin" or "Editor";
+                bool manage = role == "Project-Admin";
+                await ProjectService.UpdateMemberRoleAsync(urlId, id, true, write, manage);
+            }
+            pendingRoleChanges.Clear();
+
+            foreach (long id in pendingRemovals)
+            {
+                await ProjectService.RemoveMemberFromProjectAsync(urlId, id);
+            }
+            if (pendingRemovals.Count > 0)
+            {
+                pendingRemovals.Clear();
+                projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
+                BuildRoleSelections();
+                selectedTransferAccessControlId = projectMembers.FirstOrDefault(m => !m.Owner)?.Id.ToString() ?? string.Empty;
+            }
+
+            if (pendingTransfer && long.TryParse(selectedTransferAccessControlId, out long accessControlId))
+            {
+                bool success = await ProjectService.TransferOwnershipAsync(urlId, accessControlId);
+                if (success)
+                {
+                    NavigationManager.NavigateTo($"/Project/{urlId}");
+                    return;
+                }
+                ToastService.ShowError("Failed to transfer ownership.");
+                pendingTransfer = false;
+            }
+
+            ToastService.ShowSuccess("Settings saved.");
         }
         catch
         {
-            ToastService.ShowError("Failed to save project name.");
+            ToastService.ShowError("Failed to save settings.");
         }
 
         StateHasChanged();
     }
 
-    private async Task UpdateRoleAsync(AccessControl ac, string role)
+    private void StageRoleChange(AccessControl ac, string role)
     {
         roleSelections[ac.Id] = role;
-        bool write = role is "Project-Admin" or "Editor";
-        bool manage = role == "Project-Admin";
-        bool success = await ProjectService.UpdateMemberRoleAsync(urlId, ac.Id, true, write, manage);
-        if (success)
-        {
-            ToastService.ShowSuccess("Role updated.");
-        }
-        else
-        {
-            ToastService.ShowError("Failed to update role.");
-        }
-        StateHasChanged();
+        pendingRoleChanges[ac.Id] = role;
     }
 
-    private async Task RemoveMemberAsync(AccessControl ac)
+    private void StageRemoveMember(AccessControl ac)
     {
-        await ProjectService.RemoveMemberFromProjectAsync(urlId, ac.Id);
-        projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
-        BuildRoleSelections();
+        pendingRemovals.Add(ac.Id);
+        pendingRoleChanges.Remove(ac.Id);
 
-        AccessControl? firstNonOwner = projectMembers.FirstOrDefault(m => !m.Owner);
-        selectedTransferAccessControlId = firstNonOwner?.Id.ToString() ?? string.Empty;
+        if (selectedTransferAccessControlId == ac.Id.ToString())
+        {
+            selectedTransferAccessControlId = TransferableMembers.FirstOrDefault()?.Id.ToString() ?? string.Empty;
+        }
+        if (pendingTransfer && !TransferableMembers.Any())
+        {
+            pendingTransfer = false;
+        }
+    }
 
-        StateHasChanged();
+    private void StageTransfer()
+    {
+        if (!long.TryParse(selectedTransferAccessControlId, out _)) return;
+        pendingTransfer = !pendingTransfer;
     }
 
     private async Task InviteMemberAsync()
@@ -460,9 +508,7 @@ else
             showInviteRow = false;
             projectMembers = await ProjectService.GetProjectMembersAsync(urlId);
             BuildRoleSelections();
-
-            AccessControl? firstNonOwner = projectMembers.FirstOrDefault(m => !m.Owner);
-            selectedTransferAccessControlId = firstNonOwner?.Id.ToString() ?? string.Empty;
+            selectedTransferAccessControlId = projectMembers.FirstOrDefault(m => !m.Owner)?.Id.ToString() ?? string.Empty;
         }
 
         StateHasChanged();
@@ -504,16 +550,5 @@ else
         showDeleteDialog = false;
         await ProjectService.Delete(project);
         NavigationManager.NavigateTo("/");
-    }
-
-    private async Task TransferOwnershipAsync()
-    {
-        if (!long.TryParse(selectedTransferAccessControlId, out long accessControlId)) return;
-
-        bool success = await ProjectService.TransferOwnershipAsync(urlId, accessControlId);
-        if (success)
-        {
-            NavigationManager.NavigateTo($"/Project/{urlId}");
-        }
     }
 }
