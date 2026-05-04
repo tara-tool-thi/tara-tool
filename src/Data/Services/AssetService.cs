@@ -97,7 +97,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
     public async Task<Asset?> Save(Asset entityToSave)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        Asset? asset = context.Assets.Include(e => e.ItemDefinition).FirstOrDefault(a => a.Id == entityToSave.Id);
+        Asset? asset = await context.Assets.Include(e => e.ItemDefinition).FirstOrDefaultAsync(a => a.Id == entityToSave.Id);
         if (asset is null || await accessControlService.CheckUserAccessRightsWrite(asset.ItemDefinition!.IdProject) is false)
         {
             return null;
@@ -127,7 +127,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         {
             assets = include(assets);
         }
-        Asset? asset = assets.FirstOrDefault(a => a.Id == Id);
+        Asset? asset = await assets.FirstOrDefaultAsync(a => a.Id == Id);
         if (asset is null || await accessControlService.CheckUserAccessRightsRead(asset.ItemDefinition!.IdProject) is false)
         {
             return null;

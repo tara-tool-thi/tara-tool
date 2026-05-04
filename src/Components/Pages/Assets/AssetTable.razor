@@ -7,8 +7,8 @@
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <div>
-            <FluentSearch Immediate=true ImmediateDelay="500" @bind-Value="@searchText" Label="Free text search"
-                          Placeholder="Free text search..." />
+            <FluentSearch Immediate=true ImmediateDelay="500" @bind-Value="@searchText"
+                          Label="Search Asset by Name, Description or Group" />
         </div>
         <FluentSpacer />
         <div>
@@ -25,7 +25,7 @@
                 <span>@(context.Tag?.Name ?? "None")</span>
             </ChildContent>
         </TemplateColumn>
-        <TemplateColumn Sortable="true" SortBy="@numberDamadgeScenarioSort" Title="Nr. of Damage Scenarios">
+        <TemplateColumn Sortable="true" SortBy="@numberDamageScenarioSort" Title="Nr. of Damage Scenarios">
             <ChildContent>
                 <span>@context.DamageScenarios.Count()</span>
             </ChildContent>
@@ -49,7 +49,7 @@
     private PaginationUI paginationUI { get; set; } = default!;
 
     private GridSort<Asset> tagSort = GridSort<Asset>.ByAscending(e => e.Tag!.Name);
-    private GridSort<Asset> numberDamadgeScenarioSort = GridSort<Asset>.ByAscending(e => e.DamageScenarios.Count());
+    private GridSort<Asset> numberDamageScenarioSort = GridSort<Asset>.ByAscending(e => e.DamageScenarios.Count());
 
     private FluentDataGrid<Asset> grid = default!;
 
@@ -91,7 +91,7 @@
         NavigationManager.NavigateTo($"Asset/{row.Item.Id}");
     }
 
-    protected async override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {

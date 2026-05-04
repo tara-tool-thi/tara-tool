@@ -1,7 +1,5 @@
 @page "/Asset/{IdAsset:long}"
 @using tara_tool.Components.Dialogs
-@using System.Text.RegularExpressions
-@using System.Runtime.CompilerServices
 
 @rendermode InteractiveServer
 @inject AssetService AssetService
@@ -39,18 +37,18 @@
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <div class="fullwidth">
             <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
-                             @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Style="width: 100%;" Immediate=true
+                             @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Immediate=true
                              ImmediateDelay="500" />
         </div>
         <div>
             <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
                 <div>
-                    <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" : t.Name)
-                                    TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)" Label="Select Group"
-                                    Items=@GroupOptions />
+                    <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" :
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     t.Name) TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)"
+                                  Label="Select Group" Items=@GroupOptions />
                 </div>
                 <FluentButton IconStart="@(new Icons.Regular.Size20.Add())" Appearance="Appearance.Accent"
-                    OnClick="CreateTag" Id="AddGroupButton"/>
+                              OnClick="CreateTag" Id="AddGroupButton" />
                 <FluentTooltip Anchor="AddGroupButton" Position="TooltipPosition.Start">Add new group</FluentTooltip>
             </FluentStack>
         </div>
@@ -59,7 +57,6 @@
     <FluentTextArea Immediate=true ImmediateDelay="500" @bind-Value="@asset.Description"
                     @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Label="Description"
                     Placeholder="Description..." />
-
 }
 
 @code {
