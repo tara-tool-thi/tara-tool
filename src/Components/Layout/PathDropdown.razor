@@ -8,10 +8,11 @@
 @inject ProjectService ProjectService
 @inject ItemDefinitionService ItemService
 
-<div class="breadcrumb-container" style="display: flex; align-items: center; gap: 8px; font-size: var(--app-font-size);">
+
     @if (currentProject != null)
     {
         <!-- Project Dropdown -->
+        <FluentBreadcrumbItem>
         <FluentSelect TOption="string" 
                       Height="250px"
                       Style="min-width: 100px;"  
@@ -22,12 +23,13 @@
                 <FluentOption Value="@proj.Id.ToString()">@proj.ProjectName</FluentOption>
             }
         </FluentSelect>
-
-        <span>/</span>
+        <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+        </FluentBreadcrumbItem>
 
         @if (currentItem != null)
         {
             <!-- Item Dropdown -->
+            <FluentBreadcrumbItem>
             <FluentSelect TOption="string" 
                           Height="250px"  
                           Style="min-width: 100px;"  
@@ -38,9 +40,11 @@
                     <FluentOption Value="@item.Id.ToString()">@item.ItemName</FluentOption>
                 }
             </FluentSelect>
+            <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+            </FluentBreadcrumbItem>
         }
     }
-</div>
+
 
 @code {
     private List<Project> allProjects = new List<Project>();
@@ -130,14 +134,18 @@
 
     private async Task OnProjectChanged(string newProjectId)
     {
-        long.TryParse(newProjectId, out long ProjectId);
-        Navigator.NavigateTo($"/Project/{ProjectId}");
+        if (long.TryParse(newProjectId, out long ProjectId))
+        {
+            Navigator.NavigateTo($"/Project/{ProjectId}");
+        }
     }
 
     private async Task OnItemChanged(string newItemId)
     {
-        long.TryParse(newItemId, out long ItemId);
-        Navigator.NavigateTo($"/Item/{ItemId}");
+        if (long.TryParse(newItemId, out long ItemId))
+        {
+            Navigator.NavigateTo($"/Item/{ItemId}");
+        }
     }
 
     public void Dispose()
