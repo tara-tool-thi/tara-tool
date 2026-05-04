@@ -12,7 +12,7 @@
         </div>
         <FluentSpacer />
         <div>
-            <FluentCheckbox Label="Show Assets with no Damage Scenarios" @bind-Value="@showAssetsWithNoDamageScenario" />
+            <FluentCheckbox Label="Only show Assets with no Damage Scenarios" @bind-Value="@showAssetsWithNoDamageScenario" />
         </div>
     </FluentStack>
     <FluentDataGrid TGridItem="Asset" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
