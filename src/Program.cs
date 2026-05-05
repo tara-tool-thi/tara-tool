@@ -22,8 +22,8 @@ builder.Services.AddScoped<AuthenticationStateProvider,
 builder.Services
     .AddAuthentication(options =>
     {
-      options.DefaultScheme = IdentityConstants.ApplicationScheme;
-      options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+        options.DefaultScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
     })
     .AddIdentityCookies();
 
@@ -52,6 +52,7 @@ builder.Services.AddTransient<ProjectService>();
 builder.Services.AddTransient<ItemDefinitionService>();
 builder.Services.AddTransient<SessionService>();
 builder.Services.AddTransient<AssetService>();
+builder.Services.AddTransient<TagService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
@@ -60,14 +61,14 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-  app.UseMigrationsEndPoint();
+    app.UseMigrationsEndPoint();
 }
 else
 {
-  app.UseExceptionHandler("/Error", createScopeForErrors: true);
-  // The default HSTS value is 30 days. You may want to change this for
-  // production scenarios, see https://aka.ms/aspnetcore-hsts.
-  app.UseHsts();
+    app.UseExceptionHandler("/Error", createScopeForErrors: true);
+    // The default HSTS value is 30 days. You may want to change this for
+    // production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
 }
 app.UseStatusCodePagesWithReExecute("/not-found",
                                     createScopeForStatusCodePages: true);

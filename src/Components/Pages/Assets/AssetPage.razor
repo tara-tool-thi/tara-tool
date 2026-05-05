@@ -1,0 +1,139 @@
+@page "/Asset/{IdAsset:long}"
+@using tara_tool.Components.Dialogs
+
+@rendermode InteractiveServer
+@inject AssetService AssetService
+@inject TagService TagService
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+
+
+@if (asset is not null)
+{
+
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <h1>Asset Nr: @asset.AssetNumber</h1>
+        <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
+        <FluentTooltip Anchor="iso-help-button">
+            <p><strong>ISO/SAE 21434 - Asset</strong></p>
+            <p>The following aspects must be defined:</p>
+            <ul>
+                <li><strong>Placeholder:</strong> Placeholder</li>
+            </ul>
+        </FluentTooltip>
+        <GenericAutosave TEntity="Asset" Entity="@asset" SaveService="@AssetService" @ref=@genericAutosave />
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
+            Delete Asset
+        </FluentButton>
+    </FluentStack>
+    <p class="tiny-text">Asset, CIA Properties and damage scenarios</p>
+
+    <div style="height: 1rem;"></div>
+
+    <DeletionDialog ItemName="@asset.AssetName" OnDelete="@OnDelete" @ref=@deletionDialog />
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <div class="fullwidth">
+            <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
+                             @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Immediate=true
+                             ImmediateDelay="500" />
+        </div>
+        <div>
+            <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
+                <div>
+                    <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" :
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     t.Name) TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)"
+                                  Label="Select Group" Items=@GroupOptions />
+                </div>
+                <FluentButton IconStart="@(new Icons.Regular.Size20.Add())" Appearance="Appearance.Accent"
+                              OnClick="CreateTag" Id="AddGroupButton" />
+                <FluentTooltip Anchor="AddGroupButton" Position="TooltipPosition.Start">Add new group</FluentTooltip>
+            </FluentStack>
+        </div>
+    </FluentStack>
+    <div style="height: 1rem;"></div>
+    <FluentTextArea Immediate=true ImmediateDelay="500" @bind-Value="@asset.Description"
+                    @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Label="Description"
+                    Placeholder="Description..." />
+}
+
+@code {
+    [Parameter]
+    public long IdAsset { get; set; }
+
+    private Asset? asset { get; set; }
+
+
+    private string selectedTagName
+    {
+        get => asset?.Tag?.Name ?? "None";
+        set
+        {
+            if (asset is null)
+            {
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(value) || value.Equals("None"))
+            {
+                asset.Tag = null;
+            }
+            else if (GroupOptions.Any(t => t.Name.Equals(value)))
+            {
+                asset.Tag = GroupOptions.FirstOrDefault(t => t.Name.Equals(value));
+            }
+
+            genericAutosave.ScheduleAutoSave();
+        }
+    }
+
+    private List<Tag> GroupOptions = new();
+
+
+
+    private GenericAutosave<Asset> genericAutosave { get; set; } = default!;
+    private DeletionDialog deletionDialog { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        asset = await AssetService.GetItemByIdAsync(IdAsset, include: q => q.Include(a => a.Tag).Include(a =>
+                a.ItemDefinition));
+
+        if (asset is null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        GroupOptions.Add(new Tag { Name = "None" });
+        GroupOptions.AddRange(await TagService.GetAllTagsInProject(asset!.ItemDefinition!.IdProject));
+    }
+
+    protected async Task OnDelete()
+    {
+        if (asset is not null)
+        {
+            long idItem = asset.IdItemDefinition;
+            await AssetService.Delete(asset);
+            NavigationManager.NavigateTo($"ItemDefinition/{idItem}");
+        }
+    }
+
+    private async Task CreateTag()
+    {
+        IDialogReference dialog = await DialogService.ShowDialogAsync<AddAssetGroup>("", new DialogParameters());
+        DialogResult result = await dialog.Result;
+        if (result is { Cancelled: true } or { Data: null or "" }) return;
+        string newGroup = (string)result.Data;
+        if (newGroup.IsWhiteSpace()) return;
+        Tag? newTag = TagService.CreateTag(asset!.ItemDefinition!.IdProject, newGroup).Result;
+        if (newTag is null) return;
+        asset.Tag = newTag;
+
+        GroupOptions.Add(newTag);
+
+        genericAutosave.ScheduleAutoSave();
+        StateHasChanged();
+    }
+}
