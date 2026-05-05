@@ -123,15 +123,11 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return;
 
         //Gets all the Assets which are only connected to this
-<<<<<<< HEAD
-
-=======
-        await foreach (Asset lonelyAsset in item.Assets.Where(a => a.ItemDefinitions.Count() == 1 && a.ItemDefinitions.Any(i => i.Id == itemDefinition.Id)).ToAsyncEnumerable())
+        await foreach (Asset lonelyAsset in item.Assets.Where(a => a.IdItemDefinition == itemDefinition.Id).ToAsyncEnumerable())
         {
             //Needs to be reactivated, when Assets are there
             //await assetService.Delete(lonelyAsset);
         }
->>>>>>> ce068f5 (Add check to Save in ItemService and hide GenericAutosave on ItemEdit-Page for archived projects)
 
         context.ItemDefinitions.Remove(item);
         await context.SaveChangesAsync();
