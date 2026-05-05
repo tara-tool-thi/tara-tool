@@ -12,10 +12,7 @@ public class ApplicationDbContext(
     // DbSets
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<AccessControl> AccessControls { get; set; }
-<<<<<<< HEAD
     public DbSet<PendingRegistration> PendingRegistrations { get; set; }
-=======
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
     public DbSet<Project> Projects { get; set; }
     public DbSet<ItemDefinition> ItemDefinitions { get; set; }
     public DbSet<Image> Images { get; set; }
@@ -37,21 +34,16 @@ public class ApplicationDbContext(
             throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' not found.");
 
-<<<<<<< HEAD
-        databaseBuilder.UseSqlite(connectionString).UseLazyLoadingProxies();
-=======
+
         databaseBuilder.UseSqlite(connectionString);
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
         // Build the Model, by defining its relations
-<<<<<<< HEAD
         builder.Entity<ApplicationUser>().Ignore(e => e.EmailConfirmed);
-=======
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
+
         builder.Entity<AccessControl>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Access)
@@ -66,12 +58,6 @@ public class ApplicationDbContext(
             .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
         builder.Entity<Asset>()
-<<<<<<< HEAD
-            .HasMany(e => e.ItemDefinitions)
-            .WithMany(e => e.Assets);
-        builder.Entity<Asset>()
-            .HasMany(e => e.AssetGroup);
-=======
             .HasOne(e => e.ItemDefinition)
             .WithMany(e => e.Assets)
             .HasForeignKey(e => e.IdItemDefinition)
@@ -81,7 +67,6 @@ public class ApplicationDbContext(
             .WithMany()
             .HasForeignKey(e => e.IdTag)
             .IsRequired(false);
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
         builder.Entity<Asset>()
             .HasMany(e => e.DamageScenarios)
             .WithMany(e => e.Assets);
@@ -101,13 +86,11 @@ public class ApplicationDbContext(
             .WithOne(e => e.TreatmentDecision)
             .HasForeignKey<TreatmentDecision>(e => e.ImpactRatingId)
             .IsRequired(true);
-<<<<<<< HEAD
-=======
+
         builder.Entity<Tag>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Tags)
             .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
     }
 }
