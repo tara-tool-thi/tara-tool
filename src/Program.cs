@@ -38,7 +38,6 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {
-      options.SignIn.RequireConfirmedAccount = true;
       options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -46,6 +45,7 @@ builder.Services
     .AddDefaultTokenProviders();
 
 builder.Services.AddTransient<AccessControlService>();
+builder.Services.AddTransient<PendingRegistrationService>();
 builder.Services.AddTransient<ProjectService>();
 builder.Services.AddTransient<ItemDefinitionService>();
 builder.Services.AddTransient<SessionService>();

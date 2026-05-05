@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tara_tool.Data;
 
@@ -10,76 +11,14 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416081752_AddingOrganizationFieldToApplicationUser")]
+    partial class AddingOrganizationFieldToApplicationUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.6")
-                .HasAnnotation("Proxies:ChangeTracking", false)
-                .HasAnnotation("Proxies:CheckEquality", false)
-                .HasAnnotation("Proxies:LazyLoading", true);
-
-            modelBuilder.Entity("AssetDamageScenario", b =>
-                {
-                    b.Property<long>("AssetsId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("DamageScenariosId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AssetsId", "DamageScenariosId");
-
-                    b.HasIndex("DamageScenariosId");
-
-                    b.ToTable("AssetDamageScenario");
-                });
-
-            modelBuilder.Entity("AssetItemDefinition", b =>
-                {
-                    b.Property<long>("AssetsId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("ItemDefinitionsId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AssetsId", "ItemDefinitionsId");
-
-                    b.HasIndex("ItemDefinitionsId");
-
-                    b.ToTable("AssetItemDefinition");
-                });
-
-            modelBuilder.Entity("AttackPathThreatScenario", b =>
-                {
-                    b.Property<long>("AttackPathsId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("ThreatScenariosId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AttackPathsId", "ThreatScenariosId");
-
-                    b.HasIndex("ThreatScenariosId");
-
-                    b.ToTable("AttackPathThreatScenario");
-                });
-
-            modelBuilder.Entity("DamageScenarioThreatScenario", b =>
-                {
-                    b.Property<long>("DamageScenariosId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("ThreatScenariosId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("DamageScenariosId", "ThreatScenariosId");
-
-                    b.HasIndex("ThreatScenariosId");
-
-                    b.ToTable("DamageScenarioThreatScenario");
-                });
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -230,18 +169,18 @@ namespace tara_tool.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.AccessControl", b =>
+            modelBuilder.Entity("tara_tool.Data.AccessControl", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("Manage")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("MemberId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<bool>("Owner")
                         .HasColumnType("INTEGER");
@@ -257,14 +196,14 @@ namespace tara_tool.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationUserId");
+                    b.HasIndex("MemberId");
 
                     b.HasIndex("ProjectId");
 
                     b.ToTable("AccessControls");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.ApplicationUser", b =>
+            modelBuilder.Entity("tara_tool.Data.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -279,6 +218,9 @@ namespace tara_tool.Migrations
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("INTEGER");
@@ -329,88 +271,7 @@ namespace tara_tool.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.Asset", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AssetName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("AssetNumber")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Assets");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.AttackPath", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("AttackFeasibilityRating")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ElapsedTime")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Equipment")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("KnowledgeOfComponents")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SpecialistExpertise")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("Value")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("WindowOfOpportunity")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AttackPaths");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("AvailabilityImpcat")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("ConfidentialityImpact")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("DamageScenarioNumber")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IntegrityImpact")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("DamageScenarios");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.Image", b =>
+            modelBuilder.Entity("tara_tool.Data.Image", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -429,42 +290,7 @@ namespace tara_tool.Migrations
                     b.ToTable("Images");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.ImpactRating", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("DamageScenarioId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ImpactCategory")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Requirements")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("RiskValue")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DamageScenarioId")
-                        .IsUnique();
-
-                    b.ToTable("ImpactRatings");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.ItemDefinition", b =>
+            modelBuilder.Entity("tara_tool.Data.ItemDefinition", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -475,14 +301,6 @@ namespace tara_tool.Migrations
 
                     b.Property<long?>("ItemBoundaryId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("ItemBoundaryText")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ItemDescription")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("ItemFunction")
                         .IsRequired()
@@ -502,13 +320,6 @@ namespace tara_tool.Migrations
                     b.Property<long?>("PreliminaryArchitectureId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("PreliminaryArchitectureText")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long?>("TechnicalSketchId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("IdProject");
@@ -519,26 +330,10 @@ namespace tara_tool.Migrations
 
                     b.HasIndex("PreliminaryArchitectureId");
 
-                    b.HasIndex("TechnicalSketchId");
-
                     b.ToTable("ItemDefinitions");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.PendingRegistration", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PendingRegistrations");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.Project", b =>
+            modelBuilder.Entity("tara_tool.Data.Project", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -559,135 +354,6 @@ namespace tara_tool.Migrations
                     b.ToTable("Projects");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.Tag", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long?>("AssetId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssetId");
-
-                    b.ToTable("Tags");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.ThreatScenario", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("RiskValue")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("StrideCategorie")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ThreatScenarios");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.TreatmentDecision", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<long>("ImpactRatingId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Requirements")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("RiskTreatmentOption")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ImpactRatingId")
-                        .IsUnique();
-
-                    b.ToTable("TreatmentDecisions");
-                });
-
-            modelBuilder.Entity("AssetDamageScenario", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AssetsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("tara_tool.Data.Tables.DamageScenario", null)
-                        .WithMany()
-                        .HasForeignKey("DamageScenariosId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AssetItemDefinition", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AssetsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("tara_tool.Data.Tables.ItemDefinition", null)
-                        .WithMany()
-                        .HasForeignKey("ItemDefinitionsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("AttackPathThreatScenario", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.AttackPath", null)
-                        .WithMany()
-                        .HasForeignKey("AttackPathsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("tara_tool.Data.Tables.ThreatScenario", null)
-                        .WithMany()
-                        .HasForeignKey("ThreatScenariosId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("DamageScenarioThreatScenario", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.DamageScenario", null)
-                        .WithMany()
-                        .HasForeignKey("DamageScenariosId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("tara_tool.Data.Tables.ThreatScenario", null)
-                        .WithMany()
-                        .HasForeignKey("ThreatScenariosId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -699,7 +365,7 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("tara_tool.Data.Tables.ApplicationUser", null)
+                    b.HasOne("tara_tool.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -708,7 +374,7 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("tara_tool.Data.Tables.ApplicationUser", null)
+                    b.HasOne("tara_tool.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -717,7 +383,7 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserPasskey<string>", b =>
                 {
-                    b.HasOne("tara_tool.Data.Tables.ApplicationUser", null)
+                    b.HasOne("tara_tool.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -772,7 +438,7 @@ namespace tara_tool.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("tara_tool.Data.Tables.ApplicationUser", null)
+                    b.HasOne("tara_tool.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -781,66 +447,51 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("tara_tool.Data.Tables.ApplicationUser", null)
+                    b.HasOne("tara_tool.Data.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.AccessControl", b =>
+            modelBuilder.Entity("tara_tool.Data.AccessControl", b =>
                 {
-                    b.HasOne("tara_tool.Data.Tables.ApplicationUser", "ApplicationUser")
+                    b.HasOne("tara_tool.Data.ApplicationUser", "Member")
                         .WithMany("Projects")
-                        .HasForeignKey("ApplicationUserId")
+                        .HasForeignKey("MemberId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("tara_tool.Data.Tables.Project", "Project")
+                    b.HasOne("tara_tool.Data.Project", "Project")
                         .WithMany("Access")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("ApplicationUser");
+                    b.Navigation("Member");
 
                     b.Navigation("Project");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.ImpactRating", b =>
+            modelBuilder.Entity("tara_tool.Data.ItemDefinition", b =>
                 {
-                    b.HasOne("tara_tool.Data.Tables.DamageScenario", "DamageScenario")
-                        .WithOne("ImpactRating")
-                        .HasForeignKey("tara_tool.Data.Tables.ImpactRating", "DamageScenarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("DamageScenario");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.ItemDefinition", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.Project", "Project")
+                    b.HasOne("tara_tool.Data.Project", "Project")
                         .WithMany("ItemDefinitions")
                         .HasForeignKey("IdProject")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("tara_tool.Data.Tables.Image", "ItemBoundary")
+                    b.HasOne("tara_tool.Data.Image", "ItemBoundary")
                         .WithMany()
                         .HasForeignKey("ItemBoundaryId");
 
-                    b.HasOne("tara_tool.Data.Tables.Image", "OperationalEnvironmentImage")
+                    b.HasOne("tara_tool.Data.Image", "OperationalEnvironmentImage")
                         .WithMany()
                         .HasForeignKey("OperationalEnvironmentImageId");
 
-                    b.HasOne("tara_tool.Data.Tables.Image", "PreliminaryArchitecture")
+                    b.HasOne("tara_tool.Data.Image", "PreliminaryArchitecture")
                         .WithMany()
                         .HasForeignKey("PreliminaryArchitectureId");
-
-                    b.HasOne("tara_tool.Data.Tables.Image", "TechnicalSketch")
-                        .WithMany()
-                        .HasForeignKey("TechnicalSketchId");
 
                     b.Navigation("ItemBoundary");
 
@@ -849,49 +500,14 @@ namespace tara_tool.Migrations
                     b.Navigation("PreliminaryArchitecture");
 
                     b.Navigation("Project");
-
-                    b.Navigation("TechnicalSketch");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.Tag", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.Asset", null)
-                        .WithMany("AssetGroup")
-                        .HasForeignKey("AssetId");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.TreatmentDecision", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.ImpactRating", "ImpactRating")
-                        .WithOne("TreatmentDecision")
-                        .HasForeignKey("tara_tool.Data.Tables.TreatmentDecision", "ImpactRatingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ImpactRating");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.ApplicationUser", b =>
+            modelBuilder.Entity("tara_tool.Data.ApplicationUser", b =>
                 {
                     b.Navigation("Projects");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.Asset", b =>
-                {
-                    b.Navigation("AssetGroup");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
-                {
-                    b.Navigation("ImpactRating");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.ImpactRating", b =>
-                {
-                    b.Navigation("TreatmentDecision");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.Project", b =>
+            modelBuilder.Entity("tara_tool.Data.Project", b =>
                 {
                     b.Navigation("Access");
 

@@ -12,6 +12,7 @@ public class ApplicationDbContext(
     // DbSets
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<AccessControl> AccessControls { get; set; }
+    public DbSet<PendingRegistration> PendingRegistrations { get; set; }
     public DbSet<Project> Projects { get; set; }
     public DbSet<ItemDefinition> ItemDefinitions { get; set; }
     public DbSet<Image> Images { get; set; }
@@ -40,6 +41,7 @@ public class ApplicationDbContext(
     {
         base.OnModelCreating(builder);
         // Build the Model, by defining its relations
+        builder.Entity<ApplicationUser>().Ignore(e => e.EmailConfirmed);
         builder.Entity<AccessControl>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Access)
