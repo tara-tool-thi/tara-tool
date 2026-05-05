@@ -1,4 +1,4 @@
-﻿@page "/Account/Register"
+@page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
 @using System.Text
@@ -19,6 +19,8 @@
 <PageTitle>Register</PageTitle>
 
 <h1>Register</h1>
+
+<h1 style="color: red;">MAKE ADMIN TOGGLE HAS NOT BEEN REMOVED!</h1>
 
 <FluentGrid>
     <FluentGridItem xs="8" sm="4">
@@ -41,6 +43,7 @@
                                  AutoComplete="new-password" Required="true" Placeholder="password" Label="Confirm Password"
                                  Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+                <FluentCheckbox Name="Input.MakeAdmin" @bind-Value="Input.MakeAdmin" Label="MAKE ADMIN" Disabled="firstUser"/>
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%">Log in
                 </FluentButton>
             </FluentStack>
@@ -62,22 +65,26 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
+    private bool firstUser { get; set; } = false;
+
     private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error =>
 error.Description))}";
 
     protected override void OnInitialized()
     {
-        Input ??= new();
+        firstUser = !UserManager.Users.Any();
+        Input ??= new(){MakeAdmin = firstUser};
     }
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var user = CreateUser();
+        firstUser = !UserManager.Users.Any();
+        ApplicationUser user = CreateUser();
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        var emailStore = GetEmailStore();
+        IUserEmailStore<ApplicationUser> emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
+        IdentityResult? result = await UserManager.CreateAsync(user, Input.Password);
 
         if (!result.Succeeded)
         {
@@ -93,6 +100,8 @@ error.Description))}";
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+        if (firstUser || Input.MakeAdmin) await UserManager.AddToRoleAsync(user, "Admin");
 
         await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
 
@@ -148,5 +157,8 @@ error.Description))}";
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+
+        [Display(Name = "Make Admin")]
+        public bool MakeAdmin { get; set; }
     }
 }

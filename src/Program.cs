@@ -38,14 +38,16 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {
-        options.SignIn.RequireConfirmedAccount = true;
-        options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
+      options.SignIn.RequireConfirmedAccount = true;
+      options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
 builder.Services.AddTransient<AccessControlService>();
+builder.Services.AddTransient<PendingRegistrationService>();
 builder.Services.AddTransient<ProjectService>();
 builder.Services.AddTransient<ItemDefinitionService>();
 builder.Services.AddTransient<SessionService>();
@@ -72,6 +74,8 @@ app.UseStatusCodePagesWithReExecute("/not-found",
                                     createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+app.UseAuthorization();
+
 app.UseAntiforgery();
 
 app.MapStaticAssets();
@@ -79,5 +83,13 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+// Create Roles that do not exist. Currently only Admin, but it’s still set up to quickly accommodate new roles.
+// Add a new role by adding its name to the string[] below.
+IServiceScope scope = app.Services.CreateScope();
+RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+string[] roles = [ "Admin" ];
+foreach (string role in roles.Where(role => !roleManager.RoleExistsAsync(role).Result))
+     await roleManager.CreateAsync(new IdentityRole(role));
 
 app.Run();
