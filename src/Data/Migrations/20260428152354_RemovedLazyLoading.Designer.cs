@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tara_tool.Data;
 
@@ -10,9 +11,11 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428152354_RemovedLazyLoading")]
+    partial class RemovedLazyLoading
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
@@ -330,14 +333,17 @@ namespace tara_tool.Migrations
                     b.Property<long>("IdItemDefinition")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long?>("IdTag")
+                    b.Property<long>("IdTag")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("TagId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IdItemDefinition");
 
-                    b.HasIndex("IdTag");
+                    b.HasIndex("TagId");
 
                     b.ToTable("Assets");
                 });
@@ -783,7 +789,7 @@ namespace tara_tool.Migrations
 
                     b.HasOne("tara_tool.Data.Tables.Tag", "Tag")
                         .WithMany()
-                        .HasForeignKey("IdTag");
+                        .HasForeignKey("TagId");
 
                     b.Navigation("ItemDefinition");
 

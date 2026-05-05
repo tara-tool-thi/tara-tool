@@ -33,7 +33,7 @@ public class ApplicationDbContext(
             throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' not found.");
 
-        databaseBuilder.UseSqlite(connectionString).UseLazyLoadingProxies();
+        databaseBuilder.UseSqlite(connectionString);
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -54,10 +54,15 @@ public class ApplicationDbContext(
             .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
         builder.Entity<Asset>()
-            .HasMany(e => e.ItemDefinitions)
-            .WithMany(e => e.Assets);
+            .HasOne(e => e.ItemDefinition)
+            .WithMany(e => e.Assets)
+            .HasForeignKey(e => e.IdItemDefinition)
+            .IsRequired(true);
         builder.Entity<Asset>()
-            .HasMany(e => e.AssetGroup);
+            .HasOne(e => e.Tag)
+            .WithMany()
+            .HasForeignKey(e => e.IdTag)
+            .IsRequired(false);
         builder.Entity<Asset>()
             .HasMany(e => e.DamageScenarios)
             .WithMany(e => e.Assets);
@@ -76,6 +81,11 @@ public class ApplicationDbContext(
             .HasOne(e => e.ImpactRating)
             .WithOne(e => e.TreatmentDecision)
             .HasForeignKey<TreatmentDecision>(e => e.ImpactRatingId)
+            .IsRequired(true);
+        builder.Entity<Tag>()
+            .HasOne(e => e.Project)
+            .WithMany(e => e.Tags)
+            .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
     }
 }
