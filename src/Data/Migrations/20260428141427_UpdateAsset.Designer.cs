@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tara_tool.Data;
 
@@ -10,12 +11,18 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428141427_UpdateAsset")]
+    partial class UpdateAsset
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.6")
+                .HasAnnotation("Proxies:ChangeTracking", false)
+                .HasAnnotation("Proxies:CheckEquality", false)
+                .HasAnnotation("Proxies:LazyLoading", true);
 
             modelBuilder.Entity("AssetDamageScenario", b =>
                 {
@@ -261,6 +268,9 @@ namespace tara_tool.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("INTEGER");
 
@@ -273,9 +283,6 @@ namespace tara_tool.Migrations
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Organization")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
@@ -330,14 +337,17 @@ namespace tara_tool.Migrations
                     b.Property<long>("IdItemDefinition")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long?>("IdTag")
+                    b.Property<long>("IdTag")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("TagId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IdItemDefinition");
 
-                    b.HasIndex("IdTag");
+                    b.HasIndex("TagId");
 
                     b.ToTable("Assets");
                 });
@@ -519,23 +529,6 @@ namespace tara_tool.Migrations
                     b.ToTable("ItemDefinitions");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("tara_tool.Data.Tables.PendingRegistration", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PendingRegistrations");
-                });
-
-=======
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
             modelBuilder.Entity("tara_tool.Data.Tables.Project", b =>
                 {
                     b.Property<long>("Id")
@@ -641,24 +634,6 @@ namespace tara_tool.Migrations
                         .IsRequired();
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("AssetItemDefinition", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.Asset", null)
-                        .WithMany()
-                        .HasForeignKey("AssetsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("tara_tool.Data.Tables.ItemDefinition", null)
-                        .WithMany()
-                        .HasForeignKey("ItemDefinitionsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-=======
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
             modelBuilder.Entity("AttackPathThreatScenario", b =>
                 {
                     b.HasOne("tara_tool.Data.Tables.AttackPath", null)
@@ -808,10 +783,6 @@ namespace tara_tool.Migrations
                     b.Navigation("Project");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("tara_tool.Data.Tables.ImpactRating", b =>
-                {
-=======
             modelBuilder.Entity("tara_tool.Data.Tables.Asset", b =>
                 {
                     b.HasOne("tara_tool.Data.Tables.ItemDefinition", "ItemDefinition")
@@ -822,7 +793,7 @@ namespace tara_tool.Migrations
 
                     b.HasOne("tara_tool.Data.Tables.Tag", "Tag")
                         .WithMany()
-                        .HasForeignKey("IdTag");
+                        .HasForeignKey("TagId");
 
                     b.Navigation("ItemDefinition");
 
@@ -831,7 +802,6 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("tara_tool.Data.Tables.ImpactRating", b =>
                 {
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
                     b.HasOne("tara_tool.Data.Tables.DamageScenario", "DamageScenario")
                         .WithOne("ImpactRating")
                         .HasForeignKey("tara_tool.Data.Tables.ImpactRating", "DamageScenarioId")
@@ -878,11 +848,6 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("tara_tool.Data.Tables.Tag", b =>
                 {
-<<<<<<< HEAD
-                    b.HasOne("tara_tool.Data.Tables.Asset", null)
-                        .WithMany("AssetGroup")
-                        .HasForeignKey("AssetId");
-=======
                     b.HasOne("tara_tool.Data.Tables.Project", "Project")
                         .WithMany("Tags")
                         .HasForeignKey("IdProject")
@@ -890,7 +855,6 @@ namespace tara_tool.Migrations
                         .IsRequired();
 
                     b.Navigation("Project");
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
                 });
 
             modelBuilder.Entity("tara_tool.Data.Tables.TreatmentDecision", b =>
@@ -909,14 +873,6 @@ namespace tara_tool.Migrations
                     b.Navigation("Projects");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("tara_tool.Data.Tables.Asset", b =>
-                {
-                    b.Navigation("AssetGroup");
-                });
-
-=======
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
             modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
                 {
                     b.Navigation("ImpactRating");
@@ -927,14 +883,11 @@ namespace tara_tool.Migrations
                     b.Navigation("TreatmentDecision");
                 });
 
-<<<<<<< HEAD
-=======
             modelBuilder.Entity("tara_tool.Data.Tables.ItemDefinition", b =>
                 {
                     b.Navigation("Assets");
                 });
 
->>>>>>> 35fafcc (Feature/AssetIdentification (#127))
             modelBuilder.Entity("tara_tool.Data.Tables.Project", b =>
                 {
                     b.Navigation("Access");

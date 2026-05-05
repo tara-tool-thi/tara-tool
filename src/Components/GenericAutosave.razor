@@ -1,7 +1,8 @@
 @typeparam TEntity where TEntity : class
 @implements IDisposable
 
-<FluentIcon Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus />
+<FluentIcon Id="SaveIcon" Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus />
+<FluentTooltip Anchor="SaveIcon">@tooltipString</FluentTooltip>
 
 @code {
 
@@ -38,8 +39,16 @@
     {
         SaveStatus.Saved => new Icons.Regular.Size20.CloudCheckmark(),
         SaveStatus.Saving => new Icons.Regular.Size20.CloudSync(),
-        SaveStatus.Unsaved => new Icons.Regular.Size20.CloudDismiss(),
+        SaveStatus.Unsaved => new Icons.Regular.Size20.CloudEdit(),
         _ => new Icons.Regular.Size20.CloudCheckmark(),
+    };
+
+    private string tooltipString => saveStatus switch
+    {
+        SaveStatus.Saved => "All changes saved.",
+        SaveStatus.Saving => "Saving changes…",
+        SaveStatus.Unsaved => "Unsaved changes…",
+        _ => "Unclear status…"
     };
 
     public void Dispose()
