@@ -641,6 +641,21 @@ namespace tara_tool.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AssetItemDefinition", b =>
+                {
+                    b.HasOne("tara_tool.Data.Tables.Asset", null)
+                        .WithMany()
+                        .HasForeignKey("AssetsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("tara_tool.Data.Tables.ItemDefinition", null)
+                        .WithMany()
+                        .HasForeignKey("ItemDefinitionsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AttackPathThreatScenario", b =>
                 {
                     b.HasOne("tara_tool.Data.Tables.AttackPath", null)
@@ -790,6 +805,8 @@ namespace tara_tool.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("tara_tool.Data.Tables.ImpactRating", b =>
+            ){}
             modelBuilder.Entity("tara_tool.Data.Tables.Asset", b =>
                 {
                     b.HasOne("tara_tool.Data.Tables.ItemDefinition", "ItemDefinition")
@@ -855,6 +872,9 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("tara_tool.Data.Tables.Tag", b =>
                 {
+                    b.HasOne("tara_tool.Data.Tables.Asset", null)
+                        .WithMany("AssetGroup")
+                        .HasForeignKey("AssetId");
                     b.HasOne("tara_tool.Data.Tables.Project", "Project")
                         .WithMany("Tags")
                         .HasForeignKey("IdProject")
@@ -880,6 +900,12 @@ namespace tara_tool.Migrations
                     b.Navigation("Projects");
                 });
 
+            modelBuilder.Entity("tara_tool.Data.Tables.Asset", b =>
+                {
+                    b.Navigation("AssetGroup");
+                });
+
+
             modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
                 {
                     b.Navigation("ImpactRating");
@@ -889,6 +915,7 @@ namespace tara_tool.Migrations
                 {
                     b.Navigation("TreatmentDecision");
                 });
+
 
             modelBuilder.Entity("tara_tool.Data.Tables.ItemDefinition", b =>
                 {

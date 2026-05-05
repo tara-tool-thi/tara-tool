@@ -20,6 +20,8 @@
 
 <h1>Register</h1>
 
+<h1 style="color: red;">MAKE ADMIN TOGGLE HAS NOT BEEN REMOVED!</h1>
+
 <FluentGrid>
     <FluentGridItem xs="8" sm="4">
         <StatusMessage Message="@Message" />
@@ -41,8 +43,9 @@
                                  AutoComplete="new-password" Required="true" Placeholder="password" Label="Confirm Password"
                                  Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%">Log in
-                </FluentButton>
+                <FluentCheckbox Name="Input.MakeAdmin" @bind-Value="Input.MakeAdmin" Label="MAKE ADMIN" Disabled="firstUser"/>
+
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%" >Register</FluentButton>
             </FluentStack>
         </EditForm>
     </FluentGridItem>
@@ -62,12 +65,14 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error =>
-error.Description))}";
+    private bool firstUser { get; set; } = false;
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
     protected override void OnInitialized()
     {
-        Input ??= new();
+        firstUser = !UserManager.Users.Any();
+        Input ??= new(){MakeAdmin = firstUser};
     }
 
     public async Task RegisterUser(EditContext editContext)
@@ -148,5 +153,8 @@ error.Description))}";
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+
+        [Display(Name = "Make Admin")]
+        public bool MakeAdmin { get; set; }
     }
 }

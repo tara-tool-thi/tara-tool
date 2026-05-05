@@ -251,14 +251,3 @@ h6 {
 .accordion {
     margin-bottom: 1rem;
 }
-
-/* left spacing and vertical centering for a badge placed inline with a title/header*/
-.badge-archived {
-    margin-left: 8px;
-    align-self: center;
-}
-
-/* Use on icons that need a small gap to the right */
-.icon-spacing {
-    margin-right: 4px;
-}
