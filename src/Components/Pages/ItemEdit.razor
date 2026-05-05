@@ -174,7 +174,13 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        try
+        itemDefinition = await ItemsService.GetItemByIdAsync(itemId, include: e => e.Include(i =>
+        i.TechnicalSketch).Include(i
+    => i.PreliminaryArchitecture).Include(i => i.ItemBoundary).Include(i => i.OperationalEnvironmentImage).Include(i
+        =>
+    i.Project));
+
+        if (itemDefinition == null)
         {
             itemDefinition = await ItemsService.GetItemByIdAsync(itemId, include: e => e.Include(i =>
             i.TechnicalSketch).Include(i
@@ -256,6 +262,16 @@ else
         await ItemsService.Delete(itemDefinition);
         NavigationManager.NavigateTo($"/Project/{projectId}");
     }
+
+    async void CreateNewAsset()
+    {
+        Asset? asset = await AssetService.CreateNewAsset(itemId);
+        if (asset is not null)
+        {
+            NavigationManager.NavigateTo($"Asset/{asset!.Id}");
+        }
+    }
+}
 
     async void CreateNewAsset()
     {

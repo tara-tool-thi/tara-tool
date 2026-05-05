@@ -61,29 +61,6 @@ footer a:hover {
     text-decoration: underline;
 }
 
-.path-dropdown-select {
-    color: #fff;
-}
-
-.path-dropdown-select::part(control) {
-    background: transparent;
-    border-color: transparent;
-    box-shadow: none;
-    color: #fff;
-}
-
-.path-dropdown-select::part(selected-value),
-.path-dropdown-select::part(indicator) {
-    color: #fff;
-    fill: #fff;
-}
-
-.path-dropdown-select:hover::part(control),
-.path-dropdown-select:focus-within::part(control) {
-    background: rgba(255, 255, 255, 0.14);
-    border-color: rgba(255, 255, 255, 0.28);
-}
-
 .alert {
     border: 1px dashed var(--accent-fill-rest);
     padding: 5px;

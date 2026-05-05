@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data.Tables;
 
@@ -123,11 +125,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return;
 
         //Gets all the Assets which are only connected to this
-        await foreach (Asset lonelyAsset in item.Assets.Where(a => a.IdItemDefinition == itemDefinition.Id).ToAsyncEnumerable())
-        {
-            //Needs to be reactivated, when Assets are there
-            //await assetService.Delete(lonelyAsset);
-        }
+
 
         context.ItemDefinitions.Remove(item);
         await context.SaveChangesAsync();
