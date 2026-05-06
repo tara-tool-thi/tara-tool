@@ -8,42 +8,39 @@
 @inject ProjectService ProjectService
 @inject ItemDefinitionService ItemService
 
-
-    @if (currentProject != null)
-    {
-        <!-- Project Dropdown -->
+@if (currentProject != null)
+{
+    <FluentBreadcrumb>
         <FluentBreadcrumbItem>
-        <FluentSelect TOption="string" 
-                      Height="250px"
-                      Style="min-width: 100px;"  
-                      Value="@currentProjectId.ToString()" 
-                      ValueChanged="@OnProjectChanged">
-            @foreach (Project proj in allProjects)
-            {
-                <FluentOption Value="@proj.Id.ToString()">@proj.ProjectName</FluentOption>
-            }
-        </FluentSelect>
-        <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+            <FluentSelect TOption="Project"
+                          Height="250px"
+                          Style="min-width: 100px;"
+                          Items="@allProjects"
+                          OptionText="@(project => project.ProjectName)"
+                          OptionValue="@(project => project.Id.ToString())"
+                          OptionSelected="@(project => project.Id == currentProjectId)"
+                          Value="@currentProjectId.ToString()"
+                          ValueChanged="@OnProjectChanged" />
+            <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
         </FluentBreadcrumbItem>
 
         @if (currentItem != null)
         {
-            <!-- Item Dropdown -->
             <FluentBreadcrumbItem>
-            <FluentSelect TOption="string" 
-                          Height="250px"  
-                          Style="min-width: 100px;"  
-                          Value="@currentItemId.ToString()" 
-                          ValueChanged="@OnItemChanged">
-                @foreach (ItemDefinition item in allItems)
-                {
-                    <FluentOption Value="@item.Id.ToString()">@item.ItemName</FluentOption>
-                }
-            </FluentSelect>
-            <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+                <FluentSelect TOption="ItemDefinition"
+                              Height="250px"
+                              Style="min-width: 100px;"
+                              Items="@allItems"
+                              OptionText="@(item => item.ItemName)"
+                              OptionValue="@(item => item.Id.ToString())"
+                              OptionSelected="@(item => item.Id == currentItemId)"
+                              Value="@currentItemId.ToString()"
+                              ValueChanged="@OnItemChanged" />
+                <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
             </FluentBreadcrumbItem>
         }
-    }
+    </FluentBreadcrumb>
+}
 
 
 @code {
