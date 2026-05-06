@@ -14,14 +14,15 @@
         <FluentBreadcrumbItem>
             <FluentSelect TOption="Project"
                           Height="250px"
-                          Style="min-width: 100px;"
+                          Class="path-dropdown-select"
+                          Style="min-width: max(220px, 24ch);"
                           Items="@allProjects"
                           OptionText="@(project => project.ProjectName)"
                           OptionValue="@(project => project.Id.ToString())"
                           OptionSelected="@(project => project.Id == currentProjectId)"
                           Value="@currentProjectId.ToString()"
                           ValueChanged="@OnProjectChanged" />
-            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
         </FluentBreadcrumbItem>
 
         @if (currentItem != null)
@@ -29,14 +30,15 @@
             <FluentBreadcrumbItem>
                 <FluentSelect TOption="ItemDefinition"
                               Height="250px"
-                              Style="min-width: 100px;"
+                              Class="path-dropdown-select"
+                              Style="min-width: max(220px, 24ch);"
                               Items="@allItems"
                               OptionText="@(item => item.ItemName)"
                               OptionValue="@(item => item.Id.ToString())"
                               OptionSelected="@(item => item.Id == currentItemId)"
                               Value="@currentItemId.ToString()"
                               ValueChanged="@OnItemChanged" />
-                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
             </FluentBreadcrumbItem>
         }
     </FluentBreadcrumb>
