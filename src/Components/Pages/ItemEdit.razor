@@ -174,13 +174,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        itemDefinition = await ItemsService.GetItemByIdAsync(itemId, include: e => e.Include(i =>
-        i.TechnicalSketch).Include(i
-    => i.PreliminaryArchitecture).Include(i => i.ItemBoundary).Include(i => i.OperationalEnvironmentImage).Include(i
-        =>
-    i.Project));
-
-        if (itemDefinition == null)
+        try
         {
             itemDefinition = await ItemsService.GetItemByIdAsync(itemId, include: e => e.Include(i =>
             i.TechnicalSketch).Include(i
@@ -193,11 +187,6 @@ else
                 NavigationManager.NavigateTo("/");
                 return;
             }
-
-        if (itemDefinition.Project != null)
-        {
-            hasWriteAccess = await AccessControlService.CheckUserAccessRightsWrite(itemDefinition.Project.Id);
-        }
 
             ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
             ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);

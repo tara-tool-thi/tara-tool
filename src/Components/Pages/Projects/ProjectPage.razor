@@ -219,22 +219,29 @@
 
     private async Task addItem(string name)
     {
-        ItemDefinition? newItem = await ItemsService.CreateItemAsync(urlId, name);
-
-        if (newItem == null)
+        try
         {
-            return;
+            ItemDefinition? newItem = await ItemsService.CreateItemAsync(urlId, name);
+
+            if (newItem == null)
+            {
+                return;
+            }
+
+            Project? requestedProject = await retrieveProjectInfo();
+
+            if (requestedProject != null)
+            {
+                projectName = requestedProject.ProjectName;
+                retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+            }
+            await ItemsService.Save(newItem);
+            NavigationManager.NavigateTo($"/Item/{newItem.Id}");
         }
-
-        Project? requestedProject = await retrieveProjectInfo();
-
-        if (requestedProject != null)
+        catch (Exception ex)
         {
-            projectName = requestedProject.ProjectName;
-            retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+            Console.Error.WriteLine($"Error adding item: {ex.Message}");
         }
-        await ItemsService.Save(newItem);
-        NavigationManager.NavigateTo($"/Item/{newItem.Id}");
     }
 
 

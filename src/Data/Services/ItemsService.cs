@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data.Tables;
 
