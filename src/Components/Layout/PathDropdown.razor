@@ -99,6 +99,7 @@
                 {
                     currentProjectId = pId;
                     currentProject = await ProjectService.GetItemByIdAsync(pId, null);
+                    currentProject ??= allProjects.FirstOrDefault(project => project.Id == pId);
                 }
             }
             // CASE 2: URL is /Item/{id}
@@ -115,6 +116,7 @@
                         long parentProjectId = currentItem.IdProject;
                         currentProjectId = parentProjectId;
                         currentProject = await ProjectService.GetItemByIdAsync(parentProjectId, null);
+                        currentProject ??= allProjects.FirstOrDefault(project => project.Id == parentProjectId);
 
                         // Fetch items for this project so the second dropdown is populated
                         allItems = await ItemService.GetItemsAsync(parentProjectId, null);
