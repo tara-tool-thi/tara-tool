@@ -300,7 +300,7 @@ else
     <FluentStack Orientation="Orientation.Horizontal"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween"
                  VerticalAlignment="VerticalAlignment.Center"
-                 Style="margin-top:24px; width:100%">
+                 Style="margin-top:24px" Width="100%">     // Adds spacing from back button to member settings
         <FluentButton Appearance="Appearance.Outline"
                       OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}"))">
             Back to Project
