@@ -22,10 +22,14 @@
 }
 else
 {
-    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
         <h1>Project Settings</h1>
+        <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
     </FluentStack>
-
+    <FluentTooltip Anchor="iso-help-button">
+        <p><strong>All changes are only saved after pressing the Save button.</strong></p>
+        <p><strong>To cancel, press Back to Project.</strong> </p>
+    </FluentTooltip>
     <br />
 
     @if (project.IsArchived)
