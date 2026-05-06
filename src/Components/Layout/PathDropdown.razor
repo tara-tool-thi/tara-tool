@@ -21,7 +21,7 @@
                           OptionSelected="@(project => project.Id == currentProjectId)"
                           Value="@currentProjectId.ToString()"
                           ValueChanged="@OnProjectChanged" />
-            <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
         </FluentBreadcrumbItem>
 
         @if (currentItem != null)
@@ -36,7 +36,7 @@
                               OptionSelected="@(item => item.Id == currentItemId)"
                               Value="@currentItemId.ToString()"
                               ValueChanged="@OnItemChanged" />
-                <FluentIcon Value="@(new Icons.Regular.Size28.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Neutral" Slot="separator" />
             </FluentBreadcrumbItem>
         }
     </FluentBreadcrumb>
@@ -46,7 +46,7 @@
 @code {
     private List<Project> allProjects = new List<Project>();
     private List<ItemDefinition> allItems = new List<ItemDefinition>();
-    
+
     private Project? currentProject;
     private ItemDefinition? currentItem;
 
