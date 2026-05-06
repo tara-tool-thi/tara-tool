@@ -182,8 +182,9 @@ else
             </FluentSelect>
             <FluentButton Appearance="@(pendingTransfer ? Appearance.Accent : Appearance.Outline)"
                           OnClick="StageTransfer">
-                <FluentIcon Value="@(new Icons.Regular.Size20.PersonSwap())" Slot="start" />
-                @(pendingTransfer ? "Save to confirm" : "Transfer")
+                <FluentIcon Value="@(new Icons.Regular.Size20.PersonSwap().WithColor(@pendingTransfer ? "white" : "blue"))"
+                    Slot="start" />
+                @(pendingTransfer ? "Click to revert" : "Transfer")
             </FluentButton>
         </FluentStack>
     }
@@ -301,7 +302,7 @@ else
     <FluentStack Orientation="Orientation.Horizontal"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween"
                  VerticalAlignment="VerticalAlignment.Center"
-                 Style="margin-top:24px" Width="100%">     
+                 Style="margin-top:24px" Width="100%">
         <FluentButton Appearance="Appearance.Outline"
                       OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}"))">
             Back to Project
