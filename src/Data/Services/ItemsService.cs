@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data.Tables;
 
@@ -49,6 +47,28 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         }
 
         return itemDefinition;
+    }
+
+    public async Task<List<ItemDefinition>> GetItemsAsync(long projectID, Func<DbSet<ItemDefinition>, IQueryable<ItemDefinition>>? extend = null)
+    {
+        if (await accessControlService.CheckUserAccessRightsRead(projectID) is false)
+        {
+            return new List<ItemDefinition>();
+        }
+
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        DbSet<ItemDefinition> itemSet = context.ItemDefinitions;
+        IQueryable<ItemDefinition> itemQuery = itemSet.AsQueryable();
+        if (extend != null)
+        {
+            itemQuery = extend.Invoke(itemSet);
+        }
+
+        itemQuery = itemQuery.Where(
+          p => p.IdProject == projectID
+        );
+
+        return await itemQuery.ToListAsync();
     }
 
     public async Task<ItemDefinition?> Save(ItemDefinition itemDefinition)
