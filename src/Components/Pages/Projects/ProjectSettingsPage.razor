@@ -297,10 +297,11 @@ else
         </FluentDialogFooter>
     </FluentDialog>
 
+    // margin Adds spacing from back button to member settings
     <FluentStack Orientation="Orientation.Horizontal"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween"
                  VerticalAlignment="VerticalAlignment.Center"
-                 Style="margin-top:24px" Width="100%">     // Adds spacing from back button to member settings
+                 Style="margin-top:24px" Width="100%">     
         <FluentButton Appearance="Appearance.Outline"
                       OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}"))">
             Back to Project

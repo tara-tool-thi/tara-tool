@@ -6,8 +6,8 @@
         <h4>@Project.ProjectName</h4>
         @if (Project.IsArchived)
         {
-            <FluentBadge Appearance="Appearance.Neutral" Style="margin-left:8px; align-self:center">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Style="margin-right:4px" />
+            <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
                 Archived
             </FluentBadge>
         }

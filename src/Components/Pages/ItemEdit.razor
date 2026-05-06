@@ -24,18 +24,18 @@
             <li><strong>Placeholder:</strong> Placeholder</li>
         </ul>
     </FluentTooltip>
-@if (itemDefinition != null && itemDefinition.Project != null && itemDefinition.Project.IsArchived)
+    @if (itemDefinition != null && itemDefinition.Project != null && itemDefinition.Project.IsArchived)
 {
-    <FluentBadge Appearance="Appearance.Neutral">
-        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Style="margin-right:4px" />
+    <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
         Archived
     </FluentBadge>
 } else if (itemDefinition != null && itemDefinition.Project != null && hasWriteAccess){
     <GenericAutosave TEntity="ItemDefinition" Entity="@itemDefinition" SaveService="@ItemsService"
                      @ref=@genericAutosave />
 } else {
-    <FluentBadge Appearance="Appearance.Neutral">
-        <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Style="margin-right:4px" />
+    <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Class="icon-spacing" />
         You are not allowed to write on this project, changes will not be saved!
     </FluentBadge>
 }
