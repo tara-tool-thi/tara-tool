@@ -188,6 +188,11 @@ else
                 return;
             }
 
+        if (itemDefinition.Project != null)
+        {
+            hasWriteAccess = await AccessControlService.CheckUserAccessRightsWrite(itemDefinition.Project.Id);
+        }
+
             ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
             ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);
             ExpandedPreliminaryArchitectureText = !string.IsNullOrEmpty(itemDefinition.PreliminaryArchitectureText);
