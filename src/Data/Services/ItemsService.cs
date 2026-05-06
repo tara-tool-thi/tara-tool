@@ -76,10 +76,8 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         //This is done, to establish tracking of objects, so we do not add multiple data points at once
         ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets).FirstOrDefault(i => i.Id == itemDefinition.Id);
-        if (item is null || await accessControlService.CheckUserAccessRightsWrite(item.IdProject) is false)
-        {
-            return null;
-        }
+        if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return null;
+
         context.Entry(item).CurrentValues.SetValues(itemDefinition);
 
         if (itemDefinition.TechnicalSketch is not null)
@@ -122,13 +120,14 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         ItemDefinition? item = context.ItemDefinitions.FirstOrDefault(i => i.Id == itemDefinition.Id);
-        if (item is null)
-        {
-            return;
-        }
+        if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return;
 
         //Gets all the Assets which are only connected to this
-
+        await foreach (Asset lonelyAsset in item.Assets.Where(a => a.IdItemDefinition == itemDefinition.Id).ToAsyncEnumerable())
+        {
+            //Needs to be reactivated, when Assets are there
+            //await assetService.Delete(lonelyAsset);
+        }
 
         context.ItemDefinitions.Remove(item);
         await context.SaveChangesAsync();

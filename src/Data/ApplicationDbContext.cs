@@ -34,7 +34,6 @@ public class ApplicationDbContext(
             throw new InvalidOperationException(
                 "Connection string 'DefaultConnection' not found.");
 
-
         databaseBuilder.UseSqlite(connectionString);
     }
 
@@ -43,7 +42,6 @@ public class ApplicationDbContext(
         base.OnModelCreating(builder);
         // Build the Model, by defining its relations
         builder.Entity<ApplicationUser>().Ignore(e => e.EmailConfirmed);
-
         builder.Entity<AccessControl>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Access)
@@ -86,7 +84,6 @@ public class ApplicationDbContext(
             .WithOne(e => e.TreatmentDecision)
             .HasForeignKey<TreatmentDecision>(e => e.ImpactRatingId)
             .IsRequired(true);
-
         builder.Entity<Tag>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Tags)

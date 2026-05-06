@@ -26,7 +26,11 @@ public class AccessControlService(IDbContextFactory<ApplicationDbContext> contex
         }
 
         await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        return await context.AccessControls.AnyAsync(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.WriteAccess == true);
+        return await context.AccessControls.AnyAsync(a =>
+            a.Project.Id == ProjectId &&
+            a.ApplicationUser.Id == user.Id &&
+            a.WriteAccess == true &&
+            !a.Project.IsArchived);
     }
 
     public async Task<bool> CheckUserAccessRightsManage(long ProjectId)

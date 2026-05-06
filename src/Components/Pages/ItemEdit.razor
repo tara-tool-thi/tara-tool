@@ -9,6 +9,7 @@
 @inject NavigationManager NavigationManager
 @inject AssetService AssetService
 @inject IDialogService DialogService
+@inject AccessControlService AccessControlService
 
 <PageTitle>Item Definition</PageTitle>
 
@@ -23,8 +24,21 @@
             <li><strong>Placeholder:</strong> Placeholder</li>
         </ul>
     </FluentTooltip>
+    @if (itemDefinition != null && itemDefinition.Project != null && itemDefinition.Project.IsArchived)
+{
+    <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
+        Archived
+    </FluentBadge>
+} else if (itemDefinition != null && itemDefinition.Project != null && hasWriteAccess){
     <GenericAutosave TEntity="ItemDefinition" Entity="@itemDefinition" SaveService="@ItemsService"
                      @ref=@genericAutosave />
+} else {
+    <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Class="icon-spacing" />
+        You are not allowed to write on this project, changes will not be saved!
+    </FluentBadge>
+}
     <FluentSpacer />
     <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
@@ -156,6 +170,7 @@ else
     bool ExpandedItemFunction = false;
     bool ExpandedPreliminaryArchitectureText = false;
     bool ExpandedOperationalEnvironmentText = false;
+    bool hasWriteAccess = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -172,6 +187,11 @@ else
                 NavigationManager.NavigateTo("/");
                 return;
             }
+
+        if (itemDefinition.Project != null)
+        {
+            hasWriteAccess = await AccessControlService.CheckUserAccessRightsWrite(itemDefinition.Project.Id);
+        }
 
             ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
             ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);
@@ -246,4 +266,3 @@ else
         }
     }
 }
-

@@ -1,4 +1,4 @@
-﻿@page "/Project/{urlId:long}"
+@page "/Project/{urlId:long}"
 
 @rendermode InteractiveServer
 @inject ItemDefinitionService ItemsService
@@ -25,6 +25,7 @@
 
 @inject NavigationManager NavigationManager
 @inject ProjectService ProjectService
+@inject AccessControlService AccessControlService
 @inject DateTimeService DateTimeService
 
 
@@ -34,19 +35,42 @@
 <h2>
     <FluentStack @key="@retrievedProjectLastModifiedDate">
         @projectName
+        @if (isArchived)
+        {
+            <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
+                Archived
+            </FluentBadge>
+        }
         <FluentSpacer />
-        Last Edited: @retrievedProjectLastModifiedDate
+        <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
+        @if (canManage)
+        {
+            <FluentButton Appearance="Appearance.Outline"
+                          Title="Project Settings"
+                          IconStart="@(new Icons.Regular.Size20.Settings())"
+                          OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
+        }
     </FluentStack>
 </h2>
+@if (isArchived)
+{
+    <FluentMessageBar Intent="MessageIntent.Warning" Style="margin-bottom:12px">
+        This project is archived and cannot be edited.
+    </FluentMessageBar>
+}
 <br />
 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
     <FluentTextField Label="Search for an Item" Placeholder="Search by name, function or environment"
                      Style="width: 250px;" @bind-Value="searchText" Immediate="true" ImmediateDelay="500" />
     <FluentSpacer />
 
-    <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
-        New Item
-    </FluentButton>
+    @if (!isArchived)
+    {
+        <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
+            New Item
+        </FluentButton>
+    }
 </FluentStack>
 
 <br />
@@ -104,6 +128,8 @@
     public long urlId { get; set; }
 
     private string projectName = "";
+    private bool canManage = false;
+    private bool isArchived = false;
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
@@ -166,7 +192,9 @@
 
         projectName = requestedProject!.ProjectName;
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+        isArchived = requestedProject.IsArchived;
         localDateTimeUpdatePending = true;
+        canManage = await AccessControlService.CheckUserAccessRightsManage(urlId);
 
     }
 
