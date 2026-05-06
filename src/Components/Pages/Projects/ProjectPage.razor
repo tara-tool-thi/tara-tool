@@ -106,6 +106,7 @@
     private string projectName = "";
 
     private DateTime retrievedProjectLastModifiedDate;
+    private bool localDateTimeUpdatePending;
 
     private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
 
@@ -130,10 +131,9 @@
 
     private GridItemsProvider<ItemDefinition> FilteredItemsProvider = default!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        FilteredItemsProvider = ItemsService.GetItemsProvider(ProjectId: urlId, filter: e => e.Where(i => i.IdProject ==
-urlId).Where(i =>
+        FilteredItemsProvider = ItemsService.GetItemsProvider(ProjectId: urlId, filter: e => e.Where(i => i.IdProject == urlId).Where(i =>
             string.IsNullOrWhiteSpace(searchText) ||
                 EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
                 EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
@@ -150,7 +150,7 @@ urlId).Where(i =>
                 return;
             }
 
-            NavigationManager.NavigateTo($"Project/{newProject.Id}");
+            NavigationManager.NavigateTo($"/Project/{newProject.Id}", replace: true);
 
             return;
         }
@@ -166,13 +166,15 @@ urlId).Where(i =>
 
         projectName = requestedProject!.ProjectName;
         retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+        localDateTimeUpdatePending = true;
 
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (localDateTimeUpdatePending)
         {
+            localDateTimeUpdatePending = false;
             retrievedProjectLastModifiedDate = await DateTimeService.GetLocalDateTime(retrievedProjectLastModifiedDate);
             StateHasChanged();
         }
@@ -189,22 +191,29 @@ urlId).Where(i =>
 
     private async Task addItem(string name)
     {
-        ItemDefinition? newItem = await ItemsService.CreateItemAsync(urlId, name);
-
-        if (newItem == null)
+        try
         {
-            return;
+            ItemDefinition? newItem = await ItemsService.CreateItemAsync(urlId, name);
+
+            if (newItem == null)
+            {
+                return;
+            }
+
+            Project? requestedProject = await retrieveProjectInfo();
+
+            if (requestedProject != null)
+            {
+                projectName = requestedProject.ProjectName;
+                retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+            }
+            await ItemsService.Save(newItem);
+            NavigationManager.NavigateTo($"/Item/{newItem.Id}");
         }
-
-        Project? requestedProject = await retrieveProjectInfo();
-
-        if (requestedProject != null)
+        catch (Exception ex)
         {
-            projectName = requestedProject.ProjectName;
-            retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+            Console.Error.WriteLine($"Error adding item: {ex.Message}");
         }
-        await ItemsService.Save(newItem);
-        NavigationManager.NavigateTo($"/Item/{newItem.Id}");
     }
 
 
