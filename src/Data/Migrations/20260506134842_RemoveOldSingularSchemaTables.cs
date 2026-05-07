@@ -5,12 +5,15 @@
 namespace tara_tool.Migrations
 {
     /// <inheritdoc />
-    public partial class newDB : Migration
+    public partial class RemoveOldSingularSchemaTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // SQLite-safe cleanup for legacy artifacts that may or may not exist.
+            // AssetItemDefinition: was the many-to-many join table for Asset<=>ItemDefinition, made obsolete
+            // when the relationship changed to one-to-many (Asset.IdItemDefinition FK).
+            // DamageScenario / ImpactRating (singular): old stub tables
+            // are replaced by the proper plural versions (DamageScenarios, ImpactRatings) with full schemas.
             migrationBuilder.Sql("DROP TABLE IF EXISTS \"AssetItemDefinition\";");
             migrationBuilder.Sql("DROP TABLE IF EXISTS \"ImpactRating\";");
             migrationBuilder.Sql("DROP TABLE IF EXISTS \"DamageScenario\";");

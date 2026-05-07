@@ -11,8 +11,8 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260506134842_newDB")]
-    partial class newDB
+    [Migration("20260506134842_RemoveOldSingularSchemaTables")]
+    partial class RemoveOldSingularSchemaTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
