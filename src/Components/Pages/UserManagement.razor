@@ -1,0 +1,88 @@
+@page "/UserManagement"
+@using System.Security.Claims
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDialogService DialogService
+@inject PendingRegistrationService PendingRegistrationService
+@inject IJSRuntime JSRuntime
+@inject IToastService ToastService
+
+<AuthorizeView Roles="Admin">
+    <PageTitle>User Management</PageTitle>
+
+    <h1>User Management</h1>
+
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+            HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+        <FluentSearch Placeholder="Type to search for user..." Style="Width: 25%" @bind-Value=@UserSearch />
+        <FluentButton OnClick="OpenDialog" IconStart=@(new Icons.Regular.Size20.Add())>
+          New User
+        </FluentButton>
+
+    </FluentStack>
+</AuthorizeView>
+
+<div>
+    <FluentDialog @ref="copyLink" @bind-Hidden="@Hidden" @ondialogdismiss=CloseCopyLink>
+        <FluentDialogHeader Visible="false" />
+        <FluentDialogBody>
+            <FluentStack Orientation="Orientation.Vertical">
+                <p>This is the register link for the new user: </p>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentTextField ReadOnly="true" @bind-Value="link" style="width: 100%;"></FluentTextField>
+                    <FluentButton OnClick=@CopyToClipboard IconStart=@(new Icons.Regular.Size20.Copy()) />
+                </FluentStack>
+                <p>Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+            </FluentStack>
+        </FluentDialogBody>
+    </FluentDialog>
+</div>
+
+
+@code {
+    private string? UserSearch;
+
+    private string? email = "";
+
+    private string? link;
+
+    private FluentDialog? copyLink;
+    private bool Hidden { get; set; } = true;
+
+    private ClaimsPrincipal? user { get; set; }
+
+    @* private readonly IJSRuntime _jsRuntime; *@
+
+    protected override async Task OnInitializedAsync() {
+        user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
+        if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
+    }
+
+    private async Task OpenDialog()
+    {
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if (user is null || !user.IsInRole("Admin")) return;
+        email = (string?)result?.Data;
+        if(email == null)
+            return;
+        string? id = await PendingRegistrationService.Create(email);
+        link = NavigationManager.BaseUri + "Account/Register?id=" + id;
+        await DialogService.CloseAsync(dialog);
+        copyLink!.Show();
+    }
+
+    private void CloseCopyLink()
+    {
+        copyLink!.Hide();
+    }
+
+    private async Task CopyToClipboard()
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", link);
+        ToastService.ShowSuccess("Link copied to clipboard");
+    }
+
+}

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tara_tool.Data;
 
@@ -10,9 +11,11 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428152354_RemovedLazyLoading")]
+    partial class RemovedLazyLoading
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
@@ -261,6 +264,9 @@ namespace tara_tool.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("INTEGER");
 
@@ -273,9 +279,6 @@ namespace tara_tool.Migrations
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Organization")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
@@ -330,14 +333,17 @@ namespace tara_tool.Migrations
                     b.Property<long>("IdItemDefinition")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long?>("IdTag")
+                    b.Property<long>("IdTag")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("TagId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IdItemDefinition");
 
-                    b.HasIndex("IdTag");
+                    b.HasIndex("TagId");
 
                     b.ToTable("Assets");
                 });
@@ -519,20 +525,6 @@ namespace tara_tool.Migrations
                     b.ToTable("ItemDefinitions");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.PendingRegistration", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PendingRegistrations");
-                });
-
             modelBuilder.Entity("tara_tool.Data.Tables.Project", b =>
                 {
                     b.Property<long>("Id")
@@ -544,9 +536,6 @@ namespace tara_tool.Migrations
 
                     b.Property<DateTime>("DateLastChanged")
                         .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsArchived")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("ProjectName")
                         .IsRequired()
@@ -800,7 +789,7 @@ namespace tara_tool.Migrations
 
                     b.HasOne("tara_tool.Data.Tables.Tag", "Tag")
                         .WithMany()
-                        .HasForeignKey("IdTag");
+                        .HasForeignKey("TagId");
 
                     b.Navigation("ItemDefinition");
 

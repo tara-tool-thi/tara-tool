@@ -45,7 +45,12 @@
         </Body>
     </FluentPopover>
 
-   
+    <FluentButton Appearance="@(showArchived ? Appearance.Accent : Appearance.Outline)"
+                  Title="@(showArchived ? "Hide archived projects" : "Show archived projects")"
+                  OnClick="@(() => showArchived = !showArchived)">
+        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Slot="start" />
+        Archived
+    </FluentButton>
 </FluentStack>
 
 <br />
@@ -53,10 +58,12 @@
 @if (allProjectsWithAccess.Count() != 0)
 {
     <div @key=@TitleSearch>
-        @foreach (var project in allProjectsWithAccess.Where(project => (TitleSearch == null ||
-                                                                                                            project.ProjectName.Contains(TitleSearch)) && (selectedMails.Count() == 0 ||
-                                                                                                                        selectedMails.Contains(project.Access?.FirstOrDefault(accessControl => accessControl.Owner ==
-                                                                                                            true)?.ApplicationUser.Email ?? string.Empty))))
+        @foreach (var project in allProjectsWithAccess.Where(project =>
+            (showArchived || !project.IsArchived) &&
+            (TitleSearch == null || project.ProjectName.Contains(TitleSearch)) &&
+            (selectedMails.Count() == 0 ||
+                selectedMails.Contains(project.Access?.FirstOrDefault(accessControl => accessControl.Owner ==
+                    true)?.ApplicationUser.Email ?? string.Empty))))
         {
             <ProjectCard Project=@project />
         }
@@ -69,6 +76,7 @@
     IEnumerable<string> selectedMails = [];
 
     private bool openOwnerPopover = false;
+    private bool showArchived = false;
 
     private string? _titleSearchBack = null;
     private string? TitleSearch

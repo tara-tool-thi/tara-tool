@@ -1,0 +1,59 @@
+@using System.ComponentModel.DataAnnotations
+@using tara_tool.Components.Account.Pages.Manage
+@implements IDialogContentComponent<string>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
+        <h3>Invite new user</h3>
+    </FluentStack>
+</FluentDialogHeader>
+
+
+<EditForm Model="Input" method="post" FormName="addUser" OnValidSubmit="submit">
+    <FluentDialogBody>
+        <DataAnnotationsValidator />
+        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" Immediate=true/>
+        <FluentValidationMessage For="() => Input.Email" class="text-danger" />
+        <p>The email address is used for verification.</p>
+    </FluentDialogBody>
+
+
+    <FluentDialogFooter>
+        <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">OK</FluentButton>
+    </FluentDialogFooter>
+</EditForm>
+
+
+@code {
+    [Parameter]
+    public string Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private InputModel Input { get; set; } = new InputModel();
+
+    public class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string? Email;
+    }
+
+    public async Task invalidSubmit()
+    {
+
+    }
+
+    public async Task submit()
+    {
+        if (!string.IsNullOrWhiteSpace(Input.Email))
+        {
+            Content = Input.Email;
+            await Dialog!.CloseAsync(Content);
+        }
+    }
+
+}

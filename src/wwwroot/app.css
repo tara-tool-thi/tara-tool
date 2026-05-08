@@ -61,6 +61,29 @@ footer a:hover {
     text-decoration: underline;
 }
 
+.path-dropdown-select {
+    color: #fff;
+}
+
+.path-dropdown-select::part(control) {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: #fff;
+}
+
+.path-dropdown-select::part(selected-value),
+.path-dropdown-select::part(indicator) {
+    color: #fff;
+    fill: #fff;
+}
+
+.path-dropdown-select:hover::part(control),
+.path-dropdown-select:focus-within::part(control) {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
 .alert {
     border: 1px dashed var(--accent-fill-rest);
     padding: 5px;
@@ -228,7 +251,7 @@ table th {
 
 .tiny-text {
     color: #333333;
-    font-size: 0.75em;
+    font-size: 1em;
 }
 
 .date-text {
@@ -237,4 +260,28 @@ table th {
 
 .fullwidth {
     width: 100%;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-bottom: 0;
+}
+
+.accordion {
+    margin-bottom: 1rem;
+}
+
+/* left spacing and vertical centering for a badge placed inline with a title/header*/
+.badge-archived {
+    margin-left: 8px;
+    align-self: center;
+}
+
+/* Use on icons that need a small gap to the right */
+.icon-spacing {
+    margin-right: 4px;
 }

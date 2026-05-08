@@ -1,0 +1,156 @@
+@using tara_tool.Data.Tables
+@using tara_tool.Data.Services
+@implements IDisposable
+
+@rendermode InteractiveServer
+
+@inject NavigationManager Navigator
+@inject ProjectService ProjectService
+@inject ItemDefinitionService ItemService
+
+@if (currentProject != null)
+{
+    <FluentBreadcrumb>
+        <FluentBreadcrumbItem>
+            <FluentSelect TOption="Project"
+                          Height="250px"
+                          Class="path-dropdown-select"
+                          Style="min-width: max(220px, 24ch);"
+                          Items="@allProjects"
+                          OptionText="@(project => project.ProjectName)"
+                          OptionValue="@(project => project.Id.ToString())"
+                          OptionSelected="@(project => project.Id == currentProjectId)"
+                          Value="@currentProjectId.ToString()"
+                          ValueChanged="@OnProjectChanged" />
+            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
+        </FluentBreadcrumbItem>
+
+        @if (currentItem != null)
+        {
+            <FluentBreadcrumbItem>
+                <FluentSelect TOption="ItemDefinition"
+                              Height="250px"
+                              Class="path-dropdown-select"
+                              Style="min-width: max(220px, 24ch);"
+                              Items="@allItems"
+                              OptionText="@(item => item.ItemName)"
+                              OptionValue="@(item => item.Id.ToString())"
+                              OptionSelected="@(item => item.Id == currentItemId)"
+                              Value="@currentItemId.ToString()"
+                              ValueChanged="@OnItemChanged" />
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
+            </FluentBreadcrumbItem>
+        }
+    </FluentBreadcrumb>
+}
+
+
+@code {
+    private List<Project> allProjects = new List<Project>();
+    private List<ItemDefinition> allItems = new List<ItemDefinition>();
+
+    private Project? currentProject;
+    private ItemDefinition? currentItem;
+
+
+    private long currentProjectId;
+    private long currentItemId;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Navigator.LocationChanged += HandleLocationChanged;
+        await LoadDataFromUrl();
+    }
+
+    private async void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        // InvokeAsync to ensure we are on the UI thread when StateHasChanged is called
+        await InvokeAsync(async () =>
+        {
+            await LoadDataFromUrl();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadDataFromUrl()
+    {
+        try
+        {
+            string relativePath = Navigator.ToBaseRelativePath(Navigator.Uri);
+            string[] segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            // Reset local state to prevent "ghost" data from previous routes
+            currentProject = null;
+            currentItem = null;
+            allItems.Clear();
+            allProjects.Clear();
+
+            if (segments.Length == 0) return;
+
+            allProjects = await ProjectService.GetProjectsAsync();
+
+            string primaryType = segments[0].ToLower();
+
+            // CASE 1: URL is /Project/{id}
+            if (primaryType == "project" && segments.Length >= 2)
+            {
+                if (long.TryParse(segments[1], out long pId))
+                {
+                    currentProjectId = pId;
+                    currentProject = await ProjectService.GetItemByIdAsync(pId, null);
+                    currentProject ??= allProjects.FirstOrDefault(project => project.Id == pId);
+                }
+            }
+            // CASE 2: URL is /Item/{id}
+            else if (primaryType == "item" && segments.Length >= 2)
+            {
+                if (long.TryParse(segments[1], out long iId))
+                {
+                    currentItemId = iId;
+                    currentItem = await ItemService.GetItemByIdAsync(iId);
+
+                    if (currentItem != null)
+                    {
+                        // Derive the project from the item itself
+                        long parentProjectId = currentItem.IdProject;
+                        currentProjectId = parentProjectId;
+                        currentProject = await ProjectService.GetItemByIdAsync(parentProjectId, null);
+                        currentProject ??= allProjects.FirstOrDefault(project => project.Id == parentProjectId);
+
+                        // Fetch items for this project so the second dropdown is populated
+                        allItems = await ItemService.GetItemsAsync(parentProjectId, null);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading breadcrumb data: {ex.Message}");
+            // Gracefully handle error - breadcrumb will show empty state
+            currentProject = null;
+            currentItem = null;
+        }
+    }
+
+    private async Task OnProjectChanged(string newProjectId)
+    {
+        if (long.TryParse(newProjectId, out long ProjectId))
+        {
+            Navigator.NavigateTo($"/Project/{ProjectId}");
+        }
+    }
+
+    private async Task OnItemChanged(string newItemId)
+    {
+        if (long.TryParse(newItemId, out long ItemId))
+        {
+            Navigator.NavigateTo($"/Item/{ItemId}");
+        }
+    }
+
+    public void Dispose()
+    {
+        Navigator.LocationChanged -= HandleLocationChanged;
+    }
+}

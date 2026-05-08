@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 @inject NavigationManager Navigator
 @inject UserManager<ApplicationUser> UserManager
+@inject ProjectService ProjectService
 
 
 @attribute [Authorize]
@@ -14,8 +15,7 @@
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
              HorizontalAlignment="HorizontalAlignment.SpaceBetween">
     <h1><b style="text-align: center;">My Projects</b></h1>
-    <FluentButton OnClick=@(() => Navigator.NavigateTo(Navigator.BaseUri + "Project/-1")) IconStart=@(new
-                                                                                                          Icons.Regular.Size20.Add())>
+    <FluentButton OnClick="CreateNewProject" IconStart=@(new Icons.Regular.Size20.Add())>
         New Project
     </FluentButton>
 </FluentStack>
@@ -23,4 +23,15 @@
 
 <ProjectsList />
 
+@code {
+    private async Task CreateNewProject()
+    {
+        Project? newProject = await ProjectService.CreateNewProjectAsync("New unnamed Project");
+
+        if (newProject is not null)
+        {
+            Navigator.NavigateTo($"/Project/{newProject.Id}");
+        }
+    }
+}
 

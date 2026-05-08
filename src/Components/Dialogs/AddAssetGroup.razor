@@ -1,0 +1,25 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@implements IDialogContentComponent<string>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size28.Tag())" />
+        <h3>Add new Asset Group</h3>
+    </FluentStack>
+</FluentDialogHeader>
+<FluentDialogBody>
+    <FluentTextField @bind-Value=@Content Placeholder="Enter new group name…" Immediate="true" Class="fullwidth"/>
+</FluentDialogBody>
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent"
+        OnClick="@(() => { if (Dialog is not null) Dialog.CloseAsync(Content); })">Ok</FluentButton>
+</FluentDialogFooter>
+
+@code {
+    [Parameter]
+    public required string Content { get; set; }
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+}
