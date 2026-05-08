@@ -20,36 +20,36 @@
 
 <h1>Register</h1>
 
+<h1 style="color: red;">MAKE ADMIN TOGGLE HAS NOT BEEN REMOVED!</h1>
+
 <FluentGrid>
-    <FluentGridItem xs="8" sm="4">
+    <FluentGridItem xs="12" sm="4">
         <StatusMessage Message="@Message" />
-        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser"
-                  FormName="register">
+        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
-            <h2>Create a new account.</h2>
+            <h2>Create a new Account</h2>
             <hr />
             <FluentValidationSummary class="text-danger" role="alert" />
             <FluentStack Orientation="Orientation.Vertical">
-                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true"
-                                 Placeholder="name@example.com" Label="Email" Style="width: 100%" />
+                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.Email" class="text-danger" />
-                <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password"
-                                 AutoComplete="new-password" Required="true" Placeholder="password" Label="Password"
-                                 Style="width: 100%" />
+
+                <FluentTextField Name="Input.Username" @bind-Value="Input.Username" Label="Username" Placeholder="John Doe" Required="true" Style="width: 100%;"></FluentTextField>
+                <FluentValidationMessage For="() => Input.Username" class="text-danger" />
+
+                <FluentTextField Name="Input.Organization" @bind-Value="Input.Organization" Label="Organization" Placeholder="University of Applied Sciences Ingolstadt" Required="false" Style="width: 100%;"></FluentTextField>
+                <FluentValidationMessage For="() => Input.Organization" class="text-danger" />
+
+                <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password" Label="Password" Placeholder="*******" Required="true" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.Password" class="text-danger" />
-                <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword"
-                                 AutoComplete="new-password" Required="true" Placeholder="password" Label="Confirm Password"
-                                 Style="width: 100%" />
+
+                <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword" Label="Confirm Password" Placeholder="*******" Required="true" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
-                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%">Log in
-                </FluentButton>
+                <FluentCheckbox Name="Input.MakeAdmin" @bind-Value="Input.MakeAdmin" Label="MAKE ADMIN" Disabled="firstUser"/>
+
+                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%" >Register</FluentButton>
             </FluentStack>
         </EditForm>
-    </FluentGridItem>
-    <FluentGridItem xs="12" sm="8">
-        <h3>Use another service to log in.</h3>
-        <hr />
-        <ExternalLoginPicker />
     </FluentGridItem>
 </FluentGrid>
 
@@ -62,28 +62,35 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error =>
-error.Description))}";
+    private bool firstUser { get; set; } = false;
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
     protected override void OnInitialized()
     {
-        Input ??= new();
+        firstUser = !UserManager.Users.Any();
+        Input ??= new() { MakeAdmin = firstUser };
     }
 
     public async Task RegisterUser(EditContext editContext)
     {
         var user = CreateUser();
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        await UserStore.SetUserNameAsync(user, Input.Username, CancellationToken.None);
         var emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
         var result = await UserManager.CreateAsync(user, Input.Password);
+        user.Organization = Input.Organization;
+        await UserManager.UpdateAsync(user);
 
         if (!result.Succeeded)
         {
             identityErrors = result.Errors;
             return;
         }
+
+        if (Input.MakeAdmin)
+            await UserManager.AddToRoleAsync(user, "Admin");
 
         Logger.LogInformation("User created a new account with password.");
 
@@ -139,6 +146,15 @@ error.Description))}";
         public string Email { get; set; } = "";
 
         [Required]
+        [StringLength(100)]
+        [Display(Name = "Username")]
+        public string Username { get; set; } = "";
+
+        [StringLength(100)]
+        [Display(Name = "Organization")]
+        public string Organization { get; set; } = "";
+
+        [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Password")]
@@ -148,5 +164,8 @@ error.Description))}";
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
+
+        [Display(Name = "Make Admin")]
+        public bool MakeAdmin { get; set; }
     }
 }
