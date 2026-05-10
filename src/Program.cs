@@ -6,6 +6,7 @@ using tara_tool.Components.Account;
 using tara_tool.Data;
 using tara_tool.Data.Tables;
 using tara_tool.Data.Services;
+using Microsoft.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,3 +93,17 @@ foreach (string role in roles.Where(role => !roleManager.RoleExistsAsync(role).R
      await roleManager.CreateAsync(new IdentityRole(role));
 
 app.Run();
+
+PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
+// NavigationManager NavigationManager = scope.ServiceProvider.GetRequiredService<NavigationManager>();
+string? id = await PendingRegistrationService.Create("");
+string link = app.Urls.First() + "Account/Register?id=" + id;
+
+string asciiArt = """
+       _________    ____  ___       __              __
+      /_  __/   |  / __ \/   |     / /_____  ____  / /
+       / / / /| | / /_/ / /| |    / __/ __ \/ __ \/ /
+      / / / ___ |/ _, _/ ___ |   / /_/ /_/ / /_/ / /
+     /_/ /_/  |_/_/ |_/_/  |_|   \__/\____/\____/_/
+    """;
+Console.WriteLine(asciiArt);
