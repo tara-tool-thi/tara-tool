@@ -8,6 +8,7 @@
 @using tara_tool.Data
 @using tara_tool.Data.Tables
 
+@inject PendingRegistrationService PendingRegistration
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
 @inject SignInManager<ApplicationUser> SignInManager
@@ -54,6 +55,9 @@
 </FluentGrid>
 
 @code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
     private IEnumerable<IdentityError>? identityErrors;
 
     [SupplyParameterFromForm]
@@ -74,12 +78,12 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var user = CreateUser();
+        ApplicationUser? user = CreateUser();
 
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        var emailStore = GetEmailStore();
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None); //To-Do: Write Username in DB Username field instead of email address
+        IUserEmailStore<ApplicationUser>? emailStore = GetEmailStore();
         await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
+        IdentityResult? result = await UserManager.CreateAsync(user, Input.Password);
         user.Organization = Input.Organization;
         await UserManager.UpdateAsync(user);
 
@@ -92,12 +96,18 @@
         if (Input.MakeAdmin)
             await UserManager.AddToRoleAsync(user, "Admin");
 
+        HttpContext.Response.Cookies.Append
+        (
+            IdentityRedirectManager.StatusCookieName,
+            "Successfully Registered.\nPlease log in using your new credentials."
+        );
+
         Logger.LogInformation("User created a new account with password.");
 
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        string? userId = await UserManager.GetUserIdAsync(user);
+        string? code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+        /*string? callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
             new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
 
@@ -113,7 +123,9 @@
         {
             await SignInManager.SignInAsync(user, isPersistent: false);
             RedirectManager.RedirectTo(ReturnUrl);
-        }
+        }*/
+        RedirectManager.RedirectTo(
+                 "Account/Login");
     }
 
     private ApplicationUser CreateUser()
