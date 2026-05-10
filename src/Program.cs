@@ -7,6 +7,7 @@ using tara_tool.Data;
 using tara_tool.Data.Tables;
 using tara_tool.Data.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,7 @@ builder.Services
 
 builder.Services.AddTransient<AccessControlService>();
 builder.Services.AddTransient<PendingRegistrationService>();
+builder.Services.AddTransient<ApplicationUserService>();
 builder.Services.AddTransient<ProjectService>();
 builder.Services.AddTransient<ItemDefinitionService>();
 builder.Services.AddTransient<SessionService>();
