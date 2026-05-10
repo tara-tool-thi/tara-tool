@@ -1,15 +1,22 @@
 namespace tara_tool.Data.Tables;
 
+using tara_tool.Data.Enums;
+
 public class DamageScenario
 {
     public long Id { get; set; }
-    public virtual ICollection<Asset> Assets { get; set; } = [];
+    public Asset? Asset { get; set; }
     public string Description { get; set; } = string.Empty;
-    public bool ConfidentialityImpact { get; set; } = false;
-    public bool IntegrityImpact { get; set; } = false;
-    public bool AvailabilityImpcat { get; set; } = false;
     public long DamageScenarioNumber { get; set; } = 0;
-    public virtual ImpactRating? ImpactRating { get; set; }
+
+    public (bool Confidentiality, bool Integrity, bool Availability) AffectedSecurityGoals { get; set; } = (false, false, false);
+
+    public (ImpactRatingValue Safety, ImpactRatingValue Financial,
+        ImpactRatingValue Operational, ImpactRatingValue Privacy)
+        ImpactRating
+    { get; set; } = (ImpactRatingValue.Negligible, ImpactRatingValue.Negligible,
+        ImpactRatingValue.Negligible, ImpactRatingValue.Negligible);
+
     public virtual ICollection<ThreatScenario> ThreatScenarios { get; set; } = [];
 
 }
