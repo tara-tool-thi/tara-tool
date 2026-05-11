@@ -26,7 +26,8 @@ public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> conte
             return null;
         }
 
-        DamageScenario damageScenario = new() {
+        DamageScenario damageScenario = new()
+        {
             Id = context.DamageScenarios.Select(e => e.Id).Max() + 1,
             Asset = asset
         };
@@ -111,5 +112,28 @@ public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
             return GridItemsProviderResult.From(items, total);
         };
+    }
+
+    public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId))
+        {
+            return [];
+        }
+
+        IQueryable<DamageScenario> damageScenarios = context.DamageScenarios;
+
+        if (filter is not null)
+        {
+            damageScenarios = filter(damageScenarios);
+        }
+
+        if (request is not null)
+        {
+            damageScenarios = damageScenarios.Skip(request.Value.StartIndex).Take(request.Value.Count ?? 20);
+        }
+
+        return await damageScenarios.Select(a => new KeyValuePair<long, string>(a.Id, a.DamageScenarioNumber.ToString())).ToListAsync();
     }
 }
