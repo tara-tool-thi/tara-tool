@@ -65,19 +65,14 @@ public class ApplicationDbContext(
             .WithMany()
             .HasForeignKey(e => e.IdTag)
             .IsRequired(false);
-        builder.Entity<Asset>()
-            .HasMany(e => e.DamageScenarios)
-            .WithOne(e => e.Asset);
         builder.Entity<DamageScenario>()
-            .HasMany(e => e.ThreatScenarios)
-            .WithMany(e => e.DamageScenarios);
-        builder.Entity<DamageScenario>().Property<bool>("confidentialityAffected");
-        builder.Entity<DamageScenario>().Property<bool>("integrityAffected");
-        builder.Entity<DamageScenario>().Property<bool>("availabilityAffected");
-        builder.Entity<DamageScenario>().Property<ImpactRatingValue>("safety");
-        builder.Entity<DamageScenario>().Property<ImpactRatingValue>("operational");
-        builder.Entity<DamageScenario>().Property<ImpactRatingValue>("financial");
-        builder.Entity<DamageScenario>().Property<ImpactRatingValue>("privacy");
+            .HasOne(e => e.Asset)
+            .WithMany(e => e.DamageScenarios)
+            .IsRequired();
+        builder.Entity<ThreatScenario>()
+            .HasOne(e => e.DamageScenarios)
+            .WithMany(e => e.ThreatScenarios)
+            .IsRequired();
         builder.Entity<ThreatScenario>()
             .HasMany(e => e.AttackPaths)
             .WithMany(e => e.ThreatScenarios);

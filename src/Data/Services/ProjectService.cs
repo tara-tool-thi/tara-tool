@@ -395,13 +395,22 @@ public class ProjectService(
         return null;
     }
 
+    //Overload, because the interface forces projectId which we do not have, when checking all projects
+    public async Task<List<KeyValuePair<long, string>>> GetItems(GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    {
+        return await GetItems(0, request, filter);
+    }
+
     public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
     {
         using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
 
-        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false) return [];
+        //Manual check for this one, because what Project ID should I choose? Using everysingle one will break tracking -> killing the performance
+        string? IdUser = (await sessionService.GetApplicationUserAsync())?.Id;
+        if (IdUser == null) return [];
 
-        IQueryable<Project> projects = context.Projects;
+        //We need to check the access rights of the user right here
+        IQueryable<Project> projects = context.Projects.Where(p => p.Access.Any(a => a.ApplicationUser.Id == IdUser));
 
         if (filter is not null)
         {

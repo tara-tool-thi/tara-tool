@@ -140,12 +140,12 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
     public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Asset>, IQueryable<Asset>>? filter = null)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        if (await accessControlService.CheckUserAccessRightsRead(ProjectId))
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
         {
             return [];
         }
 
-        IQueryable<Asset> assets = context.Assets;
+        IQueryable<Asset> assets = context.Assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
 
         if (filter is not null)
         {

@@ -169,7 +169,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             return [];
         }
 
-        IQueryable<ItemDefinition> items = context.ItemDefinitions;
+        IQueryable<ItemDefinition> items = context.ItemDefinitions.Where(i => i.IdProject == ProjectId);
 
         if (filter is not null)
         {

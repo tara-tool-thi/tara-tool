@@ -117,7 +117,7 @@ public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> conte
     public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? filter = null)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        if (await accessControlService.CheckUserAccessRightsRead(ProjectId))
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
         {
             return [];
         }
