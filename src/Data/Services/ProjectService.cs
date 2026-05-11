@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data;
 using tara_tool.Data.Services;
@@ -392,5 +393,26 @@ public class ProjectService(
         await context.AccessControls.AddAsync(accessControl);
         await context.SaveChangesAsync();
         return null;
+    }
+
+    public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    {
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false) return [];
+
+        IQueryable<Project> projects = context.Projects;
+
+        if (filter is not null)
+        {
+            projects = filter(projects);
+        }
+
+        if (request is not null)
+        {
+            projects = projects.Skip(request.Value.StartIndex).Take(request.Value.Count ?? 20);
+        }
+
+        return await projects.Select(a => new KeyValuePair<long, string>(a.Id, a.ProjectName)).ToListAsync();
     }
 }

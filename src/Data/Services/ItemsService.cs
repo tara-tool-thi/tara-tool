@@ -160,4 +160,27 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         };
     }
 
+    public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return [];
+        }
+
+        IQueryable<ItemDefinition> items = context.ItemDefinitions;
+
+        if (filter is not null)
+        {
+            items = filter(items);
+        }
+
+        if (request is not null)
+        {
+            items = items.Skip(request.Value.StartIndex).Take(request.Value.Count ?? 20);
+        }
+
+        return await items.Select(i => new KeyValuePair<long, string>(i.Id, i.ItemName)).ToListAsync();
+    }
 }

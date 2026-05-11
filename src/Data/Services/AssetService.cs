@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data;
@@ -134,5 +135,28 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         }
 
         return asset;
+    }
+
+    public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Asset>, IQueryable<Asset>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId))
+        {
+            return [];
+        }
+
+        IQueryable<Asset> assets = context.Assets;
+
+        if (filter is not null)
+        {
+            assets = filter(assets);
+        }
+
+        if (request is not null)
+        {
+            assets = assets.Skip(request.Value.StartIndex).Take(request.Value.Count ?? 20);
+        }
+
+        return await assets.Select(a => new KeyValuePair<long, string>(a.Id, a.AssetName)).ToListAsync();
     }
 }
