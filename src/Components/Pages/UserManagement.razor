@@ -28,7 +28,9 @@
         <h4 style="margin: 16px 0;">Pending Registrations </h4>
          <FluentDataGrid Items="waited_people.AsQueryable()" TGridItem="PendingRegistration" Class="management-data-grid" AutoFit="true">
             <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
-            <PropertyColumn Property="@(w => w.Id)" Sortable="true" />
+            <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
+                @GenerateRegistrationLink(pendingRow.Id)
+            </TemplateColumn>
         </FluentDataGrid>
     </FluentGridItem>
 
@@ -94,9 +96,20 @@
         if(email == null)
             return;
         string? id = await PendingRegistrationService.Create(email);
-        link = NavigationManager.BaseUri + "Account/Register?id=" + id;
+
+        if (id== null){
+            ToastService.ShowError("Failed to create pending registration");
+            return;
+        }
+
+        link = GenerateRegistrationLink(id);
         await DialogService.CloseAsync(dialog);
         copyLink!.Show();
+    }
+
+    private string GenerateRegistrationLink(string id)
+    {
+        return NavigationManager.BaseUri + "Account/Register?id=" + id;
     }
 
     private void CloseCopyLink()
