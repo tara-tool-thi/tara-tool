@@ -285,3 +285,9 @@ h6 {
 .icon-spacing {
     margin-right: 4px;
 }
+
+.management-data-grid {
+    width: 100%;
+    margin: 0 auto;
+    overflow-x: auto;
+}

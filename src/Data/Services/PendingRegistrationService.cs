@@ -57,4 +57,10 @@ public class PendingRegistrationService(
         await context.SaveChangesAsync();
     }
 
+    public async Task<List<PendingRegistration>> GetAllPendingRegistrations()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        return await context.PendingRegistrations.ToListAsync();
+    }
+
 }

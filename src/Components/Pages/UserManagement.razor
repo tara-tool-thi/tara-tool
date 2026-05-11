@@ -25,15 +25,23 @@
 
     <FluentGrid Spacing="4">
     <FluentGridItem xs="12">
+        <h4 style="margin: 16px 0;">Pending Registrations </h4>
+         <FluentDataGrid Items="waited_people.AsQueryable()" TGridItem="PendingRegistration" Class="management-data-grid" AutoFit="true">
+            <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
+            <PropertyColumn Property="@(w => w.Id)" Sortable="true" />
+        </FluentDataGrid>
+    </FluentGridItem>
+
+    <FluentGridItem xs="12">
         <h4 style="margin: 16px 0;">Registered Users</h4>
-        @* <FluentDataGrid Items="@people" Style="width: 100%;" AutoFit="true"> *@
-         <FluentDataGrid Items="@people.AsQueryable()" TGridItem="ApplicationUser" Style="width: 100%; margin: 0 auto; overflow-x: auto;" AutoFit="true"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+         <FluentDataGrid Items="@people.AsQueryable()" TGridItem="ApplicationUser" Class="management-data-grid" AutoFit="true"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
             <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
-            <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein ezeinlnes pbjekt auf people*@
-            @*<PropertyColumn Property="@(p => p.Org)" Sortable="true" />*@
+            <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
+            <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
         </FluentDataGrid>
     </FluentGridItem>
     </FluentGrid>
+
 </AuthorizeView>
 
 <div>
@@ -66,6 +74,7 @@
     private ClaimsPrincipal? user { get; set; }
 
     List<ApplicationUser> people = new();
+    List<PendingRegistration> waited_people = new();
 
     @* private readonly IJSRuntime _jsRuntime; *@
 
@@ -73,6 +82,7 @@
         user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
         if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
         people = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
+        waited_people = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
     }
 
     private async Task OpenDialog()
