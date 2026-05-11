@@ -9,29 +9,107 @@ using Microsoft.CodeAnalysis;
 
 public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService) : IDataService<DamageScenario>
 {
+
+    public async Task<DamageScenario?> CreateNew(long idAsset)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        Asset? asset = await context.Assets.Include(e => e.ItemDefinition)
+                                           .ThenInclude(e => e != null ? e.Project : null)
+                                           .FirstOrDefaultAsync(e => e.Id == idAsset);
+        if (asset is null or { ItemDefinition: null } or { ItemDefinition.Project: null }
+            || (
+                asset.ItemDefinition.Project.Id is long projId
+                && await accessControlService.CheckUserAccessRightsWrite(projId) is false
+               )
+           )
+        {
+            return null;
+        }
+
+        DamageScenario damageScenario = new() {
+            Id = context.DamageScenarios.Select(e => e.Id).Max() + 1,
+            Asset = asset
+        };
+
+        await context.AddAsync(damageScenario);
+        await context.SaveChangesAsync();
+
+        return damageScenario;
+    }
+
     public async Task Delete(DamageScenario entityToDelete)
     {
-
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        DamageScenario? damageScenario = await context.DamageScenarios.Include(e => e.Asset)
+                                                      .ThenInclude(e => e != null ? e.ItemDefinition : null)
+                                                      .FirstOrDefaultAsync(a => a.Id == entityToDelete.Id);
+        if (damageScenario is not null and { Asset.ItemDefinition.IdProject: long projId }
+            && await accessControlService.CheckUserAccessRightsWrite(projId) is true)
+        {
+            context.Remove(damageScenario);
+            await context.SaveChangesAsync();
+        }
+        else return;
     }
 
     public async Task<DamageScenario?> Save(DamageScenario entityToSave)
     {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        DamageScenario? damageScenario = await context.DamageScenarios.Include(e => e.Asset)
+                                                      .ThenInclude(e => e != null ? e.ItemDefinition : null)
+                                                      .FirstOrDefaultAsync(a => a.Id == entityToSave.Id);
+
+        if (damageScenario is not null and { Asset.ItemDefinition.IdProject: long projId }
+            && await accessControlService.CheckUserAccessRightsWrite(projId) is true)
+        {
+            context.Entry(damageScenario).CurrentValues.SetValues(entityToSave);
+            await context.SaveChangesAsync();
+            return damageScenario;
+        }
+        else return null;
 
     }
 
     public async Task<DamageScenario?> GetItemByIdAsync(long id, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? include = null, CancellationToken cancellationToken = default)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        IQueryable<DamageScenario> DamageScenarios = context.DamageScenarios.AsQueryable();
+        IQueryable<DamageScenario> damageScenarios = context.DamageScenarios.AsQueryable();
+
         if (include is not null)
-        {
-            DamageScenarios = include(DamageScenarios);
-        }
-        DamageScenario? DamageScenario = await DamageScenarios.FirstOrDefaultAsync(a => a.Id == id);
-        if (DamageScenario is not null and { Asset.ItemDefinition.IdProject: long projId } && await accessControlService.CheckUserAccessRightsRead(projId) is true)
-            return DamageScenario;
+            damageScenarios = include(damageScenarios);
+
+        DamageScenario? damageScenario = await damageScenarios.FirstOrDefaultAsync(a => a.Id == id);
+        if (damageScenario is not null and { Asset.ItemDefinition.IdProject: long projId }
+            && await accessControlService.CheckUserAccessRightsRead(projId) is true)
+            return damageScenario;
         else return null;
     }
 
-    public GridItemsProvider<DamageScenario> GetItemsProvider(long ProjectId, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? include = null, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? filter = null);
+    public GridItemsProvider<DamageScenario> GetItemsProvider(long ProjectId, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? include = null, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? filter = null)
+    {
+        return async request =>
+        {
+            using ApplicationDbContext context =
+                await contextFactory.CreateDbContextAsync(request.CancellationToken);
+
+            if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+                return GridItemsProviderResult.From(new List<DamageScenario>(), 0);
+
+            IQueryable<DamageScenario> damageScenario = context.DamageScenarios.AsNoTracking().Where(a => a.Asset!.ItemDefinition!.IdProject == ProjectId);
+
+            if (include is not null)
+                damageScenario = include(damageScenario);
+
+            if (filter is not null)
+                damageScenario = filter(damageScenario);
+
+            int total = await damageScenario.CountAsync();
+            List<DamageScenario> items = await request.ApplySorting(damageScenario)
+                                                      .Skip(request.StartIndex)
+                                                      .Take(request.Count ?? 20)
+                                                      .ToListAsync(request.CancellationToken);
+
+            return GridItemsProviderResult.From(items, total);
+        };
+    }
 }

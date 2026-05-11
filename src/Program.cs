@@ -45,13 +45,7 @@ builder.Services
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddTransient<AccessControlService>();
-builder.Services.AddTransient<PendingRegistrationService>();
-builder.Services.AddTransient<ProjectService>();
-builder.Services.AddTransient<ItemDefinitionService>();
-builder.Services.AddTransient<SessionService>();
-builder.Services.AddTransient<AssetService>();
-builder.Services.AddTransient<TagService>();
+builder.Services.AddDatabaseServices();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
