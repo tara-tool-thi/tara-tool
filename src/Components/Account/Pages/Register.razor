@@ -86,6 +86,8 @@
         IdentityResult? result = await UserManager.CreateAsync(user, Input.Password);
         user.Organization = Input.Organization;
         await UserManager.UpdateAsync(user);
+        user.NameOfUser = Input.Username;
+        await UserManager.UpdateAsync(user);
 
         if (!result.Succeeded)
         {
