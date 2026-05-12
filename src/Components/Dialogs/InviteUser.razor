@@ -14,7 +14,7 @@
 <EditForm Model="Input" method="post" FormName="addUser" OnValidSubmit="submit">
     <FluentDialogBody>
         <DataAnnotationsValidator />
-        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" Immediate=true/>
+        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" Immediate=true Autofocus="true"/>
         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
         <p>The email address is used for verification.</p>
     </FluentDialogBody>

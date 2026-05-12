@@ -46,19 +46,30 @@
 
 </AuthorizeView>
 
+@* Dialog that contains the invite link *@
 <div>
-    <FluentDialog @ref="copyLink" @bind-Hidden="@Hidden" @ondialogdismiss=CloseCopyLink>
-        <FluentDialogHeader Visible="false" />
+    <FluentDialog title="Invite link" @ref="copyLink" @bind-Hidden="@Hidden" @ondialogdismiss=CloseCopyLink>
+        <FluentDialogHeader ShowDismiss="true">
+            <FluentStack VerticalAlignment="VerticalAlignment.Center">
+                <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
+                <h3>Invite link</h3>
+            </FluentStack>
+        </FluentDialogHeader>
         <FluentDialogBody>
             <FluentStack Orientation="Orientation.Vertical">
-                <p>This is the register link for the new user: </p>
-                <FluentStack Orientation="Orientation.Horizontal">
-                    <FluentTextField ReadOnly="true" @bind-Value="link" style="width: 100%;"></FluentTextField>
-                    <FluentButton OnClick=@CopyToClipboard IconStart=@(new Icons.Regular.Size20.Copy()) />
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Bottom">
+                    <div style="width: 100%;">
+                        <FluentTextField ReadOnly="true" @bind-Value="link" style="width: 100%;" Label="This is the register link for the new user:"></FluentTextField>
+                    </div>
+                    <FluentButton OnClick=@CopyToClipboard IconStart=@(new Icons.Regular.Size20.Copy()) class="bottom-margin"/>
                 </FluentStack>
                 <p>Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
             </FluentStack>
         </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentSpacer/>
+            <FluentButton OnClick=CloseCopyLink Appearance="Appearance.Accent">OK</FluentButton>
+        </FluentDialogFooter>
     </FluentDialog>
 </div>
 
