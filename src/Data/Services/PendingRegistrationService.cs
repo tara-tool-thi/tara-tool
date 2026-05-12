@@ -42,11 +42,11 @@ public class PendingRegistrationService(
         return await context.PendingRegistrations.AnyAsync(p => p.Id == id && p.Email == email);
     }
 
-    public async Task Delete(string email)
+    public async Task Delete(string id)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
-        PendingRegistration? pendingRegistration = await context.PendingRegistrations.FirstOrDefaultAsync(p => p.Email == email);
+        PendingRegistration? pendingRegistration = await context.PendingRegistrations.FirstOrDefaultAsync(p => p.Id == id);
 
         if (pendingRegistration is null)
         {
