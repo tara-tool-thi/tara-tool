@@ -63,4 +63,11 @@ public class PendingRegistrationService(
         return await context.PendingRegistrations.ToListAsync();
     }
 
+    public async Task<bool> Any()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        return await context.PendingRegistrations.AnyAsync();
+    }
+
 }

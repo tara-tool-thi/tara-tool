@@ -6,9 +6,6 @@ using tara_tool.Components.Account;
 using tara_tool.Data;
 using tara_tool.Data.Tables;
 using tara_tool.Data.Services;
-using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,19 +102,24 @@ string asciiArt = """
     """;
 
 UserManager<ApplicationUser> UserManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-if(!UserManager.Users.Any())
+PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
+string link = "";
+bool newId = !UserManager.Users.Any() && !await PendingRegistrationService.Any();
+if(newId)
 {
-    PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
     string? id = await PendingRegistrationService.Create("");
-    string link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
+    link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
 }
 
-// Console.WriteLine(app.Urls.First());
-// Console.WriteLine(NavigationManager.BaseUri);
 Console.WriteLine(asciiArt);
 Console.WriteLine("Welcome to TARA tool :)");
-Console.WriteLine("Use the following link to register the first user: ");
-// Console.WriteLine(link);
+
+if(newId)
+{
+    Console.WriteLine("Use the following link to register the first user: ");
+    Console.WriteLine(link);
+}
+
 Console.WriteLine();
 
 app.Run();
