@@ -7,15 +7,24 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.CodeAnalysis;
 
-public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService) : IDataService<DamageScenario>
+public class DamageScenarioService
+(
+    IDbContextFactory<ApplicationDbContext> contextFactory,
+    AccessControlService accessControlService,
+    AssetService assetService
+) : IDataService<DamageScenario>
 {
 
     public async Task<DamageScenario?> CreateNew(long idAsset)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        Asset? asset = await context.Assets.Include(e => e.ItemDefinition)
-                                           .ThenInclude(e => e != null ? e.Project : null)
-                                           .FirstOrDefaultAsync(e => e.Id == idAsset);
+        Asset? asset = await assetService.GetItemByIdAsync
+        (
+            idAsset,
+            include: e => e.Include(i => i.ItemDefinition)
+                           .ThenInclude(j => j != null ? j.Project : null)
+        );
+
         if (asset is null or { ItemDefinition: null } or { ItemDefinition.Project: null }
             || (
                 asset.ItemDefinition.Project.Id is long projId
@@ -26,9 +35,19 @@ public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> conte
             return null;
         }
 
+        context.Attach(asset);
+        IQueryable<DamageScenario> existingDamageScenarios = context.DamageScenarios.Where (
+            e => e.Asset != null &&
+            e.Asset.ItemDefinition != null &&
+            e.Asset.ItemDefinition.IdProject == asset.ItemDefinition.IdProject);
+
         DamageScenario damageScenario = new()
         {
-            Id = context.DamageScenarios.Select(e => e.Id).Max() + 1,
+            Description = "New unnamed Damage Scenario",
+            DamageScenarioNumber = existingDamageScenarios.Any() ?
+                                   existingDamageScenarios.Select ( e => e.DamageScenarioNumber)
+                                                          .Max() + 1
+                                                          : 1,
             Asset = asset
         };
 
@@ -41,13 +60,15 @@ public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> conte
     public async Task Delete(DamageScenario entityToDelete)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        DamageScenario? damageScenario = await context.DamageScenarios.Include(e => e.Asset)
-                                                      .ThenInclude(e => e != null ? e.ItemDefinition : null)
-                                                      .FirstOrDefaultAsync(a => a.Id == entityToDelete.Id);
-        if (damageScenario is not null and { Asset.ItemDefinition.IdProject: long projId }
+        // DamageScenario? damageScenario = await context.DamageScenarios.Include(e => e.Asset)
+        //                                               .ThenInclude(e => e != null ? e.ItemDefinition : null)
+        //                                               .FirstOrDefaultAsync(a => a.Id == entityToDelete.Id);
+
+        context.Attach(entityToDelete);
+        if (entityToDelete is not null and { Asset.ItemDefinition.IdProject: long projId }
             && await accessControlService.CheckUserAccessRightsWrite(projId) is true)
         {
-            context.Remove(damageScenario);
+            context.Remove(entityToDelete);
             await context.SaveChangesAsync();
         }
         else return;
@@ -65,7 +86,7 @@ public class DamageScenarioService(IDbContextFactory<ApplicationDbContext> conte
         {
             context.Entry(damageScenario).CurrentValues.SetValues(entityToSave);
             await context.SaveChangesAsync();
-            return damageScenario;
+            return entityToSave;
         }
         else return null;
 

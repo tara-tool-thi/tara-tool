@@ -65,6 +65,7 @@ public class ApplicationDbContext(
             .WithMany()
             .HasForeignKey(e => e.IdTag)
             .IsRequired(false);
+        builder.Entity<DamageScenario>().HasKey(e => e.Id);
         builder.Entity<DamageScenario>()
             .HasOne(e => e.Asset)
             .WithMany(e => e.DamageScenarios)

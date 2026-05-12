@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tara_tool.Data;
 
@@ -10,9 +11,11 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260512133711_DamageScenarioUpdate3")]
+    partial class DamageScenarioUpdate3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
@@ -370,19 +373,7 @@ namespace tara_tool.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Financial")
-                        .HasColumnType("INTEGER");
-
                     b.Property<bool>("IntegrityAffected")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Operational")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Privacy")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Safety")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

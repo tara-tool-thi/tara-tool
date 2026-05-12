@@ -1,0 +1,31 @@
+@using tara_tool.Data.Enums
+@rendermode InteractiveServer
+
+<FluentCard Width="min-content" MinimalStyle=true Style=@style>
+    <FluentRadioGroup @bind-Value=@Value @bind-Value:after=@(async () => await ValueChanged.InvokeAsync(Value))>
+            <h5>@CategoryName</h5>
+            <FluentRadio Value="ImpactRatingValue.Severe">Severe</FluentRadio>
+            <FluentRadio Value="ImpactRatingValue.Major">Major</FluentRadio>
+            <FluentRadio Value="ImpactRatingValue.Moderate">Moderate</FluentRadio>
+            <FluentRadio Value="ImpactRatingValue.Negligible">Negligible</FluentRadio>
+    </FluentRadioGroup>
+</FluentCard>
+
+@code {
+    [Parameter]
+    public required ImpactRatingValue Value { get; set; }
+
+    [Parameter]
+    public required EventCallback<ImpactRatingValue> ValueChanged { get; set; }
+
+    [Parameter]
+    public required string CategoryName { get; set; }
+
+    private string style => Value switch {
+        ImpactRatingValue.Severe => "background-color: #e39290",
+        ImpactRatingValue.Major => "background-color: #ffcb7f",
+        ImpactRatingValue.Moderate => "background-color: #fefe40",
+        ImpactRatingValue.Negligible => "background-color: #8dbb79",
+        _ => "background-color: #8800ff" // cyber cyber cyber
+    };
+}
