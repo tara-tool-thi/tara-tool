@@ -8,6 +8,7 @@ using tara_tool.Data.Tables;
 using tara_tool.Data.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,18 +95,29 @@ string[] roles = [ "Admin" ];
 foreach (string role in roles.Where(role => !roleManager.RoleExistsAsync(role).Result))
      await roleManager.CreateAsync(new IdentityRole(role));
 
-app.Run();
-
-PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
-// NavigationManager NavigationManager = scope.ServiceProvider.GetRequiredService<NavigationManager>();
-string? id = await PendingRegistrationService.Create("");
-string link = app.Urls.First() + "Account/Register?id=" + id;
-
 string asciiArt = """
        _________    ____  ___       __              __
       /_  __/   |  / __ \/   |     / /_____  ____  / /
        / / / /| | / /_/ / /| |    / __/ __ \/ __ \/ /
       / / / ___ |/ _, _/ ___ |   / /_/ /_/ / /_/ / /
      /_/ /_/  |_/_/ |_/_/  |_|   \__/\____/\____/_/
+
     """;
+
+UserManager<ApplicationUser> UserManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+if(!UserManager.Users.Any())
+{
+    PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
+    string? id = await PendingRegistrationService.Create("");
+    string link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
+}
+
+// Console.WriteLine(app.Urls.First());
+// Console.WriteLine(NavigationManager.BaseUri);
 Console.WriteLine(asciiArt);
+Console.WriteLine("Welcome to TARA tool :)");
+Console.WriteLine("Use the following link to register the first user: ");
+// Console.WriteLine(link);
+Console.WriteLine();
+
+app.Run();
