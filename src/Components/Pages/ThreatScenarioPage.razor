@@ -47,16 +47,16 @@
 <FluentStack>
     <div style="display: flex; border: 1px solid #8a8886; width: 100%; margin-bottom: 4px;">
 		<div style="display: flex; align-items: center; justify-content: center; border-right: 1px solid #8a8886; padding: 0 20px; font-weight: bold;">
-			@thisTS!.Name
+			@TSName
 		</div>
 
 		<div style="flex-grow: 1; background-color: @BgColor; padding: 8px 15px; display: flex; align-items: center;">
-			<span style="font-weight: 600; margin-right: 8px;">@thisTS!.Description</span>
+			<span style="font-weight: 600; margin-right: 8px;">@TSDescription</span>
 		</div>
 
 		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 15px; min-width: 80px; border-left: 1px solid #8a8886;">
 			<span style="font-size: 0.9rem;">Risk:</span>
-			<span style="color: @RiskColor; font-weight: bold;">@thisTS!.RiskValue</span>
+			<span style="color: @RiskColor; font-weight: bold;">@TSRiskValue</span>
 		</div>
 </div>
 </FluentStack>
@@ -65,9 +65,9 @@
 <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%;" HorizontalAlignment="HorizontalAlignment.Center">
     @if (FilteredAttackPaths.Any())
     {
-        
+
         int index = 1;
-        
+
         @foreach (var path in FilteredAttackPaths)
         {
             @* Each box is now its own component *@
@@ -85,8 +85,8 @@
         </FluentCard>
     }
 
-    <FluentButton Appearance="Appearance.Neutral" 
-                OnClick="AddAP" 
+    <FluentButton Appearance="Appearance.Neutral"
+                OnClick="AddAP"
                 Style="width: 100%;">
         <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
         Add Attack Path
@@ -143,27 +143,31 @@
 
     ThreatScenario? thisTS;
 
+    private string TSName = string.Empty;
+    private string TSDescription = string.Empty;
+    private string TSRiskValue = string.Empty;
+
     public string BgColor { get; set; } = "#dff6ff"; // Default light blue
     public string RiskColor { get; set; } = "#d13438"; // Default red
 
     List<AttackPath> AttackPaths = new()
-    { 
-        new AttackPath { Name = "AP1",  } 
+    {
+        new AttackPath { Name = "AP1",  }
     };
 
-    private IEnumerable<AttackPath> FilteredAttackPaths => 
-        string.IsNullOrWhiteSpace(searchText) 
-            ? AttackPaths 
-            : AttackPaths.Where(ap => 
+    private IEnumerable<AttackPath> FilteredAttackPaths =>
+        string.IsNullOrWhiteSpace(searchText)
+            ? AttackPaths
+            : AttackPaths.Where(ap =>
                 // Check if any step contains the search text
-                ap.Steps.Any(s => s.Text.Contains(searchText, StringComparison.OrdinalIgnoreCase)) || 
+                ap.Steps.Any(s => s.Text.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
                 // Check if RiskTreatment contains the search text
                 (ap.RiskTreatmentText?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
             );
 
     protected override async Task OnInitializedAsync()
     {
-        thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q => 
+        thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q =>
                                                                     q.Include(ts => ts.AttackPaths)
                                                                         .ThenInclude(ap => ap.Steps));
         if (thisTS == null)
@@ -171,6 +175,10 @@
             NavigationManager.NavigateTo("/");
             return;
         }
+
+        TSName = thisTS.Name;
+        TSDescription = thisTS.Description;
+        TSRiskValue = thisTS.RiskValue.ToString();
 
         AttackPaths.Clear();
 
@@ -182,7 +190,7 @@
 
     async Task DeleteAsync()
     {
-        
+
     }
 
     async Task AddAP()
@@ -199,7 +207,7 @@
         StateHasChanged();
     }
 
-    void NotifyAutosave() 
+    void NotifyAutosave()
     {
         genericAutosave.ScheduleAutoSave();
     }
