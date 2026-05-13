@@ -22,15 +22,6 @@ public interface IDataService<T> where T : class
     public GridItemsProvider<T> GetItemsProvider(long ProjectId, Func<IQueryable<T>, IQueryable<T>>? include = null, Func<IQueryable<T>, IQueryable<T>>? filter = null);
 
     /// <summary>
-    /// This function is needed to load the items for the breadcrumbs etc. This is needed to prevent the entire data from loading. This will be inefficient otherwise.
-    /// </summary>
-    /// <param name="ProjectId">The Id of the project</param>
-    /// <param name="request">The r</pequest, if null, all items will be loaded. </param>
-    /// <param name="filter"></param>
-    /// <returns>A List, containing Pairs of the ID and Title of the Object. </returns>
-    public Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<T>, IQueryable<T>>? filter = null);
-
-    /// <summary>
     /// Deletes the item and all preceding Data, which will become inreachable through the deletion of this object.
     /// </summary>
     /// <param name="itemToDelete">The Item to delete. </param>
@@ -38,4 +29,5 @@ public interface IDataService<T> where T : class
     public Task Delete(T itemToDelete);
 
 
+    public Task<(List<T>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<T>, IQueryable<T>>? include = null, Func<IQueryable<T>, IQueryable<T>>? filter = null);
 }

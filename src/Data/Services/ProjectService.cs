@@ -172,10 +172,42 @@ public class ProjectService(
         return project;
     }
 
-    //Not yet relevant
+    public GridItemsProvider<Project> GetItemsProvider(Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    {
+        return GetItemsProvider(0, include, filter);
+    }
+
     public GridItemsProvider<Project> GetItemsProvider(long ProjectId, Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
     {
-        throw new NotImplementedException();
+        return async request =>
+        {
+            await using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync(request.CancellationToken);
+            ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+            if (user is null)
+            {
+                return GridItemsProviderResult.From(new List<Project>(), 0);
+            }
+
+            IQueryable<Project> projects = context.Projects.AsNoTracking()
+                .Where(p => p.Access.Any(a => a.ApplicationUser.Id == user.Id));
+
+            if (include != null)
+            {
+                projects = include(projects);
+            }
+
+            if (filter != null)
+            {
+                projects = filter(projects);
+            }
+
+            int total = await projects.CountAsync();
+            List<Project> items = await request.ApplySorting(projects)
+                .Skip(request.StartIndex)
+                .Take(request.Count ?? 20)
+                .ToListAsync(request.CancellationToken);
+            return GridItemsProviderResult.From(items, total);
+        };
     }
 
     public async Task<List<AccessControl>> GetProjectMembersAsync(long projectId)
@@ -396,32 +428,34 @@ public class ProjectService(
     }
 
     //Overload, because the interface forces projectId which we do not have, when checking all projects
-    public async Task<List<KeyValuePair<long, string>>> GetItems(GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    public async Task<(List<Project>, int TotalItems)> GetItems(Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
     {
-        return await GetItems(0, request, filter);
+        return await GetItems(0, include, filter);
     }
 
-    public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    public async Task<(List<Project>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
     {
         using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
 
         //Manual check for this one, because what Project ID should I choose? Using everysingle one will break tracking -> killing the performance
         string? IdUser = (await sessionService.GetApplicationUserAsync())?.Id;
-        if (IdUser == null) return [];
+        if (IdUser == null) return ([], 0);
 
         //We need to check the access rights of the user right here
         IQueryable<Project> projects = context.Projects.Where(p => p.Access.Any(a => a.ApplicationUser.Id == IdUser));
 
+
+        if (include is not null)
+        {
+            projects = include(projects);
+        }
         if (filter is not null)
         {
             projects = filter(projects);
         }
 
-        if (request is not null)
-        {
-            projects = projects.Skip(request.Value.StartIndex).Take(request.Value.Count ?? 20);
-        }
 
-        return await projects.Select(a => new KeyValuePair<long, string>(a.Id, a.ProjectName)).ToListAsync();
+
+        return (await projects.ToListAsync(), await projects.CountAsync());
     }
 }

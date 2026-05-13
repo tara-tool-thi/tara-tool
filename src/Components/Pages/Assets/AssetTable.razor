@@ -4,17 +4,7 @@
 
 @if (paginationUI is not null)
 {
-    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
-                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-        <div>
-            <FluentSearch Immediate=true ImmediateDelay="500" @bind-Value="@searchText"
-                          Label="Search Asset by Name, Description or Group" />
-        </div>
-        <FluentSpacer />
-        <div>
-            <FluentCheckbox Label="Only show Assets with no Damage Scenarios" @bind-Value="@showAssetsWithNoDamageScenario" />
-        </div>
-    </FluentStack>
+
     <FluentDataGrid TGridItem="Asset" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
                     OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
         <PropertyColumn Property="@(p => p.AssetNumber)" Title="Nr." Sortable="true" />
@@ -39,10 +29,8 @@
     [Parameter]
     public required Func<IQueryable<Asset>, IQueryable<Asset>> Filters { get; set; }
 
-
-    //Cannot directly infered inside this component, because in theory everywhere this could be used
-    [Parameter, EditorRequired]
-    public long ProjectId { get; set; }
+    [Parameter]
+    public required long ProjectId { get; set; }
 
     private GridItemsProvider<Asset> FilteredItemsProvider { get; set; } = default!;
 
@@ -53,29 +41,8 @@
 
     private FluentDataGrid<Asset> grid = default!;
 
-    private string _searchText = string.Empty;
-    private string searchText
-    {
-        get => _searchText;
-        set
-        {
-            _searchText = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
-            RefreshGrid();
-        }
-    }
 
-    private bool _showAssetsWithNoDamageScenario = false;
-    private bool showAssetsWithNoDamageScenario
-    {
-        get => _showAssetsWithNoDamageScenario;
-        set
-        {
-            _showAssetsWithNoDamageScenario = value;
-            RefreshGrid();
-        }
-    }
-
-    private void RefreshGrid()
+    public void RefreshGrid()
     {
         // grid may be null during initial render
         if (grid is not null)
@@ -101,10 +68,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        FilteredItemsProvider = AssetService.GetItemsProvider(ProjectId, e => e.Include(a => a.Tag), e => Filters(e).Where(a =>
-            string.IsNullOrWhiteSpace(searchText) || a.AssetName.Contains(searchText) || a.Description.Contains(searchText) ||
-            a.Tag!.Name.Contains(searchText) || (a.Tag == null && "None".Contains(searchText))).Where(a =>
-showAssetsWithNoDamageScenario == false || a.DamageScenarios.Count() ==
-0));
+        FilteredItemsProvider = AssetService.GetItemsProvider(ProjectId, e => e.Include(a => a.Tag), Filters);
     }
 }

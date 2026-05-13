@@ -25,20 +25,24 @@
         </ul>
     </FluentTooltip>
     @if (itemDefinition != null && itemDefinition.Project != null && itemDefinition.Project.IsArchived)
-{
-    <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
-        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
-        Archived
-    </FluentBadge>
-} else if (itemDefinition != null && itemDefinition.Project != null && hasWriteAccess){
-    <GenericAutosave TEntity="ItemDefinition" Entity="@itemDefinition" SaveService="@ItemsService"
-                     @ref=@genericAutosave />
-} else {
-    <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
-        <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Class="icon-spacing" />
-        You are not allowed to write on this project, changes will not be saved!
-    </FluentBadge>
-}
+    {
+        <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
+            Archived
+        </FluentBadge>
+    }
+    else if (itemDefinition != null && itemDefinition.Project != null && hasWriteAccess)
+    {
+        <GenericAutosave TEntity="ItemDefinition" Entity="@itemDefinition" SaveService="@ItemsService"
+                         @ref=@genericAutosave />
+    }
+    else
+    {
+        <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Warning())" Class="icon-spacing" />
+            You are not allowed to write on this project, changes will not be saved!
+        </FluentBadge>
+    }
     <FluentSpacer />
     <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
@@ -57,13 +61,13 @@ else
     <FluentStack Orientation="Orientation.Vertical" Width="100%">
         <div class="fullwidth">
             <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                genericAutosave.ScheduleAutoSave()) Label="Item Name" Placeholder="Enter item name..." Class="fullwidth"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                genericAutosave.ScheduleAutoSave()) Label="Item Name" Placeholder="Enter item name..." Class="fullwidth"
                              Immediate="true" ImmediateDelay="500" />
         </div>
 
         <div class="fullwidth">
             <FluentTextArea @bind-Value="itemDefinition!.ItemDescription" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    genericAutosave.ScheduleAutoSave()) Label="Item Description"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                genericAutosave.ScheduleAutoSave()) Label="Item Description"
                             Placeholder="Describe the item and its purpose..." Rows="4" Class="fullwidth" Immediate="true"
                             ImmediateDelay="500" />
         </div>
@@ -111,22 +115,22 @@ else
         <FluentAccordion Class="fullwidth">
             <FluentAccordionItem Expanded="@ExpandedItemBoundaryText" Heading="Item Boundary">
                 <FluentTextArea @bind-Value="itemDefinition!.ItemBoundaryText" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                 genericAutosave.ScheduleAutoSave()) Placeholder="Describe the item boundaries and interfaces..."
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               genericAutosave.ScheduleAutoSave()) Placeholder="Describe the item boundaries and interfaces..."
                                 Rows="5" Class="fullwidth" Immediate="true" ImmediateDelay="500" />
             </FluentAccordionItem>
             <FluentAccordionItem Expanded="@ExpandedItemFunction" Heading="Item Functions">
                 <FluentTextArea @bind-Value="itemDefinition!.ItemFunction" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                genericAutosave.ScheduleAutoSave()) Placeholder="List the functions this item fulfills..." Rows="5"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      genericAutosave.ScheduleAutoSave()) Placeholder="List the functions this item fulfills..." Rows="5"
                                 Class="fullwidth" Immediate="true" ImmediateDelay="500" />
             </FluentAccordionItem>
             <FluentAccordionItem Expanded="@ExpandedPreliminaryArchitectureText" Heading="Preliminary Architecture">
                 <FluentTextArea @bind-Value="itemDefinition!.PreliminaryArchitectureText" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                            genericAutosave.ScheduleAutoSave()) Placeholder="Describe the preliminary architecture..." Rows="5"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                genericAutosave.ScheduleAutoSave()) Placeholder="Describe the preliminary architecture..." Rows="5"
                                 Class="fullwidth" Immediate="true" ImmediateDelay="500" />
             </FluentAccordionItem>
             <FluentAccordionItem Expanded="@ExpandedOperationalEnvironmentText" Heading="Operational Environment">
                 <FluentTextArea @bind-Value="itemDefinition!.OperationalEnvironmentText" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                         genericAutosave.ScheduleAutoSave())
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           genericAutosave.ScheduleAutoSave())
                                 Placeholder="Describe the operational environment and operating conditions..." Rows="5"
                                 Class="fullwidth" Immediate="true" ImmediateDelay="500" />
             </FluentAccordionItem>
@@ -149,7 +153,23 @@ else
                     </FluentStack>
                 </HeadingTemplate>
                 <ChildContent>
-                    <AssetTable Filters="@(p => p.Where(a => a.IdItemDefinition == itemId))"
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+                                 HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                        <div>
+                            <FluentSearch Immediate=true ImmediateDelay="500" @bind-Value="@assetSearchText"
+                                          Label="Search Asset by Name, Description or Group" />
+                        </div>
+                        <FluentSpacer />
+                        <div>
+                            <FluentCheckbox Label="Only show Assets with no Damage Scenarios"
+                                            @bind-Value="@showAssetsWithNoDamageScenario" />
+                        </div>
+                    </FluentStack>
+                    <AssetTable @ref="@assetTable"
+                                Filters="@(p => p.Where(a => string.IsNullOrWhiteSpace(assetSearchText) || a.AssetName.Contains(assetSearchText) || a.Description.Contains(assetSearchText) ||
+                                                                            a.Tag!.Name.Contains(assetSearchText) || (a.Tag == null && " None".Contains(assetSearchText)))
+                                                                                .Where(a =>
+                                                                                        showAssetsWithNoDamageScenario == false || a.DamageScenarios.Count() == 0))"
                                 ProjectId="@itemDefinition.IdProject" />
                 </ChildContent>
             </FluentAccordionItem>
@@ -166,6 +186,29 @@ else
     GenericAutosave<ItemDefinition> genericAutosave = default!;
     DeletionDialog deletionDialog = default!;
     string? imagePreviewUrl;
+    AssetTable? assetTable;
+
+    private string _assetSearchText = string.Empty;
+    private string assetSearchText
+    {
+        get => _assetSearchText;
+        set
+        {
+            _assetSearchText = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+            assetTable?.RefreshGrid();
+        }
+    }
+
+    private bool _showAssetsWithNoDamageScenario = false;
+    private bool showAssetsWithNoDamageScenario
+    {
+        get => _showAssetsWithNoDamageScenario;
+        set
+        {
+            _showAssetsWithNoDamageScenario = value;
+            assetTable?.RefreshGrid();
+        }
+    }
     bool ExpandedItemBoundaryText = false;
     bool ExpandedItemFunction = false;
     bool ExpandedPreliminaryArchitectureText = false;
@@ -188,10 +231,10 @@ else
                 return;
             }
 
-        if (itemDefinition.Project != null)
-        {
-            hasWriteAccess = await AccessControlService.CheckUserAccessRightsWrite(itemDefinition.Project.Id);
-        }
+            if (itemDefinition.Project != null)
+            {
+                hasWriteAccess = await AccessControlService.CheckUserAccessRightsWrite(itemDefinition.Project.Id);
+            }
 
             ExpandedItemBoundaryText = !string.IsNullOrEmpty(itemDefinition.ItemBoundaryText);
             ExpandedItemFunction = !string.IsNullOrEmpty(itemDefinition.ItemFunction);

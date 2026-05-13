@@ -27,8 +27,7 @@ public class DamageScenarioService
 
         if (asset is null or { ItemDefinition: null } or { ItemDefinition.Project: null }
             || (
-                asset.ItemDefinition.Project.Id is long projId
-                && await accessControlService.CheckUserAccessRightsWrite(projId) is false
+                    await accessControlService.CheckUserAccessRightsWrite(asset.ItemDefinition.Project.Id) is false
                )
            )
         {
@@ -71,7 +70,7 @@ public class DamageScenarioService
             context.Remove(entityToDelete);
             await context.SaveChangesAsync();
         }
-        else return;
+        return;
     }
 
     public async Task<DamageScenario?> Save(DamageScenario entityToSave)
@@ -114,6 +113,7 @@ public class DamageScenarioService
             using ApplicationDbContext context =
                 await contextFactory.CreateDbContextAsync(request.CancellationToken);
 
+
             if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
                 return GridItemsProviderResult.From(new List<DamageScenario>(), 0);
 
@@ -135,26 +135,27 @@ public class DamageScenarioService
         };
     }
 
-    public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? filter = null)
+    public async Task<(List<DamageScenario>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? include = null, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? filter = null)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
         {
-            return [];
+            return ([], 0);
         }
 
         IQueryable<DamageScenario> damageScenarios = context.DamageScenarios;
 
+        if (include is not null)
+        {
+            damageScenarios = include(damageScenarios);
+        }
+
+        damageScenarios = damageScenarios.Where(d => d.Asset!.ItemDefinition!.IdProject == ProjectId);
         if (filter is not null)
         {
             damageScenarios = filter(damageScenarios);
         }
 
-        if (request is not null)
-        {
-            damageScenarios = damageScenarios.Skip(request.Value.StartIndex).Take(request.Value.Count ?? 20);
-        }
-
-        return await damageScenarios.Select(a => new KeyValuePair<long, string>(a.Id, a.DamageScenarioNumber.ToString())).ToListAsync();
+        return (await damageScenarios.ToListAsync(), await damageScenarios.CountAsync());
     }
 }

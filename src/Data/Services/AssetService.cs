@@ -73,10 +73,11 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         return async request =>
         {
             await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync(request.CancellationToken);
-            if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
-            {
-                return GridItemsProviderResult.From(new List<Asset>(), 0);
-            }
+
+
+
+            if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false) return GridItemsProviderResult.From(new List<Asset>(), 0);
+
             IQueryable<Asset> Asset = context.Assets.AsNoTracking().Where(a => a.ItemDefinition!.IdProject == ProjectId);
 
             if (include != null)
@@ -137,26 +138,28 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         return asset;
     }
 
-    public async Task<List<KeyValuePair<long, string>>> GetItems(long ProjectId, GridItemsProviderRequest<KeyValuePair<long, string>>? request = null, Func<IQueryable<Asset>, IQueryable<Asset>>? filter = null)
+    public async Task<(List<Asset>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<Asset>, IQueryable<Asset>>? include = null, Func<IQueryable<Asset>, IQueryable<Asset>>? filter = null)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
         {
-            return [];
+            return ([], 0);
         }
 
-        IQueryable<Asset> assets = context.Assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
+        IQueryable<Asset> assets = context.Assets;
+
+        if (include is not null)
+        {
+            assets = include(assets);
+        }
+
+        assets = assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
 
         if (filter is not null)
         {
             assets = filter(assets);
         }
 
-        if (request is not null)
-        {
-            assets = assets.Skip(request.Value.StartIndex).Take(request.Value.Count ?? 20);
-        }
-
-        return await assets.Select(a => new KeyValuePair<long, string>(a.Id, a.AssetName)).ToListAsync();
+        return (await assets.ToListAsync(), await assets.CountAsync());
     }
 }

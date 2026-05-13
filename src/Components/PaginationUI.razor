@@ -1,3 +1,4 @@
+@using Microsoft.EntityFrameworkCore.Query
 @rendermode InteractiveServer
 
 <FluentPaginator State="@pagination">
@@ -28,9 +29,14 @@
 </FluentPaginator>
 
 @code {
+
+    [Parameter]
+    public EventCallback OnPageChanged { get; set; }
     private async Task onPageCountChange(string newValue)
     {
         await pagination.SetItemsPerPageAsync(int.Parse(newValue));
+        if (OnPageChanged.HasDelegate)
+            await OnPageChanged.InvokeAsync();
     }
 
 

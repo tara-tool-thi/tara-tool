@@ -6,6 +6,7 @@
 @inject TagService TagService
 @inject NavigationManager NavigationManager
 @inject IDialogService DialogService
+@inject DamageScenarioService DamageScenarioService
 
 
 @if (asset is not null)
@@ -44,7 +45,7 @@
             <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
                 <div>
                     <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" :
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     t.Name) TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          t.Name) TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)"
                                   Label="Select Group" Items=@GroupOptions />
                 </div>
                 <FluentButton IconStart="@(new Icons.Regular.Size20.Add())" Appearance="Appearance.Accent"
@@ -57,6 +58,37 @@
     <FluentTextArea Immediate=true ImmediateDelay="500" @bind-Value="@asset.Description"
                     @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Label="Description"
                     Placeholder="Description..." />
+
+    <br />
+    <hr />
+    <br />
+
+    <FluentAccordion Class="fullwidth accordion">
+        <FluentAccordionItem Expanded="true">
+            <HeadingTemplate>
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+                             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                    <p><strong>Damage Scenarios</strong></p>
+                    <FluentSpacer />
+                    <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateDamageScenario">
+                        New Damage Scenario
+                    </FluentButton>
+                </FluentStack>
+            </HeadingTemplate>
+            <ChildContent>
+                <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
+                    <FluentSearch Label="Search Damage Scenarios" Placeholder="Search by description or number"
+                                  Style="width: 250px;" @bind-Value="damageScenarioSearchText" Immediate="true"
+                                  ImmediateDelay="500" />
+                </FluentStack>
+                <DamageScenarioTable @ref="@damageScenarioTable" ProjectId="@asset!.ItemDefinition!.IdProject"
+                                     Filters="@(e => e
+                                                                                                                                                                                                                                            .Where(ds => string.IsNullOrWhiteSpace(damageScenarioSearchText) ||
+                                                                                                                                                                                                                                                EF.Functions.Like(ds.Description, $"%{damageScenarioSearchText}%") ||
+                                                                                                                                                                                                                                                ds.DamageScenarioNumber == _parsedSearchNumber))" />
+            </ChildContent>
+        </FluentAccordionItem>
+    </FluentAccordion>
 }
 
 @code {
@@ -94,6 +126,30 @@
 
     private GenericAutosave<Asset> genericAutosave { get; set; } = default!;
     private DeletionDialog deletionDialog { get; set; } = default!;
+    private DamageScenarioTable? damageScenarioTable;
+
+    private string _damageScenarioSearchText = string.Empty;
+    private long? _parsedSearchNumber;
+
+    private string damageScenarioSearchText
+    {
+        get => _damageScenarioSearchText;
+        set
+        {
+            _damageScenarioSearchText = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+            _parsedSearchNumber = long.TryParse(_damageScenarioSearchText, out long n) ? n : null;
+            damageScenarioTable?.RefreshGrid();
+        }
+    }
+
+    private async void CreateDamageScenario()
+    {
+        DamageScenario? ds = await DamageScenarioService.CreateNew(IdAsset);
+        if (ds is not null)
+        {
+            NavigationManager.NavigateTo($"/DamageScenario/{ds.Id}");
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {

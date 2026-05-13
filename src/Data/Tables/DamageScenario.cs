@@ -7,7 +7,7 @@ using tara_tool.Data.Enums;
 public class DamageScenario
 {
     public long Id { get; set; }
-    public Asset? Asset { get; set; }
+    public virtual Asset? Asset { get; set; }
     public string Description { get; set; } = string.Empty;
     [NotMapped] public string DescriptionTruncated => Description switch
     {
@@ -16,6 +16,18 @@ public class DamageScenario
     };
 
     public long DamageScenarioNumber { get; set; } = 0;
+
+    [NotMapped]
+    public (bool Confidentiality, bool Integrity, bool Availability) AffectedSecurityGoals
+    {
+        get => (ConfidentialityAffected, IntegrityAffected, AvailabilityAffected);
+        set
+        {
+            ConfidentialityAffected = value.Confidentiality;
+            IntegrityAffected = value.Integrity;
+            AvailabilityAffected = value.Availability;
+        }
+    }
 
     public bool ConfidentialityAffected { get; set; } = false;
     public bool IntegrityAffected { get; set; } = false;

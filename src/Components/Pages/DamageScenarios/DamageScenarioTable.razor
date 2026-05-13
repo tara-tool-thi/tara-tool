@@ -1,0 +1,108 @@
+@rendermode InteractiveServer
+@using tara_tool.Data.Enums
+@inject NavigationManager NavigationManager
+@inject DamageScenarioService DamageScenarioService
+
+@if (paginationUI is not null)
+{
+    <FluentDataGrid TGridItem="DamageScenario" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
+                    OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
+        <PropertyColumn Property="@(p => p.DamageScenarioNumber)" Sortable="true" Title="Nr." />
+        <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
+        <TemplateColumn Sortable="true" SortBy="@confidentialitySort" Title="Confidentiality">
+            <ChildContent>
+                <FluentCheckbox Value="@context.ConfidentialityAffected" Disabled="true" />
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@integritySort" Title="Integrity">
+            <ChildContent>
+                <FluentCheckbox Value="@context.IntegrityAffected" Disabled="true" />
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@availabilitySort" Title="Availability">
+            <ChildContent>
+                <FluentCheckbox Value="@context.AvailabilityAffected" Disabled="true" />
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@safetySort" Title="Safety">
+            <ChildContent>
+                <span class="@GetImpactClass(context.Safety)">@context.Safety</span>
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@financialSort" Title="Financial">
+            <ChildContent>
+                <span class="@GetImpactClass(context.Financial)">@context.Financial</span>
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@operationalSort" Title="Operational">
+            <ChildContent>
+                <span class="@GetImpactClass(context.Operational)">@context.Operational</span>
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@privacySort" Title="Privacy">
+            <ChildContent>
+                <span class="@GetImpactClass(context.Privacy)">@context.Privacy</span>
+            </ChildContent>
+        </TemplateColumn>
+    </FluentDataGrid>
+}
+
+<PaginationUI @ref=@paginationUI />
+
+@code {
+    [Parameter]
+    public required long ProjectId { get; set; }
+
+    [Parameter]
+    public Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? Filters { get; set; }
+
+    private GridItemsProvider<DamageScenario> FilteredItemsProvider { get; set; } = default!;
+    private PaginationUI paginationUI { get; set; } = default!;
+    private FluentDataGrid<DamageScenario> grid = default!;
+
+    private GridSort<DamageScenario> confidentialitySort = GridSort<DamageScenario>.ByAscending(e =>
+e.ConfidentialityAffected);
+    private GridSort<DamageScenario> integritySort = GridSort<DamageScenario>.ByAscending(e => e.IntegrityAffected);
+    private GridSort<DamageScenario> availabilitySort = GridSort<DamageScenario>.ByAscending(e => e.AvailabilityAffected);
+    private GridSort<DamageScenario> safetySort = GridSort<DamageScenario>.ByAscending(e => e.Safety);
+    private GridSort<DamageScenario> financialSort = GridSort<DamageScenario>.ByAscending(e => e.Financial);
+    private GridSort<DamageScenario> operationalSort = GridSort<DamageScenario>.ByAscending(e => e.Operational);
+    private GridSort<DamageScenario> privacySort = GridSort<DamageScenario>.ByAscending(e => e.Privacy);
+
+    private string GetImpactClass(ImpactRatingValue value) => value switch
+    {
+        ImpactRatingValue.Negligible => "impact-negligible",
+        ImpactRatingValue.Moderate => "impact-moderate",
+        ImpactRatingValue.Major => "impact-major",
+        ImpactRatingValue.Severe => "impact-severe",
+        _ => ""
+    };
+
+    public void RefreshGrid()
+    {
+        if (grid is not null)
+            InvokeAsync(() => grid.RefreshDataAsync());
+    }
+
+    private void onRowClick(FluentDataGridRow<DamageScenario> row)
+    {
+        if (row.Item is null)
+        {
+            return;
+        }
+        NavigationManager.NavigateTo($"/DamageScenario/{row.Item.Id}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FilteredItemsProvider = DamageScenarioService.GetItemsProvider(ProjectId, null, Filters);
+    }
+}
