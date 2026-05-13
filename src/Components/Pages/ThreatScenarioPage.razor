@@ -65,16 +65,11 @@
 <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%;" HorizontalAlignment="HorizontalAlignment.Center">
     @if (FilteredAttackPaths.Any())
     {
-
-        int index = 1;
-
         @foreach (var path in FilteredAttackPaths)
         {
             @* Each box is now its own component *@
-            <AttackPathCard @key="path.Id" attackPath="path" apNumber="index" OnFieldChanged="NotifyAutosave"/>
-            ++index;
+            <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave"/>
         }
-
     }
     else
     {
