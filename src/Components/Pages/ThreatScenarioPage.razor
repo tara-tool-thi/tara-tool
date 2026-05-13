@@ -6,6 +6,10 @@
 
 @inject AccessControlService accessControlService
 
+@inject ThreatScenarioService threatScenarioService
+
+@inject NavigationManager NavigationManager
+
 
 <PageTitle>Threat Scenario</PageTitle>
 
@@ -19,6 +23,8 @@
             <li><strong>Placeholder:</strong> Placeholder</li>
         </ul>
     </FluentTooltip>
+    <GenericAutosave TEntity="ThreatScenario" Entity="@thisTS" SaveService="@threatScenarioService"
+                     @ref=@genericAutosave />
 </FluentStack>
 
 <FluentStack VerticalAlignment="VerticalAlignment.Center">
@@ -41,16 +47,16 @@
 <FluentStack>
     <div style="display: flex; border: 1px solid #8a8886; width: 100%; margin-bottom: 4px;">
 		<div style="display: flex; align-items: center; justify-content: center; border-right: 1px solid #8a8886; padding: 0 20px; font-weight: bold;">
-			@TSName
+			@thisTS!.Name
 		</div>
 
 		<div style="flex-grow: 1; background-color: @BgColor; padding: 8px 15px; display: flex; align-items: center;">
-			<span style="font-weight: 600; margin-right: 8px;">@TSDescription</span>
+			<span style="font-weight: 600; margin-right: 8px;">@thisTS!.Description</span>
 		</div>
 
 		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 15px; min-width: 80px; border-left: 1px solid #8a8886;">
 			<span style="font-size: 0.9rem;">Risk:</span>
-			<span style="color: @RiskColor; font-weight: bold;">@TSRisk</span>
+			<span style="color: @RiskColor; font-weight: bold;">@thisTS!.RiskValue</span>
 		</div>
 </div>
 </FluentStack>
@@ -65,8 +71,7 @@
         @foreach (var path in FilteredAttackPaths)
         {
             @* Each box is now its own component *@
-            path.Label = index.ToString();
-            <AttackPathCard @key="path.Id" Data="path" />
+            <AttackPathCard @key="path.Id" attackPath="path" apNumber="index" OnFieldChanged="NotifyAutosave"/>
             ++index;
         }
 
@@ -136,44 +141,42 @@
         }
     } = string.Empty;
 
-    string TSName = "TS1";
-
-    string TSDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ornare mauris ut mi sagittis, vitae aliquam erat dictum. Donec et mattis diam, vel luctus ante. Nunc dapibus justo tellus. Nullam tempor, dui ut sollicitudin semper, mi tellus ultricies erat, nec posuere libero magna at lectus. Orci varius natoque penatibus et. ";
-    
-    string TSRisk = "S5";
+    ThreatScenario? thisTS;
 
     public string BgColor { get; set; } = "#dff6ff"; // Default light blue
     public string RiskColor { get; set; } = "#d13438"; // Default red
 
-    List<AttackPathModel> AttackPaths = new()
+    List<AttackPath> AttackPaths = new()
     { 
-        new AttackPathModel { Label = "AP1", Steps = new() { "Enter", "Grab info", "Leave" } } 
+        new AttackPath { Name = "AP1",  } 
     };
 
-    private IEnumerable<AttackPathModel> FilteredAttackPaths => 
+    private IEnumerable<AttackPath> FilteredAttackPaths => 
         string.IsNullOrWhiteSpace(searchText) 
             ? AttackPaths 
             : AttackPaths.Where(ap => 
                 // Check if any step contains the search text
-                ap.Steps.Any(s => s.Contains(searchText, StringComparison.OrdinalIgnoreCase)) || 
+                ap.Steps.Any(s => s.Text.Contains(searchText, StringComparison.OrdinalIgnoreCase)) || 
                 // Check if RiskTreatment contains the search text
-                (ap.RiskTreatment?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+                (ap.RiskTreatmentText?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
             );
 
     protected override async Task OnInitializedAsync()
     {
-        // we'd have to check access rights with something like this
-        try
+        thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q => 
+                                                                    q.Include(ts => ts.AttackPaths)
+                                                                        .ThenInclude(ap => ap.Steps));
+        if (thisTS == null)
         {
-            ThreatScenario threatScenario = new();
-            long ProjectId = threatScenario.DamageScenarios.First().Assets.First().ItemDefinition!.IdProject;
-
-            if(await accessControlService.CheckUserAccessRightsRead(ProjectId))
-                Console.Write("All Good");
+            NavigationManager.NavigateTo("/");
+            return;
         }
-        catch
+
+        AttackPaths.Clear();
+
+        foreach (AttackPath ap in thisTS.AttackPaths)
         {
-            //empty is fine for now
+            AttackPaths.Add(ap);
         }
     }
 
@@ -184,13 +187,20 @@
 
     async Task AddAP()
     {
-        AttackPathModel attackPathModel = new()
+        AttackPath attackPath = new()
         {
-            Label = "Test1",Steps = new List<string>{"Go", "Gogo", "Haha"},RiskTreatment = "Risky Business"
+            Name = "Test1", RiskTreatmentText = "Risky Business", Id = 1
         };
 
-        AttackPaths.Add(attackPathModel);
+        await threatScenarioService.CreateAttackPathAsync(TSId, attackPath);
+
+        AttackPaths.Add(attackPath);
 
         StateHasChanged();
+    }
+
+    void NotifyAutosave() 
+    {
+        genericAutosave.ScheduleAutoSave();
     }
 }
