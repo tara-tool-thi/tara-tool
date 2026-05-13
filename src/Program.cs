@@ -52,6 +52,7 @@ builder.Services.AddTransient<ItemDefinitionService>();
 builder.Services.AddTransient<SessionService>();
 builder.Services.AddTransient<AssetService>();
 builder.Services.AddTransient<TagService>();
+builder.Services.AddTransient<ThreatScenarioService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 

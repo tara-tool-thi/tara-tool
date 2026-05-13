@@ -1,0 +1,262 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.FluentUI.AspNetCore.Components;
+using tara_tool.Data.Tables;
+
+namespace tara_tool.Data.Services;
+
+public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> contextFactory, AccessControlService accessControlService) : IDataService<ThreatScenario>
+{
+    /// <summary>
+    /// Helper to find the Project ID associated with a Threat Scenario via its deep relations.
+    /// </summary>
+    private async Task<long?> GetProjectIdForScenarioAsync(ApplicationDbContext context, long threatScenarioId)
+    {
+        return await context.ThreatScenarios
+            .Where(ts => ts.Id == threatScenarioId)
+            .SelectMany(ts => ts.DamageScenarios)
+            .SelectMany(ds => ds.Assets)
+            .Select(a => a.ItemDefinition!.IdProject)
+            .FirstOrDefaultAsync(); 
+            // Note: This assumes a scenario belongs to one project via its assets.
+    }
+
+    public async Task<ThreatScenario?> CreateThreatScenarioAsync(long projectID, string name)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        /*if (await accessControlService.CheckUserAccessRightsWrite(projectID) == false)
+        {
+            return null;
+        }*/
+
+        ThreatScenario newScenario = new ThreatScenario
+        {
+            Name = name,
+        };
+
+        context.ThreatScenarios.Add(newScenario);
+        await context.SaveChangesAsync();
+
+        return newScenario;
+    }
+
+    /// <summary>
+    /// Creates a new AttackPath and associates it with an existing ThreatScenario.
+    /// </summary>
+    public async Task<AttackPath?> CreateAttackPathAsync(long threatScenarioId, AttackPath newPath)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        // 1. Find the parent scenario and include its Project link for security
+        var scenario = await context.ThreatScenarios
+            .Include(s => s.DamageScenarios)
+                .ThenInclude(ds => ds.Assets)
+                    .ThenInclude(a => a.ItemDefinition)
+            .FirstOrDefaultAsync(s => s.Id == threatScenarioId);
+
+        if (scenario == null) return null;
+
+        // 2. Perform Security Check: Does the user have rights to the project this scenario belongs to?
+        // We look for the first available project ID in the chain
+        var projectId = scenario.DamageScenarios
+            .SelectMany(ds => ds.Assets)
+            .Select(a => a.ItemDefinition!.IdProject)
+            .FirstOrDefault();
+
+        /*if (projectId == 0 || await accessControlService.CheckUserAccessRightsWrite(projectId) == false)
+        {
+            return null;
+        }*/
+
+        // 3. Create and Link the AttackPath
+        newPath.Id = 0; // Ensure it's treated as a new entity
+        
+        // We add the path to the scenario's collection. 
+        // EF Core will handle the foreign key relationship automatically.
+        scenario.AttackPaths.Add(newPath);
+
+        await context.SaveChangesAsync();
+        return newPath;
+    }
+
+    public async Task<ThreatScenario?> GetItemByIdAsync(long id, Func<IQueryable<ThreatScenario>, IQueryable<ThreatScenario>>? include = null, CancellationToken cancellationToken = default)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        IQueryable<ThreatScenario> query = context.ThreatScenarios.AsNoTracking().AsQueryable();
+        
+        if (include is not null)
+        {
+            query = include(query);
+        }
+
+        ThreatScenario? scenario = await query.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        
+        if (scenario is null) return null;
+
+        // Deep Security Check
+        /*long? projectId = await GetProjectIdForScenarioAsync(context, id);
+        if (projectId == null || await accessControlService.CheckUserAccessRightsRead(projectId.Value) is false)
+        {
+            return null;
+        }*/
+
+        return scenario;
+    }
+
+    /*public async Task<List<ThreatScenario>> GetThreatScenariosAsync(long projectID, Func<DbSet<ThreatScenario>, IQueryable<ThreatScenario>>? extend = null)
+    {
+        // Since ThreatScenario has no direct IdProject, we must filter by the relationship chain
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        IQueryable<ThreatScenario> query = context.ThreatScenarios;
+
+        if (extend != null)
+        {
+            query = extend.Invoke(context.ThreatScenarios);
+        }
+
+        // Filter scenarios that are connected to assets belonging to this project
+        query = query.Where(ts => ts.DamageScenarios
+                        .SelectMany(ds => ds.Assets)
+                        .Any(a => a.ItemDefinition!.IdProject == projectID));
+
+        // Check access for the project itself before returning results
+        if (await accessControlService.CheckUserAccessRightsRead(projectID) is false)
+        {
+            return new List<ThreatScenario>();
+        }
+
+        return await query.ToListAsync();
+    }*/
+
+    public async Task<ThreatScenario?> Save(ThreatScenario scenario)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        
+        // We must find the existing entity and include its relations to handle updates correctly
+        ThreatScenario? existingScenario = await context.ThreatScenarios
+            .Include(s => s.AttackPaths)
+                .ThenInclude(ap => ap.Steps)
+            .FirstOrDefaultAsync(s => s.Id == scenario.Id);
+
+        if (existingScenario == null) return null;
+
+        // Security Check: Verify the user has rights to the project this scenario belongs to
+        /*long? projectId = await GetProjectIdForScenarioAsync(context, scenario.Id);
+        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value)) 
+            return null;*/
+
+        // Update scalar properties
+        context.Entry(existingScenario).CurrentValues.SetValues(scenario);
+
+        // Sync the AttackPaths
+        foreach (AttackPath incomingPath in scenario.AttackPaths)
+        {
+            if (incomingPath.Id == 0)
+            {
+                // Case A: It's a brand new path. 
+                existingScenario.AttackPaths.Add(incomingPath);
+            }
+            else
+            {
+                // Case B: It's an existing path.
+                AttackPath? trackedPath = existingScenario.AttackPaths
+                    .FirstOrDefault(p => p.Id == incomingPath.Id);
+
+                if (trackedPath != null)
+                {
+                    // Update the properties of the already-tracked object.
+                    context.Entry(trackedPath).CurrentValues.SetValues(incomingPath);
+                
+                    // Step A: Identify steps to REMOVE
+                    // We remove them if:
+                    // their text is now empty/whitespace (deleted via backspace)
+                    List<AttackStep> stepsToRemove = trackedPath.Steps
+                        .Where(ts => 
+                            !incomingPath.Steps.Any(ip => ip.Id == ts.Id) || // Not in incoming list
+                            string.IsNullOrWhiteSpace(incomingPath.Steps.FirstOrDefault(ip => ip.Id == ts.Id)?.Text)              // OR text is now empty
+                        )
+                        .ToList();
+
+                    foreach (AttackStep stepToRemove in stepsToRemove)
+                    {
+                        trackedPath.Steps.Remove(stepToRemove);
+                    }
+
+                    // 2. Update existing steps or add new ones
+                    foreach (AttackStep incomingStep in incomingPath.Steps)
+                    {
+                        if (string.IsNullOrWhiteSpace(incomingStep.Text)) continue;
+                        if (incomingStep.Id == 0)
+                        {
+                            // New step
+                            trackedPath.Steps.Add(incomingStep);
+                        }
+                        else
+                        {
+                            // Existing step: Update its text
+                            AttackStep? trackedStep = trackedPath.Steps
+                                .FirstOrDefault(ts => ts.Id == incomingStep.Id);
+
+                            if (trackedStep != null)
+                            {
+                                context.Entry(trackedStep).CurrentValues.SetValues(incomingStep);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        await context.SaveChangesAsync();
+        return existingScenario;
+    }
+
+    public async Task Delete(ThreatScenario scenario)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        var existingScenario = await context.ThreatScenarios
+            .Include(s => s.DamageScenarios)
+                .ThenInclude(ds => ds.Assets)
+            .FirstOrDefaultAsync(s => s.Id == scenario.Id);
+
+        if (existingScenario == null) return;
+
+        // Security Check
+        long? projectId = await GetProjectIdForScenarioAsync(context, scenario.Id);
+        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value)) 
+            return;
+
+        context.ThreatScenarios.Remove(existingScenario);
+        await context.SaveChangesAsync();
+    }
+
+    public GridItemsProvider<ThreatScenario> GetItemsProvider(long projectId, Func<IQueryable<ThreatScenario>, IQueryable<ThreatScenario>>? include = null, Func<IQueryable<ThreatScenario>, IQueryable<ThreatScenario>>? filter = null)
+    {
+        return async request =>
+        {
+            await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync(request.CancellationToken);
+            if (await accessControlService.CheckUserAccessRightsRead(projectId) is false)
+            {
+                return GridItemsProviderResult.From(new List<ThreatScenario>(), 0);
+            }
+
+            IQueryable<ThreatScenario> query = context.ThreatScenarios.AsNoTracking();
+
+            if (include != null) query = include(query);
+            if (filter != null) query = filter(query);
+
+            // Apply the Project filter via the relationship chain
+            query = query.Where(ts => ts.DamageScenarios
+                            .SelectMany(ds => ds.Assets)
+                            .Any(a => a.ItemDefinition!.IdProject == projectId));
+
+            int total = await query.CountAsync(request.CancellationToken);
+            List<ThreatScenario> items = await request.ApplySorting(query)
+                .Skip(request.StartIndex)
+                .Take(request.Count ?? 20)
+                .ToListAsync(request.CancellationToken);
+
+            return GridItemsProviderResult.From(items, total);
+        };
+    }
+}

@@ -23,6 +23,7 @@ public class ApplicationDbContext(
     public DbSet<TreatmentDecision> TreatmentDecisions { get; set; }
     public DbSet<ThreatScenario> ThreatScenarios { get; set; }
     public DbSet<AttackPath> AttackPaths { get; set; }
+    public DbSet<AttackStep> AttackSteps { get; set; }
 
     static public void GetDbConfig(DbContextOptionsBuilder databaseBuilder,
                                    WebApplicationBuilder builder)
@@ -89,5 +90,10 @@ public class ApplicationDbContext(
             .WithMany(e => e.Tags)
             .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
+        builder.Entity<AttackPath>()
+            .HasMany(ap => ap.Steps)
+            .WithOne()
+            .HasForeignKey(step => step.AttackPathId)
+            .OnDelete(DeleteBehavior.Cascade); 
     }
 }

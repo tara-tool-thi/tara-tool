@@ -5,6 +5,7 @@ namespace tara_tool.Data.Tables;
 public class AttackPath
 {
     public long Id { get; set; }
+    public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public ElapsedTime ElapsedTime { get; set; }
     public SpecialistExpertise SpecialistExpertise { get; set; }
@@ -14,4 +15,16 @@ public class AttackPath
     public long Value { get; set; }
     public AttackFeasibilityRating AttackFeasibilityRating { get; set; }
     public virtual ICollection<ThreatScenario> ThreatScenarios { get; set; } = [];
+    public bool RiskTreatmentBool { get; set; }
+    public string RiskTreatmentText { get; set; } = string.Empty;
+    public List<AttackStep> Steps { get; set; } = new();
+}
+
+public class AttackStep 
+{
+    public long Id { get; set; }
+    public string Text { get; set; } = string.Empty;
+    
+    // Foreign Key back to the parent
+    public long AttackPathId { get; set; }
 }
