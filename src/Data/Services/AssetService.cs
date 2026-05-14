@@ -129,7 +129,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         {
             assets = include(assets);
         }
-        Asset? asset = await assets.FirstOrDefaultAsync(a => a.Id == Id);
+        Asset? asset = await assets.Include(a => a.ItemDefinition).FirstOrDefaultAsync(a => a.Id == Id);
         if (asset is null || await accessControlService.CheckUserAccessRightsRead(asset.ItemDefinition!.IdProject) is false)
         {
             return null;
