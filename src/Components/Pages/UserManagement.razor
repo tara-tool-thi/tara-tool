@@ -57,13 +57,15 @@
         </FluentDialogHeader>
         <FluentDialogBody>
             <FluentStack Orientation="Orientation.Vertical">
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Bottom">
-                    <div style="width: 100%;">
-                        <FluentTextField ReadOnly="true" @bind-Value="link" style="width: 100%;" Label="This is the register link for the new user:"></FluentTextField>
-                    </div>
-                    <FluentButton OnClick=@CopyToClipboard IconStart=@(new Icons.Regular.Size20.Copy()) class="bottom-margin"/>
+                <p class="margin-bottom-0">This is the register link for the new user:</p>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentTextField ReadOnly="true" @bind-Value="link" class="fullwidth"></FluentTextField>
+                    <FluentButton OnClick=@CopyToClipboard IconStart=@(new Icons.Regular.Size20.Copy())/>
                 </FluentStack>
-                <p>Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" class="margin-top-10">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" Class="min-width"/>
+                    <p class="margin-bottom-0">Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+                </FluentStack>
             </FluentStack>
         </FluentDialogBody>
         <FluentDialogFooter>

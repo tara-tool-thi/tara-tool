@@ -262,6 +262,14 @@ table th {
     width: 100%;
 }
 
+.margin-bottom-0 {
+    margin-bottom: 0;
+}
+
+.margin-top-10 {
+    margin-top: 10px;
+}
+
 h1,
 h2,
 h3,

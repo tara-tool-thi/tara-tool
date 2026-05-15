@@ -16,7 +16,10 @@
         <DataAnnotationsValidator />
         <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" Immediate=true Autofocus="true"/>
         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
-        <p>The email address is used for verification.</p>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Class="margin-top-10">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Info())" />
+            <p class="margin-bottom-0">The email address is used for verification. On register the invited user must enter the same email address.</p>
+        </FluentStack>
     </FluentDialogBody>
 
 
