@@ -137,11 +137,13 @@
             if (string.IsNullOrWhiteSpace(value))
             {
                 field = string.Empty;
+                UpdateAccordionExpansion();
             }
 
             else
             {
                 field = value;
+                UpdateAccordionExpansion();
             }
         }
     } = string.Empty;
@@ -166,6 +168,8 @@
             : AttackPaths.Where(ap =>
                 // Check if any step contains the search text
                 ap.Steps.Any(s => s.Text.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                // Check if Name contains search text
+                ap.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
                 // Check if RiskTreatment contains the search text
                 (ap.RiskTreatmentText?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
             );
@@ -224,5 +228,15 @@
         thisTS!.Description = TSDescription;
 
         genericAutosave.ScheduleAutoSave();
+    }
+
+    private void UpdateAccordionExpansion()
+    {
+        bool hasSearch = !string.IsNullOrWhiteSpace(searchText);
+
+        foreach (AttackPath ap in FilteredAttackPaths)
+        {
+            ap.AccordionExpanded = hasSearch;
+        }
     }
 }
