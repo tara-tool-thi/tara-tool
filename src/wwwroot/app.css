@@ -270,6 +270,10 @@ table th {
     margin-top: 10px;
 }
 
+.min-width-24 {
+    min-width: 24px;
+}
+
 h1,
 h2,
 h3,
