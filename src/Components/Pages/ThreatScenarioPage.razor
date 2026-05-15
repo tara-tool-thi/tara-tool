@@ -47,11 +47,19 @@
 <FluentStack>
     <div style="display: flex; border: 1px solid #8a8886; width: 100%; margin-bottom: 4px;">
 		<div style="display: flex; align-items: center; justify-content: center; border-right: 1px solid #8a8886; padding: 0 20px; font-weight: bold;">
-			@TSName
+            <FluentTextField @bind-Value="@TSName"
+                            Immediate="true"
+                            ImmediateDelay="500"
+                            @bind-Value:after="@NotifyTSAutosave" />
 		</div>
 
 		<div style="flex-grow: 1; background-color: @BgColor; padding: 8px 15px; display: flex; align-items: center;">
-			<span style="font-weight: 600; margin-right: 8px;">@TSDescription</span>
+			<span style="font-weight: 600; margin-right: 8px;">
+                <FluentTextField @bind-Value="@TSDescription"
+                            Immediate="true"
+                            ImmediateDelay="500"
+                            @bind-Value:after="@NotifyTSAutosave" />
+            </span>
 		</div>
 
 		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 15px; min-width: 80px; border-left: 1px solid #8a8886;">
@@ -204,6 +212,15 @@
 
     void NotifyAutosave()
     {
+        genericAutosave.ScheduleAutoSave();
+    }
+
+    void NotifyTSAutosave()
+    {
+        thisTS!.Name = TSName;
+
+        thisTS!.Description = TSDescription;
+
         genericAutosave.ScheduleAutoSave();
     }
 }

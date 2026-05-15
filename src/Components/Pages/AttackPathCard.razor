@@ -6,7 +6,11 @@
     <div style="background-color: #f3f2f1; padding: 8px 15px; display: flex; align-items: center; border-bottom: 1px solid #8a8886;">
         <div style="font-weight: bold; color: #323130; border: 1px solid #8a8886; padding: 2px 8px;">@("AP" + attackPath.Id)</div>
         <FluentSpacer Width="12"/>
-        <div style="font-weight: bold; color: #323130;">@attackPath.Name</div>
+        <div style="font-weight: bold; color: #323130;"><FluentTextField @bind-Value="@attackPath.Name"
+                                                    Immediate="true"
+                                                    ImmediateDelay="500"
+                                                    @bind-Value:after="HandleFieldChanged" />
+        </div>
     </div>
 
     <FluentGrid Spacing="2" Style="padding: 10px;">
