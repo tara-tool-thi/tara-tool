@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using tara_tool.Data.Enums;
 
 namespace tara_tool.Data.Tables;
@@ -18,6 +19,9 @@ public class AttackPath
     public bool RiskTreatmentBool { get; set; }
     public string RiskTreatmentText { get; set; } = string.Empty;
     public List<AttackStep> Steps { get; set; } = new();
+
+    [NotMapped]
+    public bool AccordionExpanded = false;
 }
 
 public class AttackStep 

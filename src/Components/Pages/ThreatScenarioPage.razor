@@ -73,11 +73,13 @@
 <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%;" HorizontalAlignment="HorizontalAlignment.Center">
     @if (FilteredAttackPaths.Any())
     {
+        <FluentAccordion Style="width: 100%">
         @foreach (var path in FilteredAttackPaths)
         {
             @* Each box is now its own component *@
             <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave"/>
         }
+        </FluentAccordion>
     }
     else
     {
@@ -200,7 +202,7 @@
     {
         AttackPath attackPath = new()
         {
-            Name = "Test1", RiskTreatmentText = "Risky Business", Id = 1
+            Name = "New unnamed attack path", Id = 1, AccordionExpanded = true,
         };
 
         await threatScenarioService.CreateAttackPathAsync(TSId, attackPath);

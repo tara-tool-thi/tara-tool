@@ -1,148 +1,156 @@
 @using Microsoft.FluentUI.AspNetCore.Components
 @using tara_tool.Data.Enums;
 
+
 <div style="border: 1px solid #8a8886; border-radius: 4px; background-color: #ffffff; overflow: visible; width: 100%">
-    @* Header Bar *@
-    <div style="background-color: #f3f2f1; padding: 8px 15px; display: flex; align-items: center; border-bottom: 1px solid #8a8886;">
-        <div style="font-weight: bold; color: #323130; border: 1px solid #8a8886; padding: 2px 8px;">@("AP" + attackPath.Id)</div>
-        <FluentSpacer Width="12"/>
-        <div style="font-weight: bold; color: #323130;"><FluentTextField @bind-Value="@attackPath.Name"
-                                                    Immediate="true"
-                                                    ImmediateDelay="500"
-                                                    @bind-Value:after="HandleFieldChanged" />
-        </div>
-    </div>
-
-    <FluentGrid Spacing="2" Style="padding: 10px;">
-        @* LEFT COLUMN: The Steps Table *@
-        <FluentGridItem xs="6">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                <thead style="background-color: #f3f2f1;">
-                    <tr>
-                        <th style="border: 1px solid #8a8886; padding: 4px; width: 40px; height: 40px; text-align: center;">#</th>
-                        <th style="border: 1px solid #8a8886; padding: 4px;">Steps</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @for (int i = 0; i < attackPath.Steps.Count; i++)
-                    {
-                        AttackStep step = attackPath.Steps[i]; // Direct reference to the object
-
-                        <tr>
-                            <td style="border: 1px solid #8a8886; text-align: center; padding: 4px; height: 40px; background-color: #f3f2f1;">@(i+1)</td>
-                            <td style="border: 1px solid #8a8886; padding: 4px;">
-                                <FluentTextField @bind-Value="step.Text"
-                                                    Immediate="true"
-                                                    ImmediateDelay="500"
-                                                    @bind-Value:after="HandleFieldChanged" />
-                            </td>
-                        </tr>
-                    }
-
-                    @* "Add New Step" Row *@
-                    <tr>
-                        <td style="border: 1px solid #8a8886; text-align: center; padding: 4px; height: 40px; background-color: #f3f2f1;">@(attackPath.Steps.Count + 1)</td>
-                        <td style="border: 1px solid #8a8886; padding: 4px;">
-                            @* Note: For the "Add" row, we usually use a different logic (like an Enter key press)
-                            because there is no existing string in the list to bind to yet. *@
-                            <FluentTextField Placeholder="Type step and press Enter..."
-                                             @bind-Value="newStepText"
-                                            @onkeyup="HandleNewStepKeyPress"/>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
-            @* Risk Decision Section *@
-            <div style="margin-top: 15px; border: 1px solid #8a8886; padding: 10px; background-color: #faf9f8;">
-                <FluentStack Orientation="Orientation.Horizontal">
-                    <span style="font-size: 0.8rem;">Risk treatment decision</span>
-                    <FluentSpacer/>
-                    <FluentCheckbox @bind-Value="@attackPath.RiskTreatmentBool" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged"/> Done
-                </FluentStack>
-                <FluentTextArea Style="width: 100%; margin-top: 5px;" Placeholder="Hide Info" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
+    <FluentAccordionItem Expanded="@attackPath.AccordionExpanded" >
+        <HeadingTemplate>
+            @* Header Bar *@
+            <div style="background-color: #f3f2f1; padding: 8px 15px; display: flex; align-items: center;">
+                <div style="font-weight: bold; color: #323130; border: 1px solid #8a8886; padding: 2px 8px;">@("AP" + attackPath.Id)</div>
+                <FluentSpacer Width="12"/>
+                <div style="font-weight: bold; color: #323130;"><FluentTextField @bind-Value="@attackPath.Name"
+                                                            Immediate="true"
+                                                            ImmediateDelay="500"
+                                                            @bind-Value:after="HandleFieldChanged" />
+                </div>
             </div>
-        </FluentGridItem>
+        </HeadingTemplate>
+
+        <ChildContent>
+            <FluentGrid Spacing="2" Style="padding: 10px;">
+                @* LEFT COLUMN: The Steps Table *@
+                <FluentGridItem xs="6">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead style="background-color: #f3f2f1;">
+                            <tr>
+                                <th style="border: 1px solid #8a8886; padding: 4px; width: 40px; height: 40px; text-align: center;">#</th>
+                                <th style="border: 1px solid #8a8886; padding: 4px;">Steps</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < attackPath.Steps.Count; i++)
+                            {
+                                AttackStep step = attackPath.Steps[i]; // Direct reference to the object
+
+                                <tr>
+                                    <td style="border: 1px solid #8a8886; text-align: center; padding: 4px; height: 40px; background-color: #f3f2f1;">@(i+1)</td>
+                                    <td style="border: 1px solid #8a8886; padding: 4px;">
+                                        <FluentTextField @bind-Value="step.Text"
+                                                            Immediate="true"
+                                                            ImmediateDelay="500"
+                                                            @bind-Value:after="HandleFieldChanged" />
+                                    </td>
+                                </tr>
+                            }
+
+                            @* "Add New Step" Row *@
+                            <tr>
+                                <td style="border: 1px solid #8a8886; text-align: center; padding: 4px; height: 40px; background-color: #f3f2f1;">@(attackPath.Steps.Count + 1)</td>
+                                <td style="border: 1px solid #8a8886; padding: 4px;">
+                                    @* Note: For the "Add" row, we usually use a different logic (like an Enter key press)
+                                    because there is no existing string in the list to bind to yet. *@
+                                    <FluentTextField Placeholder="Type step and press Enter..."
+                                                    @bind-Value="newStepText"
+                                                    @onkeyup="HandleNewStepKeyPress"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    @* Risk Decision Section *@
+                    <div style="margin-top: 15px; border: 1px solid #8a8886; padding: 10px; background-color: #faf9f8;">
+                        <FluentStack Orientation="Orientation.Horizontal">
+                            <span style="font-size: 0.8rem;">Risk treatment decision</span>
+                            <FluentSpacer/>
+                            <FluentCheckbox @bind-Value="@attackPath.RiskTreatmentBool" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged"/> Done
+                        </FluentStack>
+                        <FluentTextArea Style="width: 100%; margin-top: 5px;" Placeholder="Hide Info" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
+                    </div>
+                </FluentGridItem>
 
 
 
-        @* RIGHT COLUMN: Dropdown Inputs *@
-        <FluentGridItem xs="6" Style="border-left: 1px solid #8a8886; ">
-            <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
-                <div>
-                    <span style="font-size: 0.8rem; color: #605e5c;">Elapsed Time</span><br/>
-                    <FluentSelect Value="@(attackPath.ElapsedTime.ToString() ?? "")"
-                        ValueChanged="@OnElapsedTimeChanged"
-                        Items="@ElapsedTimeOptions"
-                        OptionText="@(opt => opt.Text)"
-                        OptionValue="@(opt => opt.Value.ToString())"
-                        Style="width: 100%;" />
-                </div>
+                @* RIGHT COLUMN: Dropdown Inputs *@
+                <FluentGridItem xs="6" Style="border-left: 1px solid #8a8886; ">
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        <div>
+                            <span style="font-size: 0.8rem; color: #605e5c;">Elapsed Time</span><br/>
+                            <FluentSelect Value="@(attackPath.ElapsedTime.ToString() ?? "")"
+                                ValueChanged="@OnElapsedTimeChanged"
+                                Items="@ElapsedTimeOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%;" />
+                        </div>
 
-                <div>
-                    <span style="font-size: 0.8rem; color: #605e5c;">Specialist Expertise</span><br/>
-                    <FluentSelect Value="@(attackPath.SpecialistExpertise.ToString() ?? "")"
-                        ValueChanged="@OnExpertiseChanged"
-                        Items="@ExpertiseOptions"
-                        OptionText="@(opt => opt.Text)"
-                        OptionValue="@(opt => opt.Value.ToString())"
-                        Style="width: 100%;" />
-                </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #605e5c;">Specialist Expertise</span><br/>
+                            <FluentSelect Value="@(attackPath.SpecialistExpertise.ToString() ?? "")"
+                                ValueChanged="@OnExpertiseChanged"
+                                Items="@ExpertiseOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%;" />
+                        </div>
 
-                <div>
-                    <span style="font-size: 0.8rem; color: #605e5c;">Knowledge of Item</span><br/>
-                    <FluentSelect Value="@(attackPath.KnowledgeOfComponents.ToString() ?? "")"
-                        ValueChanged="@OnKnowledgeChanged"
-                        Items="@KnowledgeOptions"
-                        OptionText="@(opt => opt.Text)"
-                        OptionValue="@(opt => opt.Value.ToString())"
-                        Style="width: 100%;" />
-                </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #605e5c;">Knowledge of Item</span><br/>
+                            <FluentSelect Value="@(attackPath.KnowledgeOfComponents.ToString() ?? "")"
+                                ValueChanged="@OnKnowledgeChanged"
+                                Items="@KnowledgeOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%;" />
+                        </div>
 
-                <div>
-                    <span style="font-size: 0.8rem; color: #605e5c;">Window of Opportunity</span><br/>
-                    <FluentSelect Value="@(attackPath.WindowOfOpportunity.ToString() ?? "")"
-                        ValueChanged="@OnWindowChanged"
-                        Items="@WindowOptions"
-                        OptionText="@(opt => opt.Text)"
-                        OptionValue="@(opt => opt.Value.ToString())"
-                        Style="width: 100%;" />
-                </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #605e5c;">Window of Opportunity</span><br/>
+                            <FluentSelect Value="@(attackPath.WindowOfOpportunity.ToString() ?? "")"
+                                ValueChanged="@OnWindowChanged"
+                                Items="@WindowOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%;" />
+                        </div>
 
-                <div>
-                    <span style="font-size: 0.8rem; color: #605e5c;">Equipment</span><br/>
-                    <FluentSelect Value="@(attackPath.Equipment.ToString() ?? "")"
-                        ValueChanged="@OnEquipmentChanged"
-                        Items="@EquipmentOptions"
-                        OptionText="@(opt => opt.Text)"
-                        OptionValue="@(opt => opt.Value.ToString())"
-                        Style="width: 100%;" />
-                </div>
+                        <div>
+                            <span style="font-size: 0.8rem; color: #605e5c;">Equipment</span><br/>
+                            <FluentSelect Value="@(attackPath.Equipment.ToString() ?? "")"
+                                ValueChanged="@OnEquipmentChanged"
+                                Items="@EquipmentOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%;" />
+                        </div>
 
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #edebe9; width: 100%;">
-                    <FluentStack Orientation="Orientation.Vertical">
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #edebe9; width: 100%;">
+                            <FluentStack Orientation="Orientation.Vertical">
 
-                            <div style="font-size: 0.75rem; color: #d13438; width: 100%;">
-                                <FluentStack>
-                                    <span>Attack Feasibility:</span>
-                                    <FluentSpacer />
-                                    <span>High</span>
-                                </FluentStack>
-                            </div>
-                            <div style="font-size: 1rem; font-weight: bold; color: #d13438; width: 100%;">
-                                <FluentStack>
-                                    <span>Risk Value:</span>
-                                    <FluentSpacer />
-                                    <span>S5</span>
-                                </FluentStack>
-                            </div>
+                                    <div style="font-size: 0.75rem; color: #d13438; width: 100%;">
+                                        <FluentStack>
+                                            <span>Attack Feasibility:</span>
+                                            <FluentSpacer />
+                                            <span>High</span>
+                                        </FluentStack>
+                                    </div>
+                                    <div style="font-size: 1rem; font-weight: bold; color: #d13438; width: 100%;">
+                                        <FluentStack>
+                                            <span>Risk Value:</span>
+                                            <FluentSpacer />
+                                            <span>S5</span>
+                                        </FluentStack>
+                                    </div>
 
+                            </FluentStack>
+                        </div>
                     </FluentStack>
-                </div>
-            </FluentStack>
-        </FluentGridItem>
-    </FluentGrid>
+                </FluentGridItem>
+            </FluentGrid>
+        </ChildContent>
+    </FluentAccordionItem>
 </div>
+
 
 @code {
     [Parameter] public AttackPath attackPath { get; set; } = default!;
