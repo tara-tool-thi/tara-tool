@@ -178,7 +178,7 @@
     {
         thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q =>
                                                                     q.Include(ts => ts.AttackPaths)
-                                                                        .ThenInclude(ap => ap.Steps));
+                                                                        .ThenInclude(ap => ap.Steps.OrderBy(step => step.Order)));
         if (thisTS == null)
         {
             NavigationManager.NavigateTo("/");

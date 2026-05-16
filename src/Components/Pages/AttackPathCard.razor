@@ -21,42 +21,58 @@
             <FluentGrid Spacing="2" Style="padding: 10px;">
                 @* LEFT COLUMN: The Steps Table *@
                 <FluentGridItem xs="6">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-                        <thead style="background-color: #f3f2f1;">
-                            <tr>
-                                <th style="border: 1px solid #8a8886; padding: 4px; width: 40px; height: 40px; text-align: center;">#</th>
-                                <th style="border: 1px solid #8a8886; padding: 4px;">Steps</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @for (int i = 0; i < attackPath.Steps.Count; i++)
-                            {
-                                AttackStep step = attackPath.Steps[i]; // Direct reference to the object
+                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 80%">
+                        <EmptyContent>
+                            <FluentLabel Typo="Typography.Body" Style="opacity: 0.6;">
+                                No attack paths yet.
+                            </FluentLabel>
+                        </EmptyContent>
 
-                                <tr>
-                                    <td style="border: 1px solid #8a8886; text-align: center; padding: 4px; height: 40px; background-color: #f3f2f1;">@(i+1)</td>
-                                    <td style="border: 1px solid #8a8886; padding: 4px;">
-                                        <FluentTextField @bind-Value="step.Text"
-                                                            Immediate="true"
-                                                            ImmediateDelay="500"
-                                                            @bind-Value:after="HandleFieldChanged" />
-                                    </td>
-                                </tr>
-                            }
+                        <ChildContent>
+                            <TemplateColumn Title="#" Width="40px">
+                                <br />
+                                @(attackPath.Steps.IndexOf(context) + 1)
+                            </TemplateColumn>
 
-                            @* "Add New Step" Row *@
-                            <tr>
-                                <td style="border: 1px solid #8a8886; text-align: center; padding: 4px; height: 40px; background-color: #f3f2f1;">@(attackPath.Steps.Count + 1)</td>
-                                <td style="border: 1px solid #8a8886; padding: 4px;">
-                                    @* Note: For the "Add" row, we usually use a different logic (like an Enter key press)
-                                    because there is no existing string in the list to bind to yet. *@
-                                    <FluentTextField Placeholder="Type step and press Enter..."
-                                                    @bind-Value="newStepText"
-                                                    @onkeyup="HandleNewStepKeyPress"/>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                            <TemplateColumn Title="Steps">
+                                <div class="drop-target @(hoverAbove == context ? "drop-hover" : "")"
+                                    @ondragenter="() => hoverAbove = context"
+                                    @ondragleave="() => hoverAbove = null"
+                                    @ondragover:preventDefault
+                                    @ondrop="() => DropAbove(context)"
+                                    @ondragend="() => hoverAbove = null">
+                                </div>
+
+                                <div class="drag-cell"
+                                    draggable="true"
+                                    @ondragstart="() => DragStart(context)">
+                                <FluentTextField @bind-Value="context.Text"
+                                                                Immediate="true"
+                                                                ImmediateDelay="500"
+                                                                @bind-Value:after="HandleFieldChanged" />
+                                </div>
+
+                                @if(context == attackPath.Steps.Last())
+                                {
+                                    <div class="drop-target-below @(hoverBelow == context ? "drop-hover-below" : "")"
+                                    @ondragenter="() => hoverBelow = context"
+                                    @ondragleave="() => hoverBelow = null"
+                                    @ondragover:preventDefault
+                                    @ondrop="() => DropBelow(context)"
+                                    @ondragend="() => hoverBelow = null">
+                                    </div>
+                                }
+                            </TemplateColumn>
+                        </ChildContent>
+                        
+                    </FluentDataGrid>
+                    
+                <FluentStack VerticalAlignment="VerticalAlignment.Center">
+                    <span>Add a new step here:</span>
+                    <FluentTextField Placeholder="Type step and press Enter..."
+                                                        @bind-Value="newStepText"
+                                                        @onkeyup="HandleNewStepKeyPress"/>
+                </FluentStack>
 
                     @* Risk Decision Section *@
                     <div style="margin-top: 15px; border: 1px solid #8a8886; padding: 10px; background-color: #faf9f8;">
@@ -67,7 +83,7 @@
                         </FluentStack>
                         <FluentTextArea Style="width: 100%; margin-top: 5px;" Placeholder="Hide Info" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
                     </div>
-                </FluentGridItem>
+            </FluentGridItem>
 
 
 
@@ -158,6 +174,10 @@
     [Parameter] public EventCallback OnFieldChanged { get; set; }
 
     private string newStepText = string.Empty;
+
+    private AttackStep? hoverAbove;
+    private AttackStep? hoverBelow;
+    private AttackStep? draggedItem;
 
     // --- MAPPING LISTS ---
     // Map the Enum to a user-friendly string
@@ -281,6 +301,65 @@
             await OnFieldChanged.InvokeAsync();
         }
     }
+
+    private async Task DragStart(AttackStep item)
+    {
+        draggedItem = item;
+    }
+
+    private async Task DropAbove(AttackStep targetItem)
+    {
+        if (draggedItem is null || draggedItem == targetItem)
+        {
+            hoverAbove = null;
+            hoverBelow = null;
+            return;
+        }
+
+        int oldIndex = attackPath.Steps.IndexOf(draggedItem);
+        int newIndex = attackPath.Steps.IndexOf(targetItem);
+
+        attackPath.Steps.RemoveAt(oldIndex);
+
+        if (oldIndex < newIndex)
+            newIndex--;
+
+        attackPath.Steps.Insert(newIndex, draggedItem);
+
+        hoverAbove = null;
+        hoverBelow = null;
+        draggedItem = null;
+
+        StateHasChanged();
+        await HandleFieldChanged();
+    }
+
+    private async Task DropBelow(AttackStep targetItem)
+{
+    if (draggedItem is null || draggedItem == targetItem)
+    {
+        hoverAbove = null;
+        hoverBelow = null;
+        return;
+    }
+
+    int oldIndex = attackPath.Steps.IndexOf(draggedItem);
+    int targetIndex = attackPath.Steps.IndexOf(targetItem);
+
+    attackPath.Steps.RemoveAt(oldIndex);
+
+    if (oldIndex < targetIndex)
+        targetIndex--;
+
+    attackPath.Steps.Insert(targetIndex + 1, draggedItem);
+
+    hoverAbove = null;
+    hoverBelow = null;
+    draggedItem = null;
+
+    StateHasChanged();
+    await HandleFieldChanged();
+}
 
     //Helper class for enum dropdowns
     public class SelectOption<T>

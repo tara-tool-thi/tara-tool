@@ -135,7 +135,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         // We must find the existing entity and include its relations to handle updates correctly
         ThreatScenario? existingScenario = await context.ThreatScenarios
             .Include(s => s.AttackPaths)
-                .ThenInclude(ap => ap.Steps)
+                .ThenInclude(ap => ap.Steps.OrderBy(step => step.Order))
             .FirstOrDefaultAsync(s => s.Id == scenario.Id);
 
         if (existingScenario == null) return null;
@@ -183,12 +183,15 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
                     }
 
                     // 2. Update existing steps or add new ones
-                    foreach (AttackStep incomingStep in incomingPath.Steps)
+                    for (int i = 0; i < incomingPath.Steps.Count; i++)
                     {
+                        AttackStep incomingStep = incomingPath.Steps[i];
+
                         if (string.IsNullOrWhiteSpace(incomingStep.Text)) continue;
                         if (incomingStep.Id == 0)
                         {
                             // New step
+                            incomingStep.Order = i;
                             trackedPath.Steps.Add(incomingStep);
                         }
                         else
@@ -200,6 +203,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
                             if (trackedStep != null)
                             {
                                 context.Entry(trackedStep).CurrentValues.SetValues(incomingStep);
+                                trackedStep.Order = i;
                             }
                         }
                     }
