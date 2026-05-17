@@ -14,6 +14,12 @@
                                                             ImmediateDelay="500"
                                                             @bind-Value:after="HandleFieldChanged" />
                 </div>
+                <FluentSpacer />
+                <FluentButton Title="Delete attack path" 
+                              Appearance="Appearance.Outline" 
+                              OnClick="@OnDeleteClick">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
+                </FluentButton>
             </div>
         </HeadingTemplate>
 
@@ -172,6 +178,8 @@
     [Parameter] public AttackPath attackPath { get; set; } = default!;
 
     [Parameter] public EventCallback OnFieldChanged { get; set; }
+
+    [Parameter] public EventCallback<long> OnDelete { get; set; }
 
     private string newStepText = string.Empty;
 
@@ -360,6 +368,11 @@
     StateHasChanged();
     await HandleFieldChanged();
 }
+
+    private async Task OnDeleteClick()
+    {
+        await OnDelete.InvokeAsync(attackPath.Id);
+    }
 
     //Helper class for enum dropdowns
     public class SelectOption<T>

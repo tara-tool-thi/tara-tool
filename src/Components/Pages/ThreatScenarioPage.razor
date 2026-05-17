@@ -77,7 +77,7 @@
         @foreach (var path in FilteredAttackPaths)
         {
             @* Each box is now its own component *@
-            <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave"/>
+            <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave" OnDelete="DeleteAttackPathAsync"/>
         }
         </FluentAccordion>
     }
@@ -200,6 +200,25 @@
     async Task DeleteAsync()
     {
 
+    }
+
+    async Task DeleteAttackPathAsync(long attackPathId)
+    {
+        // Remove the attack path from the local list
+        var pathToRemove = AttackPaths.FirstOrDefault(ap => ap.Id == attackPathId);
+        if (pathToRemove != null)
+        {
+            AttackPaths.Remove(pathToRemove);
+        }
+
+        // Call the service to delete it from the database
+        await threatScenarioService.DeleteAttackPathAsync(TSId, attackPathId);
+
+        // Refresh the UI
+        StateHasChanged();
+
+        // Trigger autosave to persist changes
+        NotifyAutosave();
     }
 
     async Task AddAP()

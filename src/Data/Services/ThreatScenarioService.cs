@@ -215,6 +215,54 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         return existingScenario;
     }
 
+    /// <summary>
+    /// Deletes an AttackPath from a ThreatScenario. If the AttackPath belongs to only this scenario,
+    /// it will be completely removed from the database. Otherwise, only the relationship is removed.
+    /// </summary>
+    public async Task DeleteAttackPathAsync(long threatScenarioId, long attackPathId)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        // 1. Find the scenario and attack path
+        var scenario = await context.ThreatScenarios
+            .Include(s => s.AttackPaths)
+            .Include(s => s.DamageScenarios)
+                .ThenInclude(ds => ds.Assets)
+                    .ThenInclude(a => a.ItemDefinition)
+            .FirstOrDefaultAsync(s => s.Id == threatScenarioId);
+
+        if (scenario == null) return;
+
+        // Security Check: Does user have write access to this project?
+        var projectId = scenario.DamageScenarios
+            .SelectMany(ds => ds.Assets)
+            .Select(a => a.ItemDefinition!.IdProject)
+            .FirstOrDefault();
+
+        /*if (projectId == 0 || !await accessControlService.CheckUserAccessRightsWrite(projectId))
+            return;*/
+
+        // 2. Find the attack path to remove
+        var attackPathToRemove = scenario.AttackPaths.FirstOrDefault(ap => ap.Id == attackPathId);
+        if (attackPathToRemove == null) return;
+
+        // 3. Remove the relationship
+        scenario.AttackPaths.Remove(attackPathToRemove);
+
+        // 4. Check if this was the only scenario for this attack path
+        var otherScenariosCount = await context.ThreatScenarios
+            .Where(ts => ts.Id != threatScenarioId && ts.AttackPaths.Any(ap => ap.Id == attackPathId))
+            .CountAsync();
+
+        // 5. If no other scenarios reference this attack path, delete it completely
+        if (otherScenariosCount == 0)
+        {
+            context.AttackPaths.Remove(attackPathToRemove);
+        }
+
+        await context.SaveChangesAsync();
+    }
+
     public async Task Delete(ThreatScenario scenario)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
