@@ -1,5 +1,6 @@
 @using Humanizer
 @using Microsoft.EntityFrameworkCore.Metadata.Internal
+@using Mono.TextTemplating
 @using tara_tool.Data.Tables
 @using tara_tool.Data.Services
 
@@ -28,7 +29,8 @@
                               OptionText="@(p => p.Id == -1 ? "*" :  p.ProjectName)" SelectedOptionChanged="@OnProjectChange"
                               Placeholder="Select" OptionSelected="@(p => p.Id == selectedProject?.Id)"
                               OptionValue="@(p => p.Id.ToString())" @key="@selectedProject" />
-                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                            OnClick="@(() => HandleProjectChange(selectedProject))" />
 
             </FluentBreadcrumbItem>
 
@@ -45,7 +47,8 @@
                                   OptionText="@(i => i.Id == -1 ? "*" :  i.ItemName)" OptionSelected="@(i => i.Id == selectedItem?.Id)"
                                   SelectedOptionChanged="@OnItemChanged" Placeholder="Select" OptionValue="@(p => p.Id.ToString())"
                                   @key="@selectedItem" />
-                    <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
+                    <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                                OnClick="@(() => HandleItemChange(selectedItem))" />
                 </FluentBreadcrumbItem>
 
                 if (selectedItem is not null)
@@ -61,7 +64,8 @@
                                       OptionText="@(a => a.Id == -1 ? "*" : a.AssetName)" SelectedOptionChanged="OnAssetChange"
                                       OptionSelected="@(p => p.Id == selectedAsset?.Id)" Placeholder="Select"
                                       OptionValue="@(p => p.Id.ToString())" @key="@selectedAsset" />
-                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
+                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                                    OnClick="@(() => HandleAssetChange(selectedAsset))" />
                     </FluentBreadcrumbItem>
 
                     if (selectedAsset is not null)
@@ -78,7 +82,8 @@
                                           OptionSelected="@(p => p.Id == selectedDamageScenario?.Id)"
                                           SelectedOptionChanged="@OnDamageScenarioChange" Placeholder="Select"
                                           OptionValue="@(p => p.Id.ToString())" @key="@selectedDamageScenario" />
-                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                                        OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario))" />
                         </FluentBreadcrumbItem>
                     }
                 }
@@ -220,6 +225,7 @@
             selectedDamageScenario = null;
             selectedThreatScenario = null;
             selectedProject = null;
+            StateHasChanged();
             return;
         }
         ;
@@ -344,8 +350,9 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
     }
 
 
-    private async Task HandleProjectChange(Project project, bool navigate = true)
+    private async Task HandleProjectChange(Project? project, bool navigate = true)
     {
+        if (project == null) return;
         AllAssets.Clear();
         AllDamadgeScenarios.Clear();
         AllThreatScenarios.Clear();
@@ -377,8 +384,9 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleItemChange(ItemDefinition itemDefinition, bool navigate = true)
+    private async Task HandleItemChange(ItemDefinition? itemDefinition, bool navigate = true)
     {
+        if (itemDefinition == null) return;
         AllAssets.Clear();
         AllDamadgeScenarios.Clear();
         AllThreatScenarios.Clear();
@@ -393,8 +401,9 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
             {
                 Id = -1,
             });
-            AllAssets = (await AssetService.GetItems(selectedProject?.Id ?? 0, filter: q => q.Where(a => a.IdItemDefinition ==
-itemDefinition.Id))).Item1;
+            AllAssets.AddRange((await AssetService.GetItems(selectedProject?.Id ?? 0, filter: q => q.Where(a => a.IdItemDefinition
+==
+itemDefinition.Id))).Item1);
             if (navigate) Navigator.NavigateTo($"/Item/{itemDefinition.Id}");
         }
 
@@ -415,8 +424,9 @@ itemDefinition.Id))).Item1;
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleAssetChange(Asset asset, bool navigate = true)
+    private async Task HandleAssetChange(Asset? asset, bool navigate = true)
     {
+        if (asset == null) return;
         AllDamadgeScenarios.Clear();
         AllThreatScenarios.Clear();
         selectedAsset = asset;
@@ -453,17 +463,32 @@ a.Asset!.Id == asset.Id))).Item1);
 
     //ToDo: Add when ThreaScenarioService is finished
 
-    private async Task HandleDamageScenarioChange(DamageScenario asset, bool navigate = true)
+    private async Task HandleDamageScenarioChange(DamageScenario? damageScenario, bool navigate = true)
     {
+        if (damageScenario == null) return;
+        AllThreatScenarios.Clear();
+        selectedDamageScenario = damageScenario;
+        selectedThreatScenario = null;
 
+        if (damageScenario.Id != -1)
+        {
+
+            AllThreatScenarios.Add(new ThreatScenario
+            {
+                Id = -1,
+            });
+            Navigator.NavigateTo(SerializeCurrentState());
+        }
     }
 
     private async Task OnDamageScenarioChange(DamageScenario damageScenario)
     {
-
+        if (selectedAsset?.Id == damageScenario.Id) return;
+        await HandleDamageScenarioChange(damageScenario);
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async Task HandleThreatScenarioChange(ThreatScenario threatScenario, bool navigate = true)
+    private async Task HandleThreatScenarioChange(ThreatScenario? threatScenario, bool navigate = true)
     {
 
     }

@@ -1,0 +1,128 @@
+@page "/Overview"
+@using Mono.TextTemplating
+
+@rendermode InteractiveServer
+@inject NavigationManager Navigator
+
+
+@if (topLayer is not null && bottomLayer is not null)
+{
+    <OverviewElement IdProject="@IdProject" IdAsset="@IdAsset" IdDamageScenario=@IdDamageScenario IdItem=@IdItem
+                     LastLayer=@((LayerType)bottomLayer) CurrentLayer="@((LayerType)topLayer)" SearchText="@searchText"
+                     @key=@renderKey />
+}
+
+
+@code {
+
+    private long renderKey = 0;
+
+    [SupplyParameterFromQuery]
+    public long? IdProject { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdItem { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdAsset { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdDamageScenario { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdThreatScenario { get; set; } = null;
+
+    private LayerType? topLayer = null;
+    private LayerType? bottomLayer = null;
+    private string searchText { get; set; } = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IdProject is null || IdProject == -1)
+        {
+            //Please do not ask but here the explanation: ParameterSet is also called, when you navigate away from the URL, aka the
+            //query and thereby the parameters change. This leads to a race (I think, or it is predetermine, I do not know exactly),
+            //which then
+            //triggers this condition -> if we are not on the overview, we do not care what IdIs.
+            //Why not using another function to override? Well that will kill the current way of how it works -> For real can
+            //someone please make a web framewor
+            //where the programmers do not have to do such hacks -> Would be highly appriciated - Ardwetha
+            if (Navigator.Uri.Contains("Overview"))
+            {
+                //Id Project must no be null
+                Navigator.NavigateTo("/");
+            }
+
+            return;
+        }
+
+        if (IdItem == -1)
+        {
+            topLayer = LayerType.Item;
+        }
+        else if (IdAsset == -1)
+        {
+            topLayer = LayerType.Asset;
+        }
+        else if (IdDamageScenario == -1)
+        {
+            topLayer = LayerType.DamageScenario;
+        }
+        else if (IdThreatScenario == -1)
+        {
+            topLayer = LayerType.ThreatScenario;
+        }
+
+        if (IdDamageScenario == -1)
+        {
+            bottomLayer = LayerType.DamageScenario;
+        }
+        else if (IdAsset == -1)
+        {
+            bottomLayer = LayerType.Asset;
+        }
+        else if (IdItem == -1)
+        {
+            bottomLayer = LayerType.Item;
+        }
+        else if (IdProject == -1)
+        {
+            bottomLayer = LayerType.Project;
+        }
+
+
+        //Fallback: no wildcards found — redirect to the deepest entity page instead of Overview
+        if (topLayer is null && bottomLayer is null)
+        {
+            if (IdThreatScenario is not null)
+                Navigator.NavigateTo($"/ThreatScenario/{IdThreatScenario}");
+            else if (IdDamageScenario is not null)
+                Navigator.NavigateTo($"/DamageScenario/{IdDamageScenario}");
+            else if (IdAsset is not null)
+                Navigator.NavigateTo($"/Asset/{IdAsset}");
+            else if (IdItem is not null)
+                Navigator.NavigateTo($"/Item/{IdItem}");
+            else
+                Navigator.NavigateTo("/");
+            return;
+        }
+
+        //Catch invalid States
+        if (topLayer is null || bottomLayer is null)
+        {
+            Navigator.NavigateTo("/");
+            return;
+        }
+
+        if ((int)topLayer! > (int)bottomLayer!)
+        {
+            Navigator.NavigateTo("/");
+            return;
+        }
+
+        renderKey++;
+        StateHasChanged();
+
+    }
+
+}

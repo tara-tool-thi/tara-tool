@@ -162,4 +162,24 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
 
         return (await assets.ToListAsync(), await assets.CountAsync());
     }
+
+    public async Task<int> CountAllItems(long ProjectId, Func<IQueryable<Asset>, IQueryable<Asset>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return 0;
+        }
+
+        IQueryable<Asset> assets = context.Assets;
+
+        assets = assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
+
+        if (filter is not null)
+        {
+            assets = filter(assets);
+        }
+
+        return await assets.CountAsync();
+    }
 }

@@ -187,4 +187,24 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
 
         return (await items.ToListAsync(), await items.CountAsync());
     }
+
+    public async Task<int> CountAllItems(long ProjectId, Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return 0;
+        }
+
+        IQueryable<ItemDefinition> items = context.ItemDefinitions;
+
+        items = items.Where(a => a.IdProject == ProjectId);
+
+        if (filter is not null)
+        {
+            items = filter(items);
+        }
+
+        return await items.CountAsync();
+    }
 }

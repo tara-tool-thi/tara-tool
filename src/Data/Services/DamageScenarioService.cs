@@ -35,7 +35,7 @@ public class DamageScenarioService
         }
 
         context.Attach(asset);
-        IQueryable<DamageScenario> existingDamageScenarios = context.DamageScenarios.Where (
+        IQueryable<DamageScenario> existingDamageScenarios = context.DamageScenarios.Where(
             e => e.Asset != null &&
             e.Asset.ItemDefinition != null &&
             e.Asset.ItemDefinition.IdProject == asset.ItemDefinition.IdProject);
@@ -44,7 +44,7 @@ public class DamageScenarioService
         {
             Description = "New unnamed Damage Scenario",
             DamageScenarioNumber = existingDamageScenarios.Any() ?
-                                   existingDamageScenarios.Select ( e => e.DamageScenarioNumber)
+                                   existingDamageScenarios.Select(e => e.DamageScenarioNumber)
                                                           .Max() + 1
                                                           : 1,
             Asset = asset
@@ -157,5 +157,25 @@ public class DamageScenarioService
         }
 
         return (await damageScenarios.ToListAsync(), await damageScenarios.CountAsync());
+    }
+
+    public async Task<int> CountAllItems(long ProjectId, Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return 0;
+        }
+
+        IQueryable<DamageScenario> damageScenarios = context.DamageScenarios;
+
+        damageScenarios = damageScenarios.Where(a => a.Asset!.ItemDefinition!.IdProject == ProjectId);
+
+        if (filter is not null)
+        {
+            damageScenarios = filter(damageScenarios);
+        }
+
+        return await damageScenarios.CountAsync();
     }
 }
