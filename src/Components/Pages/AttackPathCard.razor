@@ -27,9 +27,9 @@
             <FluentGrid Spacing="2" Style="padding: 10px;">
                 @* LEFT COLUMN: The Steps Table *@
                 <FluentGridItem xs="6">
-                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 300px; overflow: auto;">
+                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 150px; min-height: 50px; overflow: auto;">
                         <EmptyContent>
-                            <FluentLabel Typo="Typography.Body" Style="opacity: 0.6;">
+                            <FluentLabel Typo="Typography.Body" Style="opacity: 0.6; padding: 10px;">
                                 No attack paths yet.
                             </FluentLabel>
                         </EmptyContent>
