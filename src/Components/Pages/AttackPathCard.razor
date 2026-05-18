@@ -153,7 +153,7 @@
                                         <FluentStack>
                                             <span>Attack Feasibility:</span>
                                             <FluentSpacer />
-                                            <span>High</span>
+                                            <span>@AttackFeasibilityScore</span>
                                         </FluentStack>
                                     </div>
                                     <div style="font-size: 1rem; font-weight: bold; color: #d13438; width: 100%;">
@@ -201,6 +201,8 @@
 
     private bool showDeleteDialog = false;
 
+    private string AttackFeasibilityScore = string.Empty;
+
 
     private AttackStep? hoverAbove;
     private AttackStep? hoverBelow;
@@ -244,6 +246,11 @@
         new() { Value = Equipment.MultipleBespoken, Text = "Multiple Bespoke" }
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        await CalculateAndSetAttackFeasiblityScore();
+    }
+
     // --- ENUM HANDLERS ---
 
     private async Task OnElapsedTimeChanged(string? val)
@@ -251,6 +258,7 @@
         if (Enum.TryParse<ElapsedTime>(val, out ElapsedTime result))
         {
             attackPath.ElapsedTime = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -260,6 +268,7 @@
         if (Enum.TryParse<SpecialistExpertise>(val, out SpecialistExpertise result))
         {
             attackPath.SpecialistExpertise = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -269,6 +278,7 @@
         if (Enum.TryParse<KnowledgeOfComponents>(val, out KnowledgeOfComponents result))
         {
             attackPath.KnowledgeOfComponents = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -278,6 +288,7 @@
         if (Enum.TryParse<WindowOfOpportunity>(val, out WindowOfOpportunity result))
         {
             attackPath.WindowOfOpportunity = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -287,8 +298,29 @@
         if (Enum.TryParse<Equipment>(val, out Equipment result))
         {
             attackPath.Equipment = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
+    }
+
+    private async Task CalculateAndSetAttackFeasiblityScore()
+    {
+        ElapsedTime ET = attackPath.ElapsedTime;
+
+        int AttackFeasibilityScoreInt = (int)attackPath.ElapsedTime + (int)attackPath.SpecialistExpertise + (int)attackPath.KnowledgeOfComponents + (int)attackPath.WindowOfOpportunity + (int)attackPath.Equipment;
+
+        AttackFeasibilityRating rating = AttackFeasibilityScoreInt switch
+        {
+            < 10 => AttackFeasibilityRating.Critical,
+            < 14 => AttackFeasibilityRating.High,
+            < 20 => AttackFeasibilityRating.Medium,
+            < 24 => AttackFeasibilityRating.Low,
+            _    => AttackFeasibilityRating.VeryLow
+        };
+        
+        attackPath.AttackFeasibilityRating = rating;
+
+        AttackFeasibilityScore = rating.ToString().Replace("VeryLow", "Very Low");
     }
 
     private async Task HandleFieldChanged()
