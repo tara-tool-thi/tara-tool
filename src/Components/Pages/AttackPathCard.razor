@@ -17,7 +17,7 @@
                 <FluentSpacer />
                 <FluentButton Title="Delete attack path" 
                               Appearance="Appearance.Outline" 
-                              OnClick="@OnDeleteClick">
+                              OnClick="@(()=> showDeleteDialog = true)">
                     <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
                 </FluentButton>
             </div>
@@ -27,7 +27,7 @@
             <FluentGrid Spacing="2" Style="padding: 10px;">
                 @* LEFT COLUMN: The Steps Table *@
                 <FluentGridItem xs="6">
-                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 80%">
+                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 300px; overflow: auto;">
                         <EmptyContent>
                             <FluentLabel Typo="Typography.Body" Style="opacity: 0.6;">
                                 No attack paths yet.
@@ -171,6 +171,22 @@
             </FluentGrid>
         </ChildContent>
     </FluentAccordionItem>
+
+    <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete attack path confirmation">
+        <FluentDialogHeader>
+            <h3>Delete Attack Path</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            Are you sure you want to delete this Attack Path? This cannot be undone.
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = false)">Cancel</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" OnClick="ConfirmDeleteAsync">Delete</FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
 </div>
 
 
@@ -182,6 +198,9 @@
     [Parameter] public EventCallback<long> OnDelete { get; set; }
 
     private string newStepText = string.Empty;
+
+    private bool showDeleteDialog = false;
+
 
     private AttackStep? hoverAbove;
     private AttackStep? hoverBelow;
@@ -372,6 +391,13 @@
     private async Task OnDeleteClick()
     {
         await OnDelete.InvokeAsync(attackPath.Id);
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        showDeleteDialog = false;
+        await OnDelete.InvokeAsync(attackPath.Id);
+        StateHasChanged();
     }
 
     //Helper class for enum dropdowns

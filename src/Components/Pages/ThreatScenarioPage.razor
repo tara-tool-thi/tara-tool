@@ -199,7 +199,17 @@
 
     async Task DeleteAsync()
     {
+        if (thisTS == null)
+        {
+            showDeleteDialog = false;
+            return;
+        }
 
+        await threatScenarioService.Delete(thisTS);
+
+        // Close dialog and navigate away (back to home)
+        showDeleteDialog = false;
+        NavigationManager.NavigateTo("/");
     }
 
     async Task DeleteAttackPathAsync(long attackPathId)
