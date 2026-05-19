@@ -45,7 +45,7 @@
             <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
                 <div>
                     <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" :
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          t.Name) TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              t.Name) TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)"
                                   Label="Select Group" Items=@GroupOptions />
                 </div>
                 <FluentButton IconStart="@(new Icons.Regular.Size20.Add())" Appearance="Appearance.Accent"
@@ -81,11 +81,9 @@
                                   Style="width: 250px;" @bind-Value="damageScenarioSearchText" Immediate="true"
                                   ImmediateDelay="500" />
                 </FluentStack>
-                <DamageScenarioTable @ref="@damageScenarioTable" ProjectId="@asset!.ItemDefinition!.IdProject"
-                                     Filters="@(e => e
-                                                                                                                                                                                                                                            .Where(ds => string.IsNullOrWhiteSpace(damageScenarioSearchText) ||
-                                                                                                                                                                                                                                                EF.Functions.Like(ds.Description, $"%{damageScenarioSearchText}%") ||
-                                                                                                                                                                                                                                                ds.DamageScenarioNumber == _parsedSearchNumber))" />
+                <DamageScenarioTable @ref="@damageScenarioTable" ProjectId="@asset!.ItemDefinition!.IdProject" Filters="@(e => e.Where(a => a.Asset!.Id == IdAsset).Where(ds => string.IsNullOrWhiteSpace(damageScenarioSearchText) ||
+                                                                             EF.Functions.Like(ds.Description, $"%{damageScenarioSearchText}%") ||
+                                                                             ds.DamageScenarioNumber == _parsedSearchNumber))" />
             </ChildContent>
         </FluentAccordionItem>
     </FluentAccordion>

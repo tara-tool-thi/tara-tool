@@ -1,6 +1,5 @@
-@using Microsoft.AspNetCore.Authentication.OAuth
 @using Microsoft.CodeAnalysis
-@using Microsoft.EntityFrameworkCore.Query
+@using System.Security.Cryptography
 
 @rendermode InteractiveServer
 @inject ItemDefinitionService ItemService
@@ -48,17 +47,41 @@
     {
         @if (pagination is not null)
         {
-            @foreach (string data in displayData)
+            @foreach ((string, long) data in displayData)
             {
+                _renderVersion++;
                 <FluentAccordion @key=@($"{_renderVersion}_{data}")>
                     <FluentAccordionItem>
                         <HeadingTemplate>
-                            <span>@data</span>
+                            <span>@data.Item1</span>
                         </HeadingTemplate>
                         <ChildContent>
-                            <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
-                                             LastLayer="@LastLayer" SearchText=@SearchText IdItem="@IdItem" IdAsset="@IdAsset"
-                                             IdDamageScenario="@IdDamageScenario" />
+                            @*Depending on the layer, we manipulate the ids so the filters work*@
+                            @switch (CurrentLayer)
+                            {
+                                case LayerType.Item:
+                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@data.Item2" IdAsset="@null"
+                                                     IdDamageScenario="@null" />
+                                    break;
+                                case LayerType.Asset:
+                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@data.Item2"
+                                                     IdDamageScenario="@null" />
+                                    break;
+                                case LayerType.DamageScenario:
+                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null"
+                                                     IdDamageScenario="@data.Item2" />
+                                    break;
+                                case LayerType.ThreatScenario:
+                                    @*ToDo: Add Threat Scenarios*@
+                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null" IdDamageScenario="@null" />
+                                    break;
+
+                            }
+
                         </ChildContent>
                     </FluentAccordionItem>
                 </FluentAccordion>
@@ -67,10 +90,12 @@
         }
         else
         {
+            _renderVersion++;
             StateHasChanged();
         }
 
-        <PaginationUI @ref=@pagination OnPageChanged="@(async () => { await LoadPageAsync(); StateHasChanged(); })" />
+        <PaginationUI @ref=@pagination
+                      OnPageChanged="@(async () => { await LoadPageAsync(); _renderVersion++; StateHasChanged(); })" />
     }
 }
 
@@ -143,6 +168,8 @@
     private AssetTable? AssetGrid { get; set; } = null;
     private ItemDefinitionTable? ItemGrid { get; set; } = null;
     private DamageScenarioTable? DamageScenarioGrid { get; set; } = null;
+
+    private string randomToStopDoubleKey = string.Empty;
     //private FluentDataGrid<ThreatScenario>? ThreatScenarioGrid { get; set; } = null;
 
     private Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>> ItemFilter =>
@@ -157,7 +184,7 @@
                            a.Description.Contains(SearchText));
 
     private Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>> DamageScenarioFilter =>
-        q => q.Where(d => IdItem == null || IdItem == -1 || IdItem == d.Asset!.IdItemDefinition)
+        q => q
               .Where(d => IdAsset == null || IdAsset == -1 || IdAsset == d.Asset!.Id)
               .Where(d => string.IsNullOrEmpty(SearchText) ||
                            d.Description.Contains(SearchText) ||
@@ -165,18 +192,19 @@
 
     protected async override Task OnInitializedAsync()
     {
+        _renderVersion++;
         isLastLayer = CurrentLayer == LastLayer;
         if (IdProject is null || IdProject == -1) return;
         itemsProvider = ItemService.GetItemsProvider((long)IdProject, filter: ItemFilter);
         assetsProvider = AssetService.GetItemsProvider((long)IdProject, filter: AssetFilter);
         damageScenarioProvider = DamageScenarioService.GetItemsProvider((long)IdProject, filter: DamageScenarioFilter);
-        _renderVersion++;
     }
 
-    private List<string> displayData { get; set; } = [];
+    private List<(string, long)> displayData { get; set; } = [];
 
     private async Task LoadCountAsync()
     {
+        _renderVersion++;
         if (isLastLayer == true) return;
         if (IdProject is null || IdProject == -1) return;
         int count = CurrentLayer switch
@@ -187,11 +215,11 @@
             _ => 0
         };
         await pagination.pagination.SetTotalItemCountAsync(count);
-        _renderVersion++;
     }
 
     private async Task LoadPageAsync()
     {
+        _renderVersion++;
         if (IdProject is null || IdProject == -1) return;
         int skip = pagination.pagination.CurrentPageIndex * pagination.pagination.ItemsPerPage;
         int take = pagination.pagination.ItemsPerPage;
@@ -200,18 +228,16 @@
         Func<IQueryable<Asset>, IQueryable<Asset>> AssetPage = q => AssetFilter(q).Skip(skip).Take(take);
         Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>> DamageScenarioPage = q =>
     DamageScenarioFilter(q).Skip(skip).Take(take);
-        _renderVersion++;
         displayData = CurrentLayer switch
         {
             LayerType.Item => (await ItemService.GetItems((long)IdProject, filter: ItemPage)).Item1.Select(i =>
-i.ItemName).ToList(),
+(i.ItemName, i.Id)).ToList(),
             LayerType.Asset => (await AssetService.GetItems((long)IdProject, filter: AssetPage)).Item1.Select(a =>
-a.AssetName).ToList(),
+(a.AssetName, a.Id)).ToList(),
             LayerType.DamageScenario => (await DamageScenarioService.GetItems((long)IdProject, filter:
-    DamageScenarioPage)).Item1.Select(d => d.DamageScenarioNumber.ToString()).ToList(),
+    DamageScenarioPage)).Item1.Select(d => (d.DamageScenarioNumber.ToString(), d.Id)).ToList(),
             _ => []
         };
-        _renderVersion++;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -220,6 +246,7 @@ a.AssetName).ToList(),
         {
             await LoadCountAsync();
             await LoadPageAsync();
+            _renderVersion++;
             StateHasChanged();
         }
     }
