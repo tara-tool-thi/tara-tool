@@ -5,6 +5,7 @@
 @using tara_tool.Components
 @inject DamageScenarioService DamageScenarioService;
 @inject NavigationManager NavigationManager
+@attribute [Authorize]
 
 @if (damageScenario is not null)
 {
@@ -31,43 +32,45 @@
         and define their CIA properties.
     </p>
 
-    <FluentStack VerticalAlignment="VerticalAlignment.Top">
-        <FluentCard MinimalStyle=true Width="min-content">
-            <h4>DS&nbsp;@damageScenario?.DamageScenarioNumber</h4>
-        </FluentCard>
-        <FluentTextArea Class="fullwidth"
-                        @bind-Value=@damageScenario.Description
-                        @bind-Value:after=@genericAutosave.ScheduleAutoSave
-                        Immediate=true/>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap=4>
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <h4 class="margin-box">DS&nbsp;@damageScenario?.DamageScenarioNumber</h4>
+            <FluentTextArea Class="fullwidth" @bind-Value=@damageScenario!.Description
+                            @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />@*This warns of null deref, but null
+        check happens above…*@
+        </FluentStack>
+
+        <FluentAccordion Class="fullwidth">
+            <FluentAccordionItem Expanded=true Heading="Affected Security Goals">
+                <FluentStack>
+                    <FluentCheckbox @bind-Value=@damageScenario.ConfidentialityAffected
+                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        Confidentiality
+                    </FluentCheckbox>
+                    <FluentCheckbox @bind-Value=@damageScenario.IntegrityAffected
+                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        Integrity
+                    </FluentCheckbox>
+                    <FluentCheckbox @bind-Value=@damageScenario.AvailabilityAffected
+                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        Availability
+                    </FluentCheckbox>
+                </FluentStack>
+            </FluentAccordionItem>
+            <FluentAccordionItem Expanded=true Heading="Impact Rating">
+                <FluentStack>
+                    <ImpactRatingCard @bind-Value=@damageScenario.Safety @bind-Value:after=@genericAutosave.ScheduleAutoSave
+                                      CategoryName="Safety" />
+                    <ImpactRatingCard @bind-Value=@damageScenario.Financial
+                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Financial" />
+                    <ImpactRatingCard @bind-Value=@damageScenario.Operational
+                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Operational" />
+                    <ImpactRatingCard @bind-Value=@damageScenario.Privacy
+                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
+                </FluentStack>
+            </FluentAccordionItem>
+        </FluentAccordion>
     </FluentStack>
-
-
-    <FluentAccordion Class="fullwidth">
-        <FluentAccordionItem Expanded=true Heading="Affected Security Goals">
-            <FluentStack>
-                <FluentCheckbox @bind-Value=@damageScenario.ConfidentialityAffected
-                                @bind-Value:after=@genericAutosave.ScheduleAutoSave>
-                                Confidentiality
-                </FluentCheckbox>
-                <FluentCheckbox @bind-Value=@damageScenario.IntegrityAffected
-                                @bind-Value:after=@genericAutosave.ScheduleAutoSave>
-                                Integrity
-                </FluentCheckbox>
-                <FluentCheckbox @bind-Value=@damageScenario.AvailabilityAffected
-                                @bind-Value:after=@genericAutosave.ScheduleAutoSave>
-                                Availability
-                </FluentCheckbox>
-            </FluentStack>
-        </FluentAccordionItem>
-        <FluentAccordionItem Expanded=true Heading="Impact Rating">
-            <FluentStack>
-                <ImpactRatingCard @bind-Value=@damageScenario.Safety @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Safety" />
-                <ImpactRatingCard @bind-Value=@damageScenario.Financial @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Financial" />
-                <ImpactRatingCard @bind-Value=@damageScenario.Operational @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Operational" />
-                <ImpactRatingCard @bind-Value=@damageScenario.Privacy @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
-            </FluentStack>
-        </FluentAccordionItem>
-    </FluentAccordion>
 }
 
 
