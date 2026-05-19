@@ -45,60 +45,56 @@
 
 <div style="height: 1rem;"></div>
 
-<FluentStack>
-    <div style="display: flex; border: 1px solid #8a8886; width: 100%; margin-bottom: 4px;">
-		<div style="display: flex; align-items: center; justify-content: center; border-right: 1px solid #8a8886; padding: 0 20px; font-weight: bold;">
-            <FluentTextField @bind-Value="@TSName"
-                            Immediate="true"
-                            ImmediateDelay="500"
-                            @bind-Value:after="@NotifyTSAutosave" />
-		</div>
-
-		<div style="flex-grow: 1; background-color: @BgColor; padding: 8px 15px; display: flex; align-items: center;">
-			<span style="font-weight: 600; margin-right: 8px;">
-                <FluentTextField @bind-Value="@TSDescription"
-                            Immediate="true"
-                            ImmediateDelay="500"
-                            @bind-Value:after="@NotifyTSAutosave" />
-            </span>
-		</div>
-
-		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 15px; min-width: 80px; border-left: 1px solid #8a8886;">
-			<span style="font-size: 0.9rem;">Risk:</span>
-			<span style="color: @RiskColor; font-weight: bold;">@TSRiskValue</span>
-		</div>
+<div style="display: flex; border: 1px solid #8a8886; width: 100%; margin-bottom: 4px;">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" Style="padding: 0 20px; font-weight: bold; border-right: 1px solid #8a8886;">
+        <FluentTextField @bind-Value="@TSName"
+                        Immediate="true"
+                        ImmediateDelay="500"
+                        Style="width: auto;"
+                        @bind-Value:after="@NotifyTSAutosave" />
+    </FluentStack>
+    <FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" Style="@($"flex-grow: 1; background-color: {BgColor}; padding: 8px 15px;")">
+        <FluentTextField @bind-Value="@TSDescription"
+                    Immediate="true"
+                    ImmediateDelay="500"
+                    Style="width: auto;"
+                    @bind-Value:after="@NotifyTSAutosave" />
+    </FluentStack>
+    <FluentStack Orientation="Orientation.Vertical" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" Style="padding: 4px 15px; min-width: 80px; border-left: 1px solid #8a8886;">
+        <FluentLabel>Risk:</FluentLabel>
+        <strong style="color: @RiskColor;">@TSRiskValue</strong>
+    </FluentStack>
 </div>
-</FluentStack>
 
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
-<FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%;" HorizontalAlignment="HorizontalAlignment.Center">
-    @if (FilteredAttackPaths.Any())
-    {
-        <FluentAccordion Style="width: 100%">
-        @foreach (var path in FilteredAttackPaths)
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%;" HorizontalAlignment="HorizontalAlignment.Center">
+        @if (FilteredAttackPaths.Any())
         {
-            @* Each box is now its own component *@
-            <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave" OnDelete="DeleteAttackPathAsync"/>
+            <FluentAccordion Class="fullwidth">
+            @foreach (var path in FilteredAttackPaths)
+            {
+                @* Each box is now its own component *@
+                <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave" OnDelete="DeleteAttackPathAsync"/>
+            }
+            </FluentAccordion>
         }
-        </FluentAccordion>
-    }
-    else
-    {
-         @* This shows if the list is empty OR if the search returned zero results *@
-        <FluentCard Style="text-align: center;">
-            <FluentIcon Value="@(new Icons.Regular.Size24.Search())"/>
-            <p>No attack paths found matching your search.</p>
-        </FluentCard>
-    }
+        else
+        {
+            @* This shows if the list is empty OR if the search returned zero results *@
+            <FluentCard Style="text-align: center;">
+                <FluentIcon Value="@(new Icons.Regular.Size24.Search())"/>
+                <p>No attack paths found matching your search.</p>
+            </FluentCard>
+        }
 
-    <FluentButton Appearance="Appearance.Neutral"
-                OnClick="AddAP"
-                Style="width: 100%;">
-        <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
-        Add Attack Path
-    </FluentButton>
+        <FluentButton Appearance="Appearance.Neutral"
+                    OnClick="AddAP"
+                    Class="fullwidth">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
+            Add Attack Path
+        </FluentButton>
 
-</FluentStack>
+    </FluentStack>
 </FluentStack>
 
 
@@ -110,7 +106,7 @@
         Are you sure you want to delete <strong>Threat Scenario: @TSName</strong>? This cannot be undone.
     </FluentDialogBody>
     <FluentDialogFooter>
-        <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalGap="8">
             <FluentSpacer />
             <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = false)">Cancel
             </FluentButton>
