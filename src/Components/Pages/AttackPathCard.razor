@@ -14,9 +14,10 @@
                                  ImmediateDelay="500"
                                  @bind-Value:after="HandleFieldChanged" />
                 <FluentSpacer />
-                <FluentButton Title="Delete attack path"
-                              Appearance="Appearance.Outline"
-                              OnClick="@OnDeleteClick">
+
+                <FluentButton Title="Delete attack path" 
+                              Appearance="Appearance.Outline" 
+                              OnClick="@(()=> showDeleteDialog = true)">
                     <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
                 </FluentButton>
             </FluentStack>
@@ -26,9 +27,9 @@
             <FluentGrid Spacing="2" Class="attackpath-grid">
                 @* LEFT COLUMN: The Steps Table *@
                 <FluentGridItem xs="6">
-                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 80%">
+                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 150px; min-height: 50px; overflow: auto;">
                         <EmptyContent>
-                            <FluentLabel Typo="Typography.Body" Style="opacity: 0.6;">
+                            <FluentLabel Typo="Typography.Body" Style="opacity: 0.6; padding: 10px;">
                                 No attack paths yet.
                             </FluentLabel>
                         </EmptyContent>
@@ -153,6 +154,7 @@
                                             <FluentLabel>Attack Feasibility:</FluentLabel>
                                             <FluentSpacer />
                                             <FluentLabel>High</FluentLabel>
+                                            <span>@AttackFeasibilityScore</span>
                                         </FluentStack>
                                     </div>
                                     <div class="attackpath-riskvalue">
@@ -172,6 +174,22 @@
     </FluentAccordionItem>
 </FluentStack>
 
+    <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete attack path confirmation">
+        <FluentDialogHeader>
+            <h3>Delete Attack Path</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            Are you sure you want to delete <strong>Attack Path: @attackPath.Name</strong>? This cannot be undone.
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = false)">Cancel</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" OnClick="ConfirmDeleteAsync">Delete</FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
+
 
 @code {
     [Parameter] public AttackPath attackPath { get; set; } = default!;
@@ -181,6 +199,11 @@
     [Parameter] public EventCallback<long> OnDelete { get; set; }
 
     private string newStepText = string.Empty;
+
+    private bool showDeleteDialog = false;
+
+    private string AttackFeasibilityScore = string.Empty;
+
 
     private AttackStep? hoverAbove;
     private AttackStep? hoverBelow;
@@ -224,6 +247,11 @@
         new() { Value = Equipment.MultipleBespoken, Text = "Multiple Bespoke" }
     };
 
+    protected override async Task OnInitializedAsync()
+    {
+        await CalculateAndSetAttackFeasiblityScore();
+    }
+
     // --- ENUM HANDLERS ---
 
     private async Task OnElapsedTimeChanged(string? val)
@@ -231,6 +259,7 @@
         if (Enum.TryParse<ElapsedTime>(val, out ElapsedTime result))
         {
             attackPath.ElapsedTime = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -240,6 +269,7 @@
         if (Enum.TryParse<SpecialistExpertise>(val, out SpecialistExpertise result))
         {
             attackPath.SpecialistExpertise = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -249,6 +279,7 @@
         if (Enum.TryParse<KnowledgeOfComponents>(val, out KnowledgeOfComponents result))
         {
             attackPath.KnowledgeOfComponents = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -258,6 +289,7 @@
         if (Enum.TryParse<WindowOfOpportunity>(val, out WindowOfOpportunity result))
         {
             attackPath.WindowOfOpportunity = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
     }
@@ -267,8 +299,29 @@
         if (Enum.TryParse<Equipment>(val, out Equipment result))
         {
             attackPath.Equipment = result;
+            await CalculateAndSetAttackFeasiblityScore();
             await OnFieldChanged.InvokeAsync();
         }
+    }
+
+    private async Task CalculateAndSetAttackFeasiblityScore()
+    {
+        ElapsedTime ET = attackPath.ElapsedTime;
+
+        int AttackFeasibilityScoreInt = (int)attackPath.ElapsedTime + (int)attackPath.SpecialistExpertise + (int)attackPath.KnowledgeOfComponents + (int)attackPath.WindowOfOpportunity + (int)attackPath.Equipment;
+
+        AttackFeasibilityRating rating = AttackFeasibilityScoreInt switch
+        {
+            < 10 => AttackFeasibilityRating.Critical,
+            < 14 => AttackFeasibilityRating.High,
+            < 20 => AttackFeasibilityRating.Medium,
+            < 24 => AttackFeasibilityRating.Low,
+            _    => AttackFeasibilityRating.VeryLow
+        };
+        
+        attackPath.AttackFeasibilityRating = rating;
+
+        AttackFeasibilityScore = rating.ToString().Replace("VeryLow", "Very Low");
     }
 
     private async Task HandleFieldChanged()
@@ -371,6 +424,13 @@
     private async Task OnDeleteClick()
     {
         await OnDelete.InvokeAsync(attackPath.Id);
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        showDeleteDialog = false;
+        await OnDelete.InvokeAsync(attackPath.Id);
+        StateHasChanged();
     }
 
     //Helper class for enum dropdowns

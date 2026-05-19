@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 
 @using tara_tool.Data.Services
+@using tara_tool.Data.Enums;
 
 @inject AccessControlService accessControlService
 
@@ -106,7 +107,7 @@
         <h3>Delete Threat Scenario</h3>
     </FluentDialogHeader>
     <FluentDialogBody>
-        Are you sure you want to delete <strong>PLACEHOLDER - THREAT SCENARIO NAME HERE</strong>? This cannot be undone.
+        Are you sure you want to delete <strong>Threat Scenario: @TSName</strong>? This cannot be undone.
     </FluentDialogBody>
     <FluentDialogFooter>
         <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
@@ -154,6 +155,8 @@
     private string TSDescription = string.Empty;
     private string TSRiskValue = string.Empty;
 
+    private float ImpactRating = 1;
+
     public string BgColor { get; set; } = "#dff6ff"; // Default light blue
     public string RiskColor { get; set; } = "#d13438"; // Default red
 
@@ -187,6 +190,9 @@
 
         TSName = thisTS.Name;
         TSDescription = thisTS.Description;
+
+        await CalculateRiskValue();
+
         TSRiskValue = thisTS.RiskValue.ToString();
 
         AttackPaths.Clear();
@@ -199,7 +205,17 @@
 
     async Task DeleteAsync()
     {
+        if (thisTS == null)
+        {
+            showDeleteDialog = false;
+            return;
+        }
 
+        await threatScenarioService.Delete(thisTS);
+
+        // Close dialog and navigate away (back to home)
+        showDeleteDialog = false;
+        NavigationManager.NavigateTo("/");
     }
 
     async Task DeleteAttackPathAsync(long attackPathId)
@@ -235,12 +251,13 @@
         StateHasChanged();
     }
 
-    void NotifyAutosave()
+    async void NotifyAutosave()
     {
+        await CalculateRiskValue();
         genericAutosave.ScheduleAutoSave();
     }
 
-    void NotifyTSAutosave()
+    async void NotifyTSAutosave()
     {
         thisTS!.Name = TSName;
 
@@ -258,4 +275,42 @@
             ap.AccordionExpanded = hasSearch;
         }
     }
+
+    private async Task<AttackFeasibilityRating> FindMostCriticalRiskValue()
+    {
+        // 1. Ensure we have data to work with to avoid errors
+        if (thisTS?.AttackPaths == null || !thisTS.AttackPaths.Any())
+        {
+            return AttackFeasibilityRating.VeryLow; // Return the "least critical" if no paths exist
+        }
+
+        // 2. Use LINQ to find the minimum value.
+        // Since Critical = 0 and VeryLow = 4, Min() will find the most critical rating.
+        AttackFeasibilityRating mostCritical = thisTS.AttackPaths
+            .Min(ap => ap.AttackFeasibilityRating);
+
+        return mostCritical;
+    }
+
+    private async Task CalculateRiskValue()
+    {
+        float mostCriticalRating = await FindMostCriticalRiskValue() switch
+        {
+            AttackFeasibilityRating.Critical => 2,
+            AttackFeasibilityRating.High => 2,
+            AttackFeasibilityRating.Medium => (float)1.5,
+            AttackFeasibilityRating.Low => 1,
+            AttackFeasibilityRating.VeryLow => 0,
+            _ => 0,
+        };
+
+        float Risk = 1 + ImpactRating * mostCriticalRating;
+
+        thisTS!.RiskValue = (long)Risk;
+
+        TSRiskValue = ((long)Risk).ToString();
+
+        StateHasChanged();
+    }
+
 }
