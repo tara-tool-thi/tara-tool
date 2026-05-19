@@ -2,29 +2,28 @@
 @using tara_tool.Data.Enums;
 
 
-<div style="border: 1px solid #8a8886; border-radius: 4px; background-color: #ffffff; overflow: visible; width: 100%">
-    <FluentAccordionItem Expanded="@attackPath.AccordionExpanded" >
+<FluentStack Class="attackpath-card">
+    <FluentAccordionItem Expanded="@attackPath.AccordionExpanded">
         <HeadingTemplate>
             @* Header Bar *@
-            <div style="background-color: #f3f2f1; padding: 8px 15px; display: flex; align-items: center;">
-                <div style="font-weight: bold; color: #323130; border: 1px solid #8a8886; padding: 2px 8px;">@("AP" + attackPath.Id)</div>
+            <FluentStack Orientation="Orientation.Horizontal" Class="attackpath-header">
+                <FluentLabel Class="attackpath-badge">@("AP" + attackPath.Id)</FluentLabel>
                 <FluentSpacer Width="12"/>
-                <div style="font-weight: bold; color: #323130;"><FluentTextField @bind-Value="@attackPath.Name"
-                                                            Immediate="true"
-                                                            ImmediateDelay="500"
-                                                            @bind-Value:after="HandleFieldChanged" />
-                </div>
+                <FluentTextField @bind-Value="@attackPath.Name"
+                                 Immediate="true"
+                                 ImmediateDelay="500"
+                                 @bind-Value:after="HandleFieldChanged" />
                 <FluentSpacer />
-                <FluentButton Title="Delete attack path" 
-                              Appearance="Appearance.Outline" 
+                <FluentButton Title="Delete attack path"
+                              Appearance="Appearance.Outline"
                               OnClick="@OnDeleteClick">
                     <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
                 </FluentButton>
-            </div>
+            </FluentStack>
         </HeadingTemplate>
 
         <ChildContent>
-            <FluentGrid Spacing="2" Style="padding: 10px;">
+            <FluentGrid Spacing="2" Class="attackpath-grid">
                 @* LEFT COLUMN: The Steps Table *@
                 <FluentGridItem xs="6">
                     <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 80%">
@@ -74,30 +73,30 @@
                     </FluentDataGrid>
                     
                 <FluentStack VerticalAlignment="VerticalAlignment.Center">
-                    <span>Add a new step here:</span>
+                    <FluentLabel>Add a new step here:</FluentLabel>
                     <FluentTextField Placeholder="Type step and press Enter..."
-                                                        @bind-Value="newStepText"
-                                                        @onkeyup="HandleNewStepKeyPress"/>
+                                     @bind-Value="newStepText"
+                                     @onkeyup="HandleNewStepKeyPress"/>
                 </FluentStack>
 
                     @* Risk Decision Section *@
-                    <div style="margin-top: 15px; border: 1px solid #8a8886; padding: 10px; background-color: #faf9f8;">
+                    <FluentStack Class="attackpath-risk">
                         <FluentStack Orientation="Orientation.Horizontal">
-                            <span style="font-size: 0.8rem;">Risk treatment decision</span>
+                            <FluentLabel Class="attackpath-small">Risk treatment decision</FluentLabel>
                             <FluentSpacer/>
                             <FluentCheckbox @bind-Value="@attackPath.RiskTreatmentBool" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged"/> Done
                         </FluentStack>
-                        <FluentTextArea Style="width: 100%; margin-top: 5px;" Placeholder="Hide Info" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
-                    </div>
+                        <FluentTextArea Class="fullwidth" Placeholder="Hide Info" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
+                    </FluentStack>
             </FluentGridItem>
 
 
 
                 @* RIGHT COLUMN: Dropdown Inputs *@
-                <FluentGridItem xs="6" Style="border-left: 1px solid #8a8886; ">
+                <FluentGridItem xs="6" Class="attackpath-rightcol">
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
                         <div>
-                            <span style="font-size: 0.8rem; color: #605e5c;">Elapsed Time</span><br/>
+                            <FluentLabel Class="attackpath-small">Elapsed Time</FluentLabel><br/>
                             <FluentSelect Value="@(attackPath.ElapsedTime.ToString() ?? "")"
                                 ValueChanged="@OnElapsedTimeChanged"
                                 Items="@ElapsedTimeOptions"
@@ -107,7 +106,7 @@
                         </div>
 
                         <div>
-                            <span style="font-size: 0.8rem; color: #605e5c;">Specialist Expertise</span><br/>
+                            <FluentLabel Class="attackpath-small">Specialist Expertise</FluentLabel><br/>
                             <FluentSelect Value="@(attackPath.SpecialistExpertise.ToString() ?? "")"
                                 ValueChanged="@OnExpertiseChanged"
                                 Items="@ExpertiseOptions"
@@ -117,7 +116,7 @@
                         </div>
 
                         <div>
-                            <span style="font-size: 0.8rem; color: #605e5c;">Knowledge of Item</span><br/>
+                            <FluentLabel Class="attackpath-small">Knowledge of Item</FluentLabel><br/>
                             <FluentSelect Value="@(attackPath.KnowledgeOfComponents.ToString() ?? "")"
                                 ValueChanged="@OnKnowledgeChanged"
                                 Items="@KnowledgeOptions"
@@ -127,7 +126,7 @@
                         </div>
 
                         <div>
-                            <span style="font-size: 0.8rem; color: #605e5c;">Window of Opportunity</span><br/>
+                            <FluentLabel Class="attackpath-small">Window of Opportunity</FluentLabel><br/>
                             <FluentSelect Value="@(attackPath.WindowOfOpportunity.ToString() ?? "")"
                                 ValueChanged="@OnWindowChanged"
                                 Items="@WindowOptions"
@@ -137,7 +136,7 @@
                         </div>
 
                         <div>
-                            <span style="font-size: 0.8rem; color: #605e5c;">Equipment</span><br/>
+                            <FluentLabel Class="attackpath-small">Equipment</FluentLabel><br/>
                             <FluentSelect Value="@(attackPath.Equipment.ToString() ?? "")"
                                 ValueChanged="@OnEquipmentChanged"
                                 Items="@EquipmentOptions"
@@ -149,18 +148,18 @@
                         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #edebe9; width: 100%;">
                             <FluentStack Orientation="Orientation.Vertical">
 
-                                    <div style="font-size: 0.75rem; color: #d13438; width: 100%;">
+                                    <div class="attackpath-danger">
                                         <FluentStack>
-                                            <span>Attack Feasibility:</span>
+                                            <FluentLabel>Attack Feasibility:</FluentLabel>
                                             <FluentSpacer />
-                                            <span>High</span>
+                                            <FluentLabel>High</FluentLabel>
                                         </FluentStack>
                                     </div>
-                                    <div style="font-size: 1rem; font-weight: bold; color: #d13438; width: 100%;">
+                                    <div class="attackpath-riskvalue">
                                         <FluentStack>
-                                            <span>Risk Value:</span>
+                                            <FluentLabel>Risk Value:</FluentLabel>
                                             <FluentSpacer />
-                                            <span>S5</span>
+                                            <FluentLabel>S5</FluentLabel>
                                         </FluentStack>
                                     </div>
 
@@ -171,7 +170,7 @@
             </FluentGrid>
         </ChildContent>
     </FluentAccordionItem>
-</div>
+</FluentStack>
 
 
 @code {

@@ -285,3 +285,89 @@ h6 {
 .icon-spacing {
     margin-right: 4px;
 }
+
+/* AttackPathCard reusable styles (moved from component-specific CSS) */
+.drag-cell {
+    cursor: grab;
+    user-select: none;
+}
+
+.drag-cell:active {
+    cursor: grabbing;
+}
+
+.drop-target {
+    padding: 6px 0;
+    border-top: 2px solid transparent;
+}
+
+.drop-hover {
+    border-top-color: #3b82f6;
+    background-color: #cce5ff;
+}
+
+.drop-target-below {
+    padding: 6px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.drop-hover-below {
+    border-bottom-color: #3b82f6;
+    background-color: #cce5ff;
+}
+
+/* AttackPathCard layout classes */
+.attackpath-card {
+    border: 1px solid #8a8886;
+    border-radius: 4px;
+    background-color: #ffffff;
+    overflow: visible;
+    width: 100%;
+}
+
+.attackpath-header {
+    background-color: #f3f2f1;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+}
+
+.attackpath-badge {
+    font-weight: bold;
+    color: #323130;
+    border: 1px solid #8a8886;
+    padding: 2px 8px;
+}
+
+.attackpath-grid {
+    padding: 10px;
+}
+
+.attackpath-risk {
+    margin-top: 15px;
+    border: 1px solid #8a8886;
+    padding: 10px;
+    background-color: #faf9f8;
+}
+
+.attackpath-rightcol {
+    border-left: 1px solid #8a8886;
+}
+
+.attackpath-small {
+    font-size: 0.8rem;
+    color: #605e5c;
+}
+
+.attackpath-danger {
+    font-size: 0.75rem;
+    color: #d13438;
+    width: 100%;
+}
+
+.attackpath-riskvalue {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #d13438;
+    width: 100%;
+}
