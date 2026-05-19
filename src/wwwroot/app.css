@@ -316,6 +316,17 @@ h6 {
     background-color: #cce5ff;
 }
 
+.attack-step-empty-table {
+    margin-bottom: 0;
+}
+
+.empty-step-cell {
+    color: #605e5c;
+    opacity: 0.8;
+    padding: 18px 10px;
+    text-align: center;
+}
+
 /* AttackPathCard layout classes */
 .attackpath-card {
     border: 1px solid #8a8886;

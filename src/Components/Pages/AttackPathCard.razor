@@ -27,51 +27,66 @@
             <FluentGrid Spacing="2" Class="attackpath-grid">
                 @* LEFT COLUMN: The Steps Table *@
                 <FluentGridItem xs="6">
-                    <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="max-height: 150px; min-height: 50px; overflow: auto;">
-                        <EmptyContent>
-                            <FluentLabel Typo="Typography.Body" Style="opacity: 0.6; padding: 10px;">
-                                No attack paths yet.
-                            </FluentLabel>
-                        </EmptyContent>
+                    @if (attackPath.Steps.Any())
+                    {
+                        <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="min-height: 50px; overflow: visible;">
+                            <ChildContent>
+                                <TemplateColumn Title="#" Width="40px">
+                                    <br />
+                                    @(attackPath.Steps.IndexOf(context) + 1)
+                                </TemplateColumn>
 
-                        <ChildContent>
-                            <TemplateColumn Title="#" Width="40px">
-                                <br />
-                                @(attackPath.Steps.IndexOf(context) + 1)
-                            </TemplateColumn>
-
-                            <TemplateColumn Title="Steps">
-                                <div class="drop-target @(hoverAbove == context ? "drop-hover" : "")"
-                                    @ondragenter="() => hoverAbove = context"
-                                    @ondragleave="() => hoverAbove = null"
-                                    @ondragover:preventDefault
-                                    @ondrop="() => DropAbove(context)"
-                                    @ondragend="() => hoverAbove = null">
-                                </div>
-
-                                <div class="drag-cell"
-                                    draggable="true"
-                                    @ondragstart="() => DragStart(context)">
-                                <FluentTextField @bind-Value="context.Text"
-                                                                Immediate="true"
-                                                                ImmediateDelay="500"
-                                                                @bind-Value:after="HandleFieldChanged" />
-                                </div>
-
-                                @if(context == attackPath.Steps.Last())
-                                {
-                                    <div class="drop-target-below @(hoverBelow == context ? "drop-hover-below" : "")"
-                                    @ondragenter="() => hoverBelow = context"
-                                    @ondragleave="() => hoverBelow = null"
-                                    @ondragover:preventDefault
-                                    @ondrop="() => DropBelow(context)"
-                                    @ondragend="() => hoverBelow = null">
+                                <TemplateColumn Title="Steps">
+                                    <div class="drop-target @(hoverAbove == context ? "drop-hover" : "")"
+                                        @ondragenter="() => hoverAbove = context"
+                                        @ondragleave="() => hoverAbove = null"
+                                        @ondragover:preventDefault
+                                        @ondrop="() => DropAbove(context)"
+                                        @ondragend="() => hoverAbove = null">
                                     </div>
-                                }
-                            </TemplateColumn>
-                        </ChildContent>
-                        
-                    </FluentDataGrid>
+
+                                    <div class="drag-cell"
+                                        draggable="true"
+                                        @ondragstart="() => DragStart(context)">
+                                    <FluentTextField @bind-Value="context.Text"
+                                                                    Immediate="true"
+                                                                    ImmediateDelay="500"
+                                                                    @bind-Value:after="HandleFieldChanged" />
+                                    </div>
+
+                                    @if(context == attackPath.Steps.Last())
+                                    {
+                                        <div class="drop-target-below @(hoverBelow == context ? "drop-hover-below" : "")"
+                                        @ondragenter="() => hoverBelow = context"
+                                        @ondragleave="() => hoverBelow = null"
+                                        @ondragover:preventDefault
+                                        @ondrop="() => DropBelow(context)"
+                                        @ondragend="() => hoverBelow = null">
+                                        </div>
+                                    }
+                                </TemplateColumn>
+                            </ChildContent>
+                            
+                        </FluentDataGrid>
+                    }
+                    else
+                    {
+                        <table class="attack-step-empty-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">#</th>
+                                    <th>Steps</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="2" class="empty-step-cell">
+                                        No attack paths yet.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    }
                     
                 <FluentStack VerticalAlignment="VerticalAlignment.Center">
                     <FluentLabel>Add a new step here:</FluentLabel>
