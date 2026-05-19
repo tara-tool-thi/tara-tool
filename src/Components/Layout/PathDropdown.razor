@@ -241,7 +241,7 @@
         if (urlPrefix == "Item" && selectedItem?.Id == idLong) return;
         if (urlPrefix == "Asset" && selectedAsset?.Id == idLong) return;
         if (urlPrefix == "DamageScenario" && selectedDamageScenario?.Id == idLong) return;
-        if (urlPrefix == "ThreatScenario" && selectedDamageScenario?.Id == idLong) return;
+        if (urlPrefix == "ThreatScenario" && selectedThreatScenario?.Id == idLong) return;
 
         //Listen to States -> Set Data -> reset otherwise
         if (urlPrefix == "Project")
@@ -473,6 +473,16 @@ a.Asset!.Id == asset.Id))).Item1);
         if (damageScenario.Id != -1)
         {
 
+            AllThreatScenarios.Add(new ThreatScenario
+            {
+                Id = -1,
+            });
+            //ToDo: Add ThreatScenarios here
+            if (navigate) Navigator.NavigateTo($"/DamageScenario/{damageScenario.Id}");
+        }
+
+        if (damageScenario.Id == -1)
+        {
             AllThreatScenarios.Add(new ThreatScenario
             {
                 Id = -1,
