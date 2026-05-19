@@ -289,9 +289,6 @@ a!.Project));
 d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
                 if (damageScenario is null) return;
 
-                selectedProject = damageScenario.Asset!.ItemDefinition!.Project;
-                selectedItem = damageScenario.Asset!.ItemDefinition;
-                selectedAsset = damageScenario.Asset!;
 
                 await HandleProjectChange(damageScenario.Asset!.ItemDefinition!.Project, false);
                 await HandleItemChange(damageScenario.Asset!.ItemDefinition, false);
@@ -493,7 +490,7 @@ a.Asset!.Id == asset.Id))).Item1);
 
     private async Task OnDamageScenarioChange(DamageScenario damageScenario)
     {
-        if (selectedAsset?.Id == damageScenario.Id) return;
+        if (selectedDamageScenario?.Id == damageScenario.Id) return;
         await HandleDamageScenarioChange(damageScenario);
         await InvokeAsync(StateHasChanged);
     }
