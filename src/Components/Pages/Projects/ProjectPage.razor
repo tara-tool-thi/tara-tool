@@ -32,6 +32,7 @@
 <PageTitle>Project</PageTitle>
 
 <br />
+<FluentStack>
 <h2>
     <FluentStack @key="@retrievedProjectLastModifiedDate">
         @projectName
@@ -43,15 +44,21 @@
             </FluentBadge>
         }
         <FluentSpacer />
+        </FluentStack>
+</h2>
+        <FluentSpacer/>
         <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
+
+
         @if (canManage)
         {
             <FluentButton Appearance="Appearance.Outline" Title="Project Settings"
                           IconStart="@(new Icons.Regular.Size20.Settings())"
                           OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
         }
-    </FluentStack>
-</h2>
+
+</FluentStack>
+
 @if (isArchived)
 {
     <FluentMessageBar Intent="MessageIntent.Warning" Style="margin-bottom:12px">
