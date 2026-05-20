@@ -28,9 +28,8 @@
         <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
-            <h2>Create a new Account</h2>
+            <h3>Create a new Account</h3>
             <hr />
-            <FluentValidationSummary class="text-danger" role="alert" />
             <FluentStack Orientation="Orientation.Vertical">
                 <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.Email" class="text-danger" />
@@ -83,14 +82,37 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
+        // ToDos:
+        // Implementierung der Logik für den initialen Nutzer
+        // -> Abgleich mit Datenbank -> noch kein User in AspNetUsers?
+        // -> initialem Nutzer in AspNetUserRoles Admin Rechte einräumen
+        // SPÄTER MAL herausnehmen des MakeAdmin Häckchens
+        // if @id != null Abfrage raus
+        // zum laufen bringen: dass initialer Nutzer sich trotz Email-id Checks registrieren kann
+
+
         ApplicationUser? user = CreateUser();
 
         if (@id != null)
         {
-            if (!await PendingRegistration.Check(Input.Email, @id))
+            bool initialUser = !UserManager.Users.Any();
+            Console.WriteLine("initialUser:" + initialUser);
+            bool onlyOneId = await PendingRegistration.CheckOtherIds(@id);
+            Console.WriteLine("onlyOneId:" + onlyOneId);
+            List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
+            int anz = pendingRegistrations.Count();
+            Console.WriteLine("Anz PendingRs:" + anz);
+            //if(initialUser && onlyOneId)
+            if(initialUser && (anz == 1))
             {
-                errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
-                return;
+                await UserManager.AddToRoleAsync(user, "Admin");
+                Console.WriteLine("User nun Admin");
+            } else {
+                if (!await PendingRegistration.Check(Input.Email, @id))
+                {
+                    errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
+                    return;
+                }
             }
         }
 
@@ -109,8 +131,8 @@
             return;
         }
 
-        if (Input.MakeAdmin)
-            await UserManager.AddToRoleAsync(user, "Admin");
+        //if (Input.MakeAdmin)
+        //    await UserManager.AddToRoleAsync(user, "Admin");
 
         HttpContext.Response.Cookies.Append
         (

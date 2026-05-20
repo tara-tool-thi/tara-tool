@@ -42,6 +42,13 @@ public class PendingRegistrationService(
         return await context.PendingRegistrations.AnyAsync(p => p.Id == id && p.Email == email);
     }
 
+    public async Task<bool> CheckOtherIds(string id)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        return await context.PendingRegistrations.AnyAsync(p => p.Id != id);
+    }
+
     public async Task Delete(string email)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
@@ -55,6 +62,19 @@ public class PendingRegistrationService(
 
         context.PendingRegistrations.Remove(pendingRegistration);
         await context.SaveChangesAsync();
+    }
+
+    public async Task<List<PendingRegistration>> GetAllPendingRegistrations()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        return await context.PendingRegistrations.ToListAsync();
+    }
+
+    public async Task<bool> Any()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        return await context.PendingRegistrations.AnyAsync();
     }
 
 }
