@@ -11,29 +11,14 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260512131525_AdjustAssetDamageScenarioNavigationProperty")]
-    partial class AdjustAssetDamageScenarioNavigationProperty
+    [Migration("20260520084730_LatestDBSchemaAsPerDesign")]
+    partial class LatestDBSchemaAsPerDesign
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
-
-            modelBuilder.Entity("AttackPathThreatScenario", b =>
-                {
-                    b.Property<long>("AttackPathsId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("ThreatScenariosId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("AttackPathsId", "ThreatScenariosId");
-
-                    b.HasIndex("ThreatScenariosId");
-
-                    b.ToTable("AttackPathThreatScenario");
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -240,6 +225,9 @@ namespace tara_tool.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("NameOfUser")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("TEXT");
@@ -340,6 +328,9 @@ namespace tara_tool.Migrations
                     b.Property<int>("SpecialistExpertise")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long>("ThreatScenariosId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long>("Value")
                         .HasColumnType("INTEGER");
 
@@ -347,6 +338,8 @@ namespace tara_tool.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ThreatScenariosId");
 
                     b.ToTable("AttackPaths");
                 });
@@ -583,21 +576,6 @@ namespace tara_tool.Migrations
                     b.ToTable("TreatmentDecisions");
                 });
 
-            modelBuilder.Entity("AttackPathThreatScenario", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.AttackPath", null)
-                        .WithMany()
-                        .HasForeignKey("AttackPathsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("tara_tool.Data.Tables.ThreatScenario", null)
-                        .WithMany()
-                        .HasForeignKey("ThreatScenariosId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -734,6 +712,17 @@ namespace tara_tool.Migrations
                     b.Navigation("Tag");
                 });
 
+            modelBuilder.Entity("tara_tool.Data.Tables.AttackPath", b =>
+                {
+                    b.HasOne("tara_tool.Data.Tables.ThreatScenario", "ThreatScenarios")
+                        .WithMany("AttackPaths")
+                        .HasForeignKey("ThreatScenariosId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ThreatScenarios");
+                });
+
             modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
                 {
                     b.HasOne("tara_tool.Data.Tables.Asset", "Asset")
@@ -829,6 +818,11 @@ namespace tara_tool.Migrations
                     b.Navigation("ItemDefinitions");
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("tara_tool.Data.Tables.ThreatScenario", b =>
+                {
+                    b.Navigation("AttackPaths");
                 });
 #pragma warning restore 612, 618
         }

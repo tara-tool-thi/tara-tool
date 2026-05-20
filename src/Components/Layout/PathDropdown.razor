@@ -14,11 +14,12 @@
 @inject AssetService AssetService
 
 
-<div @key=@rerenderdKey>
-    @if (selectedProject is not null)
+<div @key=@(rerenderdKey.ToString() + addtion.ToString())>
+
+        <FluentBreadcrumb @key=@(rerenderdKey.ToString() + addtion.ToString())>
+                @if (selectedProject is not null)
     {
-        <FluentBreadcrumb @key=@rerenderdKey>
-            <FluentBreadcrumbItem @key="@selectedProject">
+            <FluentBreadcrumbItem @key="@(selectedProject.GetHashCode() + addtion.ToString())">
                 @if (showDeleteIconWithRespectToLayer("Project"))
                 {
                     <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
@@ -88,9 +89,9 @@
                     }
                 }
             }
-
-        </FluentBreadcrumb>
     }
+        </FluentBreadcrumb>
+
 </div>
 
 
@@ -112,6 +113,7 @@
         return false;
     }
 
+    private long addtion = 0;
     private long rerenderdKey
     {
         get
@@ -198,7 +200,6 @@
     protected override async Task OnInitializedAsync()
     {
         Navigator.LocationChanged += OnLocationChanged;
-        AllProjects = await ProjectService.GetProjectsAsync();
         await HandleCurrentUrl();
     }
 
@@ -307,7 +308,7 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
                 OnDamageScenarioChange(damageScenario);
             }
         } *@
-
+        addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -354,6 +355,8 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
         AllDamadgeScenarios.Clear();
         AllThreatScenarios.Clear();
         AllItems.Clear();
+        AllProjects.Clear();
+        AllProjects = await ProjectService.GetProjectsAsync();
         selectedItem = null;
         selectedAsset = null;
         selectedDamageScenario = null;
@@ -372,13 +375,14 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
             if (navigate)
                 Navigator.NavigateTo($"/Project/{project.Id}");
         }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async void OnProjectChange(Project project)
     {
         if (selectedProject?.Id == project.Id) return;
         await HandleProjectChange(project);
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task HandleItemChange(ItemDefinition? itemDefinition, bool navigate = true)
@@ -412,13 +416,14 @@ itemDefinition.Id))).Item1);
             });
             Navigator.NavigateTo(SerializeCurrentState());
         }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnItemChanged(ItemDefinition itemDefinition)
     {
         if (selectedItem?.Id == itemDefinition.Id) return;
         await HandleItemChange(itemDefinition);
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task HandleAssetChange(Asset? asset, bool navigate = true)
@@ -449,13 +454,14 @@ a.Asset!.Id == asset.Id))).Item1);
             });
             Navigator.NavigateTo(SerializeCurrentState());
         }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnAssetChange(Asset asset)
     {
         if (selectedAsset?.Id == asset.Id) return;
         await HandleAssetChange(asset);
-        await InvokeAsync(StateHasChanged);
     }
 
     //ToDo: Add when ThreaScenarioService is finished
@@ -486,13 +492,14 @@ a.Asset!.Id == asset.Id))).Item1);
             });
             Navigator.NavigateTo(SerializeCurrentState());
         }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnDamageScenarioChange(DamageScenario damageScenario)
     {
         if (selectedDamageScenario?.Id == damageScenario.Id) return;
         await HandleDamageScenarioChange(damageScenario);
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task HandleThreatScenarioChange(ThreatScenario? threatScenario, bool navigate = true)

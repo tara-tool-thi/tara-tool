@@ -74,9 +74,10 @@ public class ApplicationDbContext(
             .HasOne(e => e.DamageScenarios)
             .WithMany(e => e.ThreatScenarios)
             .IsRequired();
-        builder.Entity<ThreatScenario>()
-            .HasMany(e => e.AttackPaths)
-            .WithMany(e => e.ThreatScenarios);
+        builder.Entity<AttackPath>()
+            .HasOne(e => e.ThreatScenarios)
+            .WithMany(e => e.AttackPaths)
+            .IsRequired();
         builder.Entity<Tag>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Tags)

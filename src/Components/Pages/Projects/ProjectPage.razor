@@ -33,29 +33,29 @@
 
 <br />
 <FluentStack>
-<h2>
-    <FluentStack @key="@retrievedProjectLastModifiedDate">
-        @projectName
-        @if (isArchived)
-        {
-            <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
-                Archived
-            </FluentBadge>
-        }
-        <FluentSpacer />
+    <h2>
+        <FluentStack @key="@retrievedProjectLastModifiedDate">
+            @projectName
+            @if (isArchived)
+            {
+                <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
+                    Archived
+                </FluentBadge>
+            }
+            <FluentSpacer />
         </FluentStack>
-</h2>
-        <FluentSpacer/>
-        <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
+    </h2>
+    <FluentSpacer />
+    <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
 
 
-        @if (canManage)
-        {
-            <FluentButton Appearance="Appearance.Outline" Title="Project Settings"
-                          IconStart="@(new Icons.Regular.Size20.Settings())"
-                          OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
-        }
+    @if (canManage)
+    {
+        <FluentButton Appearance="Appearance.Outline" Title="Project Settings"
+                      IconStart="@(new Icons.Regular.Size20.Settings())"
+                      OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
+    }
 
 </FluentStack>
 
@@ -80,11 +80,12 @@
 </FluentStack>
 
 <br />
-<ItemDefinitionTable @ref="@table" ProjectId="@urlId" Filters="@(e => e.Where(i =>
-                                                              string.IsNullOrWhiteSpace(searchText) ||
-                                                              EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
-                                                              EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
-                                                              EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%")))" />
+<ItemDefinitionTable @ref="@table" ProjectId="@urlId"
+                     Filters="@(e => e.Where(i => i.IdProject == urlId).Where(i =>
+                                                                                   string.IsNullOrWhiteSpace(searchText) ||
+                                                                                   EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
+                                                                                   EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
+                                                                                   EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%")))" />
 
 @code {
     [Parameter]
