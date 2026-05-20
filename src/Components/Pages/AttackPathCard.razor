@@ -74,7 +74,7 @@
                     }
                     else
                     {
-                        <FluentLabel Typo="Typography.Body" Alignment="HorizontalAlignment.Center" Style="opacity: 0.6; padding: 10px; height: 260px">
+                        <FluentLabel Typo="Typography.Body" Alignment="HorizontalAlignment.Center" Style="opacity: 0.6; padding: 10px; height: 60%">
                                 No attack paths yet.
                         </FluentLabel>
                     }
@@ -166,7 +166,7 @@
                                         <FluentStack>
                                             <span>Risk Value:</span>
                                             <FluentSpacer />
-                                            <span>@APRiskValue</span>
+                                            <span>@(ImpactCategory + APRiskValue)</span>
                                         </FluentStack>
                                     </div>
 
@@ -203,6 +203,8 @@
     [Parameter] public EventCallback<long> OnDelete { get; set; }
 
     [Parameter] public float ImpactRating { get; set; }
+
+    [Parameter] public string ImpactCategory { get; set; } = string.Empty;
 
     private string newStepText = string.Empty;
 

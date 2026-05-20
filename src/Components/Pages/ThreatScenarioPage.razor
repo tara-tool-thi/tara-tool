@@ -74,7 +74,7 @@
             @foreach (var path in FilteredAttackPaths)
             {
                 @* Each box is now its own component *@
-                <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave" OnDelete="DeleteAttackPathAsync" ImpactRating="ImpactRating"/>
+                <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave" OnDelete="DeleteAttackPathAsync" ImpactRating="@ImpactRating" ImpactCategory="@ImpactCategory"/>
             }
             </FluentAccordion>
         }
@@ -153,13 +153,12 @@
 
     private float ImpactRating = 1;
 
+    private string ImpactCategory = "T";
+
     public string BgColor { get; set; } = "#dff6ff"; // Default light blue
     public string RiskColor { get; set; } = "#d13438"; // Default red
 
-    List<AttackPath> AttackPaths = new()
-    {
-        new AttackPath { Name = "AP1",  }
-    };
+    List<AttackPath> AttackPaths = new();
 
     private IEnumerable<AttackPath> FilteredAttackPaths =>
         string.IsNullOrWhiteSpace(searchText)
@@ -175,8 +174,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q =>
-                                                                    q.Include(ts => ts.AttackPaths)
+
+        thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q => q
+                                                                        .Include(ts => ts.DamageScenarios)
+                                                                        .Include(ts => ts.AttackPaths)
                                                                         .ThenInclude(ap => ap.Steps.OrderBy(step => step.Order)));
         if (thisTS == null)
         {
@@ -190,6 +191,8 @@
         await CalculateRiskValue();
 
         TSRiskValue = thisTS.RiskValue.ToString();
+
+        (ImpactCategory, ImpactRating) = await FindWorstImpactCategoryAndRating(thisTS.DamageScenarios!.ImpactRating);
 
         AttackPaths.Clear();
 
@@ -277,6 +280,28 @@
         TSRiskValue = await threatScenarioService.CalculateRiskValue(thisTS!, ImpactRating);
 
         StateHasChanged();
+    }
+
+    private async Task<(string, float)> FindWorstImpactCategoryAndRating((ImpactRatingValue Safety, ImpactRatingValue Financial, ImpactRatingValue Operational, ImpactRatingValue Privacy) impactRatings)
+    {
+        // Find the category with the worst value (check enums)
+        // IF two have the same value decide based on this priority list (von Prio high bis Prio low): 1. Safety, 2. Privacy, 3. Operational, 4. Financial
+        // Mehr Infos in Ticket #112 unter "Szenario 1" und "Szenario 2"
+        // Returned soll nur der Erste Buchstabe der Kategorie werden, also "S", "P", "O" oder "F"
+        // Am Ende soll auf der Seite dann im Attackpath sowas wie "Risk: S5" oder "Risk: O3" stehen
+
+        //Hier soll geschaut werden ob Szenario 1 oder Szenario 2 zutrifft
+        //Falls 1:
+        //Hole den Wert für die am kritischen bewertete Kategorie und packe ihn in worstImpactRating. Packe den Namen der Kategorie in worstImpactCategory
+        //Falls 2:
+        //Bsp. Safety und Operational sind beide "Major" bewertet. Safety hat eine höhere priorität also kommt Safety in worstImpactCategory
+
+
+        string worstImpactCategory = "Test";
+
+        float worstImpactRating = (float)impactRatings.Safety; //Zum Beispiel
+
+        return (worstImpactCategory.ElementAt(0).ToString(), (float)1.5);
     }
 
 }

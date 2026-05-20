@@ -14,14 +14,13 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
     {
         return await context.ThreatScenarios
             .Where(ts => ts.Id == threatScenarioId)
-            .SelectMany(ts => ts.DamageScenarios)
-            .SelectMany(ds => ds.Assets)
-            .Select(a => a.ItemDefinition!.IdProject)
+            .Select(ts => ts.DamageScenarios)
+            .Select(ds => ds!.Asset)
+            .Select(a => a!.ItemDefinition!.IdProject)
             .FirstOrDefaultAsync();
-            // Note: This assumes a scenario belongs to one project via its assets.
     }
 
-    public async Task<ThreatScenario?> CreateThreatScenarioAsync(long projectID, string name)
+    public async Task<ThreatScenario?> CreateThreatScenarioAsync(long projectID, string name, DamageScenario DS)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         /*if (await accessControlService.CheckUserAccessRightsWrite(projectID) == false)
@@ -29,12 +28,15 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
             return null;
         }*/
 
+        context.Attach(DS);
+
         ThreatScenario newScenario = new ThreatScenario
         {
             Name = name,
+            DamageScenarios = DS,
         };
 
-        context.ThreatScenarios.Add(newScenario);
+        await context.ThreatScenarios.AddAsync(newScenario);
         await context.SaveChangesAsync();
 
         return newScenario;
@@ -50,18 +52,16 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         // 1. Find the parent scenario and include its Project link for security
         var scenario = await context.ThreatScenarios
             .Include(s => s.DamageScenarios)
-                .ThenInclude(ds => ds.Assets)
-                    .ThenInclude(a => a.ItemDefinition)
+                .ThenInclude(ds => ds!.Asset)
+                    .ThenInclude(a => a!.ItemDefinition)
             .FirstOrDefaultAsync(s => s.Id == threatScenarioId);
 
         if (scenario == null) return null;
 
         // 2. Perform Security Check: Does the user have rights to the project this scenario belongs to?
         // We look for the first available project ID in the chain
-        var projectId = scenario.DamageScenarios
-            .SelectMany(ds => ds.Assets)
-            .Select(a => a.ItemDefinition!.IdProject)
-            .FirstOrDefault();
+        long? projectId = await GetProjectIdForScenarioAsync(context, threatScenarioId);
+
 
         /*if (projectId == 0 || await accessControlService.CheckUserAccessRightsWrite(projectId) == false)
         {
@@ -228,17 +228,15 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         var scenario = await context.ThreatScenarios
             .Include(s => s.AttackPaths)
             .Include(s => s.DamageScenarios)
-                .ThenInclude(ds => ds.Assets)
-                    .ThenInclude(a => a.ItemDefinition)
+                .ThenInclude(ds => ds!.Asset)
+                    .ThenInclude(a => a!.ItemDefinition)
             .FirstOrDefaultAsync(s => s.Id == threatScenarioId);
 
         if (scenario == null) return;
 
         // Security Check: Does user have write access to this project?
-        var projectId = scenario.DamageScenarios
-            .SelectMany(ds => ds.Assets)
-            .Select(a => a.ItemDefinition!.IdProject)
-            .FirstOrDefault();
+        long? projectId = await GetProjectIdForScenarioAsync(context, threatScenarioId);
+
 
         /*if (projectId == 0 || !await accessControlService.CheckUserAccessRightsWrite(projectId))
             return;*/
@@ -269,7 +267,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         var existingScenario = await context.ThreatScenarios
             .Include(s => s.DamageScenarios)
-                .ThenInclude(ds => ds.Assets)
+                .ThenInclude(ds => ds!.Asset)
             .FirstOrDefaultAsync(s => s.Id == scenario.Id);
 
         if (existingScenario == null) return;
@@ -299,9 +297,8 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
             if (filter != null) query = filter(query);
 
             // Apply the Project filter via the relationship chain
-            query = query.Where(ts => ts.DamageScenarios
-                            .SelectMany(ds => ds.Assets)
-                            .Any(a => a.ItemDefinition!.IdProject == projectId));
+            query = query.Where(ts => ts.DamageScenarios!.Asset!.ItemDefinition!.IdProject == projectId);
+
 
             int total = await query.CountAsync(request.CancellationToken);
             List<ThreatScenario> items = await request.ApplySorting(query)

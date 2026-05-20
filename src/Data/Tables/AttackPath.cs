@@ -15,7 +15,7 @@ public class AttackPath
     public Equipment Equipment { get; set; }
     public long Value { get; set; }
     public AttackFeasibilityRating AttackFeasibilityRating { get; set; }
-    public virtual ICollection<ThreatScenario> ThreatScenarios { get; set; } = [];
+    public virtual ThreatScenario? ThreatScenarios { get; set; }
     public bool RiskTreatmentBool { get; set; }
     public string RiskTreatmentText { get; set; } = string.Empty;
     public List<AttackStep> Steps { get; set; } = new();
@@ -24,12 +24,12 @@ public class AttackPath
     public bool AccordionExpanded = false;
 }
 
-public class AttackStep 
+public class AttackStep
 {
     public long Id { get; set; }
     public string Text { get; set; } = string.Empty;
     public int Order { get; set; }
-    
+
     // Foreign Key back to the parent
     public long AttackPathId { get; set; }
 }
