@@ -344,10 +344,16 @@ h6 {
 }
 
 .attackpath-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-weight: bold;
     color: #323130;
     border: 1px solid #8a8886;
     padding: 2px 8px;
+    width: 48px;
+    box-sizing: border-box;
+    text-align: center;
 }
 
 .attackpath-grid {
