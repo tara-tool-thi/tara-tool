@@ -3,7 +3,7 @@
 
 
 <FluentStack Class="attackpath-card">
-    <FluentAccordionItem Expanded="@attackPath.AccordionExpanded">
+    <FluentAccordionItem Expanded="@attackPath.AccordionExpanded" Style="width: 100%;">
         <HeadingTemplate>
             @* Header Bar *@
             <FluentStack Orientation="Orientation.Horizontal" Class="attackpath-header">
@@ -112,7 +112,7 @@
                 <FluentGridItem xs="6" Class="attackpath-rightcol">
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
                         <div>
-                            <FluentLabel Class="attackpath-small">Elapsed Time</FluentLabel><br/>
+                            <span class="attackpath-small">Elapsed Time</span>
                             <FluentSelect Value="@(attackPath.ElapsedTime.ToString() ?? "")"
                                 ValueChanged="@OnElapsedTimeChanged"
                                 Items="@ElapsedTimeOptions"
@@ -122,7 +122,7 @@
                         </div>
 
                         <div>
-                            <FluentLabel Class="attackpath-small">Specialist Expertise</FluentLabel><br/>
+                            <span class="attackpath-small">Specialist Expertise</span>
                             <FluentSelect Value="@(attackPath.SpecialistExpertise.ToString() ?? "")"
                                 ValueChanged="@OnExpertiseChanged"
                                 Items="@ExpertiseOptions"
@@ -132,7 +132,7 @@
                         </div>
 
                         <div>
-                            <FluentLabel Class="attackpath-small">Knowledge of Item</FluentLabel><br/>
+                            <span class="attackpath-small">Knowledge of Item</span>
                             <FluentSelect Value="@(attackPath.KnowledgeOfComponents.ToString() ?? "")"
                                 ValueChanged="@OnKnowledgeChanged"
                                 Items="@KnowledgeOptions"
@@ -142,7 +142,7 @@
                         </div>
 
                         <div>
-                            <FluentLabel Class="attackpath-small">Window of Opportunity</FluentLabel><br/>
+                            <span class="attackpath-small">Window of Opportunity</span>
                             <FluentSelect Value="@(attackPath.WindowOfOpportunity.ToString() ?? "")"
                                 ValueChanged="@OnWindowChanged"
                                 Items="@WindowOptions"
@@ -152,7 +152,7 @@
                         </div>
 
                         <div>
-                            <FluentLabel Class="attackpath-small">Equipment</FluentLabel><br/>
+                            <span class="attackpath-small">Equipment</span>
                             <FluentSelect Value="@(attackPath.Equipment.ToString() ?? "")"
                                 ValueChanged="@OnEquipmentChanged"
                                 Items="@EquipmentOptions"
@@ -161,27 +161,25 @@
                                 Style="width: 100%;" />
                         </div>
 
-                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #edebe9; width: 100%;">
+                        <FluentDivider Style="margin-top: 10px; margin-bottom: 10px;" />
                             <FluentStack Orientation="Orientation.Vertical">
 
-                                    <div class="attackpath-danger">
+                                    <div style="font-size: 0.75rem; width: 100%; color: @FeasibilityColor;">
                                         <FluentStack>
-                                            <FluentLabel>Attack Feasibility:</FluentLabel>
+                                            <span>Attack Feasibility:</span>
                                             <FluentSpacer />
-                                            <FluentLabel>High</FluentLabel>
-                                            <span>@AttackFeasibilityScore</span>
+                                            <span style="font-weight: bold;">@AttackFeasibilityScore</span>
                                         </FluentStack>
                                     </div>
-                                    <div class="attackpath-riskvalue">
+                                    <div style="font-size: 1rem; width: 100%; color: @FeasibilityColor; font-weight: bold;">
                                         <FluentStack>
-                                            <FluentLabel>Risk Value:</FluentLabel>
+                                            <span>Risk Value:</span>
                                             <FluentSpacer />
-                                            <FluentLabel>S5</FluentLabel>
+                                            <span>S5</span>
                                         </FluentStack>
                                     </div>
 
                             </FluentStack>
-                        </div>
                     </FluentStack>
                 </FluentGridItem>
             </FluentGrid>
@@ -218,6 +216,9 @@
     private bool showDeleteDialog = false;
 
     private string AttackFeasibilityScore = string.Empty;
+
+    private string FeasibilityColor => attackPath.AttackFeasibilityRating <= AttackFeasibilityRating.High
+        ? "#d13438" : "#605e5c";
 
 
     private AttackStep? hoverAbove;

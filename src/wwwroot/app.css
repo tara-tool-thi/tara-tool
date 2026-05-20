@@ -368,6 +368,8 @@ h6 {
 .attackpath-small {
     font-size: 0.8rem;
     color: #605e5c;
+    display: block;
+    margin-bottom: 2px;
 }
 
 .attackpath-danger {
@@ -381,4 +383,32 @@ h6 {
     font-weight: bold;
     color: #d13438;
     width: 100%;
+}
+
+/* ThreatScenarioPage header bar */
+.ts-header-bar {
+    border: 1px solid #8a8886;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.ts-header-name {
+    border-right: 1px solid #8a8886;
+    padding: 0 20px;
+    font-weight: bold;
+}
+
+.ts-header-description {
+    flex-grow: 1;
+    padding: 8px 15px;
+}
+
+.ts-header-risk {
+    padding: 4px 15px;
+    min-width: 80px;
+    border-left: 1px solid #8a8886;
+}
+
+.ts-header-risk-label {
+    font-size: 0.9rem;
 }
