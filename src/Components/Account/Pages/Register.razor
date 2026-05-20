@@ -8,6 +8,8 @@
 @using tara_tool.Data
 @using tara_tool.Data.Tables
 
+
+@inject ApplicationUserService ApplicationUserService
 @inject PendingRegistrationService PendingRegistration
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
@@ -25,7 +27,6 @@
 <FluentGrid>
     <FluentGridItem xs="12" sm="4">
         <StatusMessage Message="@errorMessage" />
-        <StatusMessage Message="@Message" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
             <h3>Create a new Account</h3>
@@ -60,8 +61,6 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
-    private IEnumerable<IdentityError>? identityErrors;
-
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = default!;
 
@@ -69,8 +68,6 @@
     private string? ReturnUrl { get; set; }
 
     private bool firstUser { get; set; } = false;
-
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
 
     private string? errorMessage;
 
@@ -82,38 +79,44 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
-        // ToDos:
-        // Implementierung der Logik für den initialen Nutzer
-        // -> Abgleich mit Datenbank -> noch kein User in AspNetUsers?
-        // -> initialem Nutzer in AspNetUserRoles Admin Rechte einräumen
-        // SPÄTER MAL herausnehmen des MakeAdmin Häckchens
-        // if @id != null Abfrage raus
-        // zum laufen bringen: dass initialer Nutzer sich trotz Email-id Checks registrieren kann
-
+        if (@id == null)
+        {
+            errorMessage = "Error: You are not priviledged to register for this project without an invitation.";
+            return;
+        }
 
         ApplicationUser? user = CreateUser();
 
-        if (@id != null)
+        bool initialUser = !UserManager.Users.Any();
+
+        // bool onlyOneId = await PendingRegistration.CheckOtherIds(@id);
+
+        List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
+        int NumberOfPendingRegistrations = pendingRegistrations.Count();
+
+        if (initialUser && (NumberOfPendingRegistrations == 1))
         {
-            bool initialUser = !UserManager.Users.Any();
-            Console.WriteLine("initialUser:" + initialUser);
-            bool onlyOneId = await PendingRegistration.CheckOtherIds(@id);
-            Console.WriteLine("onlyOneId:" + onlyOneId);
-            List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
-            int anz = pendingRegistrations.Count();
-            Console.WriteLine("Anz PendingRs:" + anz);
-            //if(initialUser && onlyOneId)
-            if(initialUser && (anz == 1))
+            await UserManager.AddToRoleAsync(user, "Admin");
+            Console.WriteLine("User nun Admin");
+        } else {
+            if (!await PendingRegistration.Check(Input.Email, @id))
             {
-                await UserManager.AddToRoleAsync(user, "Admin");
-                Console.WriteLine("User nun Admin");
-            } else {
-                if (!await PendingRegistration.Check(Input.Email, @id))
-                {
-                    errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
-                    return;
-                }
+                errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
+                return;
             }
+        }
+
+        if (await ApplicationUserService.CheckEmailDuplicate(Input.Email))
+        {
+            errorMessage = "Error: The email address is already taken.";
+            return;
+        }
+
+
+        if (await ApplicationUserService.CheckNameOfUserDuplicate(Input.Username))
+        {
+            errorMessage = "Error: The username is already taken.";
+            return;
         }
 
         await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
@@ -125,14 +128,8 @@
         user.NameOfUser = Input.Username;
         await UserManager.UpdateAsync(user);
 
-        if (!result.Succeeded)
-        {
-            identityErrors = result.Errors;
-            return;
-        }
-
-        //if (Input.MakeAdmin)
-        //    await UserManager.AddToRoleAsync(user, "Admin");
+        if (Input.MakeAdmin)
+            await UserManager.AddToRoleAsync(user, "Admin");
 
         HttpContext.Response.Cookies.Append
         (
