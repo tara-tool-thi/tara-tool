@@ -62,7 +62,7 @@
 
     <FluentStack Class="ts-header-risk" Orientation="Orientation.Vertical" VerticalGap="0" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
         <span class="ts-header-risk-label">Risk:</span>
-        <span style="color: @RiskColor; font-weight: bold;">@TSRiskValue</span>
+        <span style="color: @RiskColor; font-weight: bold;">@(ImpactCategory + TSRiskValue)</span>
     </FluentStack>
 </FluentStack>
 
