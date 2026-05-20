@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data.Tables;
+using tara_tool.Data.Enums;
 
 namespace tara_tool.Data.Services;
 
@@ -16,7 +17,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
             .SelectMany(ts => ts.DamageScenarios)
             .SelectMany(ds => ds.Assets)
             .Select(a => a.ItemDefinition!.IdProject)
-            .FirstOrDefaultAsync(); 
+            .FirstOrDefaultAsync();
             // Note: This assumes a scenario belongs to one project via its assets.
     }
 
@@ -69,8 +70,8 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
         // 3. Create and Link the AttackPath
         newPath.Id = 0; // Ensure it's treated as a new entity
-        
-        // We add the path to the scenario's collection. 
+
+        // We add the path to the scenario's collection.
         // EF Core will handle the foreign key relationship automatically.
         scenario.AttackPaths.Add(newPath);
 
@@ -82,14 +83,14 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         IQueryable<ThreatScenario> query = context.ThreatScenarios.AsNoTracking().AsQueryable();
-        
+
         if (include is not null)
         {
             query = include(query);
         }
 
         ThreatScenario? scenario = await query.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-        
+
         if (scenario is null) return null;
 
         // Deep Security Check
@@ -131,7 +132,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
     public async Task<ThreatScenario?> Save(ThreatScenario scenario)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        
+
         // We must find the existing entity and include its relations to handle updates correctly
         ThreatScenario? existingScenario = await context.ThreatScenarios
             .Include(s => s.AttackPaths)
@@ -142,7 +143,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
         // Security Check: Verify the user has rights to the project this scenario belongs to
         /*long? projectId = await GetProjectIdForScenarioAsync(context, scenario.Id);
-        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value)) 
+        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
             return null;*/
 
         // Update scalar properties
@@ -153,7 +154,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         {
             if (incomingPath.Id == 0)
             {
-                // Case A: It's a brand new path. 
+                // Case A: It's a brand new path.
                 existingScenario.AttackPaths.Add(incomingPath);
             }
             else
@@ -166,12 +167,12 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
                 {
                     // Update the properties of the already-tracked object.
                     context.Entry(trackedPath).CurrentValues.SetValues(incomingPath);
-                
+
                     // Step A: Identify steps to REMOVE
                     // We remove them if:
                     // their text is now empty/whitespace (deleted via backspace)
                     List<AttackStep> stepsToRemove = trackedPath.Steps
-                        .Where(ts => 
+                        .Where(ts =>
                             !incomingPath.Steps.Any(ip => ip.Id == ts.Id) || // Not in incoming list
                             string.IsNullOrWhiteSpace(incomingPath.Steps.FirstOrDefault(ip => ip.Id == ts.Id)?.Text)              // OR text is now empty
                         )
@@ -275,7 +276,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
         // Security Check
         long? projectId = await GetProjectIdForScenarioAsync(context, scenario.Id);
-        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value)) 
+        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
             return;
 
         context.ThreatScenarios.Remove(existingScenario);
@@ -310,5 +311,40 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
             return GridItemsProviderResult.From(items, total);
         };
+    }
+
+    public async Task<AttackFeasibilityRating> FindMostCriticalRiskValue(ThreatScenario thisTS)
+    {
+        // 1. Ensure we have data to work with to avoid errors
+        if (thisTS?.AttackPaths == null || !thisTS.AttackPaths.Any())
+        {
+            return AttackFeasibilityRating.VeryLow; // Return the "least critical" if no paths exist
+        }
+
+        // 2. Use LINQ to find the minimum value.
+        // Since Critical = 0 and VeryLow = 4, Min() will find the most critical rating.
+        AttackFeasibilityRating mostCritical = thisTS.AttackPaths
+            .Min(ap => ap.AttackFeasibilityRating);
+
+        return mostCritical;
+    }
+
+    public async Task<string> CalculateRiskValue(ThreatScenario thisTS, float ImpactRating)
+    {
+        float mostCriticalRating = await FindMostCriticalRiskValue(thisTS) switch
+        {
+            AttackFeasibilityRating.Critical => 2,
+            AttackFeasibilityRating.High => 2,
+            AttackFeasibilityRating.Medium => (float)1.5,
+            AttackFeasibilityRating.Low => 1,
+            AttackFeasibilityRating.VeryLow => 0,
+            _ => 0,
+        };
+
+        float Risk = 1 + ImpactRating * mostCriticalRating;
+
+        thisTS!.RiskValue = (long)Risk;
+
+        return ((long)Risk).ToString();
     }
 }
