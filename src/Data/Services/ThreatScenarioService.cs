@@ -50,10 +50,9 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
         // 1. Find the parent scenario and include its Project link for security
-        var scenario = await context.ThreatScenarios
-            .Include(s => s.DamageScenarios)
-                .ThenInclude(ds => ds!.Asset)
-                    .ThenInclude(a => a!.ItemDefinition)
+        ThreatScenario? scenario = await context.ThreatScenarios
+            .Include(s => s.AttackPaths)
+                .ThenInclude(ap => ap.Steps.OrderBy(step => step.Order))
             .FirstOrDefaultAsync(s => s.Id == threatScenarioId);
 
         if (scenario == null) return null;
@@ -225,7 +224,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
         // 1. Find the scenario and attack path
-        var scenario = await context.ThreatScenarios
+        ThreatScenario? scenario = await context.ThreatScenarios
             .Include(s => s.AttackPaths)
             .Include(s => s.DamageScenarios)
                 .ThenInclude(ds => ds!.Asset)
@@ -242,14 +241,14 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
             return;*/
 
         // 2. Find the attack path to remove
-        var attackPathToRemove = scenario.AttackPaths.FirstOrDefault(ap => ap.Id == attackPathId);
+        AttackPath? attackPathToRemove = scenario.AttackPaths.FirstOrDefault(ap => ap.Id == attackPathId);
         if (attackPathToRemove == null) return;
 
         // 3. Remove the relationship
         scenario.AttackPaths.Remove(attackPathToRemove);
 
         // 4. Check if this was the only scenario for this attack path
-        var otherScenariosCount = await context.ThreatScenarios
+        int otherScenariosCount = await context.ThreatScenarios
             .Where(ts => ts.Id != threatScenarioId && ts.AttackPaths.Any(ap => ap.Id == attackPathId))
             .CountAsync();
 
@@ -265,7 +264,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
     public async Task Delete(ThreatScenario scenario)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        var existingScenario = await context.ThreatScenarios
+        ThreatScenario? existingScenario = await context.ThreatScenarios
             .Include(s => s.DamageScenarios)
                 .ThenInclude(ds => ds!.Asset)
             .FirstOrDefaultAsync(s => s.Id == scenario.Id);

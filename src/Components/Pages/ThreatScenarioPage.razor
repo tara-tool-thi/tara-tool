@@ -53,7 +53,7 @@
 
     <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center" Style="@($"background-color: {BgColor};")">
         <span style="font-weight: 600; margin-right: 8px;">
-            <FluentTextField @bind-Value="@TSDescription"
+            <FluentTextArea @bind-Value="@TSDescription"
                         Immediate="true"
                         ImmediateDelay="500"
                         @bind-Value:after="@NotifyTSAutosave" />
@@ -174,7 +174,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-
         thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q => q
                                                                         .Include(ts => ts.DamageScenarios)
                                                                         .Include(ts => ts.AttackPaths)
@@ -246,6 +245,8 @@
         await threatScenarioService.CreateAttackPathAsync(TSId, attackPath);
 
         AttackPaths.Add(attackPath);
+
+        thisTS!.AttackPaths.Add(attackPath);
 
         StateHasChanged();
     }
