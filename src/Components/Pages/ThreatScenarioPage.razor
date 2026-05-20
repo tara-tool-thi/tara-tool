@@ -43,29 +43,27 @@
 
 <div style="height: 1rem;"></div>
 
-<FluentStack>
-    <div style="display: flex; border: 1px solid #8a8886; width: 100%; margin-bottom: 4px;">
-		<div style="display: flex; align-items: center; justify-content: center; border-right: 1px solid #8a8886; padding: 0 20px; font-weight: bold;">
-            <FluentTextField @bind-Value="@TSName"
-                            Immediate="true"
-                            ImmediateDelay="500"
-                            @bind-Value:after="@NotifyTSAutosave" />
-		</div>
+<FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto 1fr auto; align-items: stretch;">
+    <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
+        <FluentTextField @bind-Value="@TSName"
+                        Immediate="true"
+                        ImmediateDelay="500"
+                        @bind-Value:after="@NotifyTSAutosave" />
+    </FluentStack>
 
-		<div style="flex-grow: 1; background-color: @BgColor; padding: 8px 15px; display: flex; align-items: center;">
-			<span style="font-weight: 600; margin-right: 8px; flex: 1">
-                <FluentTextArea @bind-Value="@TSDescription" Class="fullwidth"
-                            Immediate="true"
-                            ImmediateDelay="500"
-                            @bind-Value:after="@NotifyTSAutosave" />
-            </span>
-		</div>
+    <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center" Style="@($"background-color: {BgColor};")">
+        <span style="font-weight: 600; margin-right: 8px;">
+            <FluentTextField @bind-Value="@TSDescription"
+                        Immediate="true"
+                        ImmediateDelay="500"
+                        @bind-Value:after="@NotifyTSAutosave" />
+        </span>
+    </FluentStack>
 
-		<div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 15px; min-width: 80px; border-left: 1px solid #8a8886;">
-			<span style="font-size: 0.9rem;">Risk:</span>
-			<span style="color: @RiskColor; font-weight: bold;">@TSRiskValue</span>
-		</div>
-    </div>
+    <FluentStack Class="ts-header-risk" Orientation="Orientation.Vertical" VerticalGap="0" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
+        <span class="ts-header-risk-label">Risk:</span>
+        <span style="color: @RiskColor; font-weight: bold;">@TSRiskValue</span>
+    </FluentStack>
 </FluentStack>
 
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
