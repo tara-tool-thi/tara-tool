@@ -9,14 +9,14 @@
             <FluentStack Orientation="Orientation.Horizontal" Class="attackpath-header">
                 <FluentLabel Class="attackpath-badge">@("AP" + attackPath.Id)</FluentLabel>
                 <FluentSpacer Width="12"/>
-                <FluentTextField @bind-Value="@attackPath.Name"
+                <FluentTextField @bind-Value="@attackPath.Name" Style="width: 30%"
                                  Immediate="true"
                                  ImmediateDelay="500"
                                  @bind-Value:after="HandleFieldChanged" />
                 <FluentSpacer />
 
-                <FluentButton Title="Delete attack path" 
-                              Appearance="Appearance.Outline" 
+                <FluentButton Title="Delete attack path"
+                              Appearance="Appearance.Outline"
                               OnClick="@(()=> showDeleteDialog = true)">
                     <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
                 </FluentButton>
@@ -66,28 +66,16 @@
                                     }
                                 </TemplateColumn>
                             </ChildContent>
-                            
+
                         </FluentDataGrid>
                     }
                     else
                     {
-                        <table class="attack-step-empty-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 40px;">#</th>
-                                    <th>Steps</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="2" class="empty-step-cell">
-                                        No attack paths yet.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <FluentLabel Typo="Typography.Body" Alignment="HorizontalAlignment.Center" Style="opacity: 0.6; padding: 10px; height: 260px">
+                                No attack paths yet.
+                        </FluentLabel>
                     }
-                    
+
                 <FluentStack VerticalAlignment="VerticalAlignment.Center">
                     <FluentLabel>Add a new step here:</FluentLabel>
                     <FluentTextField Placeholder="Type step and press Enter..."
@@ -96,7 +84,7 @@
                 </FluentStack>
 
                     @* Risk Decision Section *@
-                    <FluentStack Class="attackpath-risk">
+                    <FluentStack Class="attackpath-risk" Orientation="Orientation.Vertical">
                         <FluentStack Orientation="Orientation.Horizontal">
                             <FluentLabel Class="attackpath-small">Risk treatment decision</FluentLabel>
                             <FluentSpacer/>
@@ -334,7 +322,7 @@
             < 24 => AttackFeasibilityRating.Low,
             _    => AttackFeasibilityRating.VeryLow
         };
-        
+
         attackPath.AttackFeasibilityRating = rating;
 
         AttackFeasibilityScore = rating.ToString().Replace("VeryLow", "Very Low");

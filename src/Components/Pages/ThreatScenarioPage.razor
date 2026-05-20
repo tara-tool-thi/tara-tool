@@ -55,8 +55,8 @@
 		</div>
 
 		<div style="flex-grow: 1; background-color: @BgColor; padding: 8px 15px; display: flex; align-items: center;">
-			<span style="font-weight: 600; margin-right: 8px;">
-                <FluentTextField @bind-Value="@TSDescription"
+			<span style="font-weight: 600; margin-right: 8px; flex: 1">
+                <FluentTextArea @bind-Value="@TSDescription" Class="fullwidth"
                             Immediate="true"
                             ImmediateDelay="500"
                             @bind-Value:after="@NotifyTSAutosave" />
@@ -71,7 +71,7 @@
 </FluentStack>
 
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center">
-    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 100%;" HorizontalAlignment="HorizontalAlignment.Center">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%;" HorizontalAlignment="HorizontalAlignment.Center">
         @if (FilteredAttackPaths.Any())
         {
             <FluentAccordion Class="fullwidth">
