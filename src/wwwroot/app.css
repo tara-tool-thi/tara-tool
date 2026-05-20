@@ -285,3 +285,7 @@ h6 {
 .icon-spacing {
     margin-right: 4px;
 }
+
+.theme-toggle-spacing {
+    margin-right: 12px;
+}
