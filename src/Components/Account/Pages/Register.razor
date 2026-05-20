@@ -139,6 +139,8 @@
 
         Logger.LogInformation("User created a new account with password.");
 
+        await PendingRegistration.Delete(@id);
+
         RedirectManager.RedirectTo(
                  "Account/Login");
     }
