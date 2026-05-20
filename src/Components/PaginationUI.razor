@@ -1,7 +1,7 @@
 @using Microsoft.EntityFrameworkCore.Query
 @rendermode InteractiveServer
 
-<FluentPaginator State="@pagination">
+<FluentPaginator State="@pagination" CurrentPageIndexChanged="onPageIndexChange">
     <SummaryTemplate>
         <FluentStack VerticalAlignment="VerticalAlignment.Center">
             <span><b>@pagination.TotalItemCount</b>&nbsp;items</span>
@@ -35,6 +35,11 @@
     private async Task onPageCountChange(string newValue)
     {
         await pagination.SetItemsPerPageAsync(int.Parse(newValue));
+        await onPageIndexChange();
+    }
+
+    private async Task onPageIndexChange()
+    {
         if (OnPageChanged.HasDelegate)
             await OnPageChanged.InvokeAsync();
     }

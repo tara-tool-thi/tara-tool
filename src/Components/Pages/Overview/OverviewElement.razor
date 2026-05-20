@@ -47,46 +47,49 @@
     {
         @if (pagination is not null)
         {
-            @foreach ((string, long) data in displayData)
-            {
-                _renderVersion++;
-                <FluentAccordion @key=@($"{_renderVersion}_{data}")>
-                    <FluentAccordionItem>
-                        <HeadingTemplate>
-                            <span>@data.Item1</span>
-                        </HeadingTemplate>
-                        <ChildContent>
-                            @*Depending on the layer, we manipulate the ids so the filters work*@
-                            @switch (CurrentLayer)
-                            {
-                                case LayerType.Item:
-                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
-                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@data.Item2" IdAsset="@null"
-                                                     IdDamageScenario="@null" />
-                                    break;
-                                case LayerType.Asset:
-                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
-                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@data.Item2"
-                                                     IdDamageScenario="@null" />
-                                    break;
-                                case LayerType.DamageScenario:
-                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
-                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null"
-                                                     IdDamageScenario="@data.Item2" />
-                                    break;
-                                case LayerType.ThreatScenario:
-                                    @*ToDo: Add Threat Scenarios*@
-                                    <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
-                                                     LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null" IdDamageScenario="@null" />
-                                    break;
+            <div @key=@_renderVersion>
+                @foreach ((string, long) data in displayData)
+                {
+                    _renderVersion++;
+                    <FluentAccordion @key=@($"{_renderVersion}_{data}")>
+                        <FluentAccordionItem>
+                            <HeadingTemplate>
+                                <span>@data.Item1</span>
+                            </HeadingTemplate>
+                            <ChildContent>
+                                @*Depending on the layer, we manipulate the ids so the filters work*@
+                                @switch (CurrentLayer)
+                                {
+                                    case LayerType.Item:
+                                        <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                         LastLayer="@LastLayer" SearchText=@SearchText IdItem="@data.Item2" IdAsset="@null"
+                                                         IdDamageScenario="@null" />
+                                        break;
+                                    case LayerType.Asset:
+                                        <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                         LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@data.Item2"
+                                                         IdDamageScenario="@null" />
+                                        break;
+                                    case LayerType.DamageScenario:
+                                        <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                         LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null"
+                                                         IdDamageScenario="@data.Item2" />
+                                        break;
+                                    case LayerType.ThreatScenario:
+                                        @*ToDo: Add Threat Scenarios*@
+                                        <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
+                                                         LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null"
+                                                         IdDamageScenario="@null" />
+                                        break;
 
-                            }
+                                }
 
-                        </ChildContent>
-                    </FluentAccordionItem>
-                </FluentAccordion>
+                            </ChildContent>
+                        </FluentAccordionItem>
+                    </FluentAccordion>
 
-            }
+                }
+            </div>
         }
         else
         {
@@ -173,7 +176,7 @@
     //private FluentDataGrid<ThreatScenario>? ThreatScenarioGrid { get; set; } = null;
 
     private Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>> ItemFilter =>
-    q => q.Where(i => string.IsNullOrWhiteSpace(SearchText) ||
+    q => q.Where(i => i.IdProject == IdProject).Where(i => string.IsNullOrWhiteSpace(SearchText) ||
                        i.ItemName.Contains(SearchText) ||
                        i.ItemDescription.Contains(SearchText));
 

@@ -42,7 +42,13 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         Project? project = await context.Projects.Include(a => a.ItemDefinitions).ThenInclude(i => i.Assets).FirstOrDefaultAsync(p => p.Id == itemDefinition.IdProject);
         if (project is null) return null;
 
-        long number = project.ItemDefinitions.SelectMany(a => a.Assets.Select(i => i.AssetNumber)).OrderBy(a => a).FirstOrDefault() + 1;
+        IEnumerable<Asset> assets = project.ItemDefinitions.SelectMany(a => a.Assets);
+        long number = 0;
+        if (assets.Count() > 0)
+        {
+            number = assets.Max(a => a.AssetNumber) + 1;
+        }
+
         Asset newAsset = new Asset
         {
             AssetNumber = number,
