@@ -19,41 +19,40 @@
             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <FluentSpacer />
         <FluentButton OnClick="OpenDialog" IconStart=@(new Icons.Regular.Size20.Add())>
-          New User
+            New User
         </FluentButton>
     </FluentStack>
 
-<h4 style="margin: 16px 0;">Pending Registrations</h4>
-<FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@RegistrationSearch />
-<FluentDataGrid Items="waited_people.AsQueryable()" TGridItem="PendingRegistration" Class="management-data-grid" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="grid">
-    <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
-    <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
-        @GenerateRegistrationLink(pendingRow.Id)
-        @* <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) /> *@
-    </TemplateColumn>
-    <TemplateColumn Context="pendingRow">
-        @* <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) /> *@
-    </TemplateColumn>
-    <TemplateColumn Context="pendingRow">
-        <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) />
-        <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
-            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
-        </FluentButton>
-        @* @DeletePendingRegistration(pendingRow.Id); *@
-    </TemplateColumn>
-</FluentDataGrid>
+@if(paginationUsers is not null)
+{
+    <h4 style="margin: 16px 0;">Pending Registrations</h4>
+    <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
+    <FluentDataGrid Items="filterdRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationUsers.pagination" Class="management-data-grid" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations">
+        <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
+        <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
+            @GenerateRegistrationLink(pendingRow.Id)
+        </TemplateColumn>
+        <TemplateColumn Context="pendingRow">
+            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) />
+            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+            </FluentButton>
+        </TemplateColumn>
+    </FluentDataGrid>
+}
+<PaginationUI @ref=@paginationUsers />
 
-@if (paginationUI is not null)
+@if (paginationPendingRegistrations is not null)
 {
     <h4 style="margin: 16px 0;">Registered Users</h4>
-    <FluentSearch Placeholder="Type to search for user..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@UserSearch />
-    <FluentDataGrid Items="@people.AsQueryable()" TGridItem="ApplicationUser" Class="management-data-grid" Pagination="@paginationUI.pagination" AutoFit="true"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+    <FluentSearch Placeholder="Type to search for user..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
+    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="management-data-grid" Pagination="@paginationPendingRegistrations.pagination" AutoFit="true" @ref="gridUsers"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
         <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
         <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
     </FluentDataGrid>
 }
-<PaginationUI @ref=@paginationUI />
+<PaginationUI @ref=@paginationPendingRegistrations />
 
 @* Dialog that contains the invite link *@
 <div>
@@ -88,9 +87,8 @@
 
 
 @code {
-    private string? RegistrationSearch;
-    private string? UserSearch;
-    private PaginationUI paginationUI { get; set; } = default!;
+    private PaginationUI paginationPendingRegistrations { get; set; } = default!;
+    private PaginationUI paginationUsers { get; set; } = default!;
 
     private string? email = "";
 
@@ -101,18 +99,101 @@
 
     private ClaimsPrincipal? user { get; set; }
 
-    private FluentDataGrid<PendingRegistration> grid = default!;
-    List<ApplicationUser> people = new();
-    List<PendingRegistration> waited_people = new();
+    private FluentDataGrid<PendingRegistration> gridPendingRegistrations = default!;
+    private FluentDataGrid<ApplicationUser> gridUsers = default!;
 
-    @* private readonly IJSRuntime _jsRuntime; *@
+    List<PendingRegistration> pendingRegistrations = new();
+    List<ApplicationUser> users = new();
+
+    private List<PendingRegistration> filterdRegistrations
+    {
+        get
+        {
+            if(registrationSearch != null)
+            {
+                field = pendingRegistrations.Where(r => r.Email.Contains(registrationSearch)).ToList();
+            }
+            else
+            {
+                field = pendingRegistrations;
+            }
+            return field;
+        }
+    } = new List<PendingRegistration>();
+
+    private List<ApplicationUser> filteredUsers
+    {
+        get
+        {
+            if(userSearch != null)
+            {
+                field = users.Where(r => r.Email.Contains(userSearch)).ToList();
+            }
+            else
+            {
+                field = users;
+            }
+            return field;
+        }
+    } = new List<ApplicationUser>();
+
+    // variables catching the search fields
+    private string? _registrationSearch;
+    private string? registrationSearch
+    {
+        get => _registrationSearch;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                _registrationSearch = string.Empty;
+            }
+
+            else
+            {
+                _registrationSearch = value;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private string? _userSearch;
+    private string? userSearch
+    {
+        get => _userSearch;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                _userSearch = string.Empty;
+            }
+
+            else
+            {
+                _userSearch = value;
+            }
+            StateHasChanged();
+        }
+    }
+
+
+    // necessary for rendering tables with pagination
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender) {
+            StateHasChanged();
+        }
+    }
 
     protected override async Task OnInitializedAsync() {
         user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
         if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
-        people = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
-        waited_people = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
-    }
+        if(users.Count == 0 || pendingRegistrations.Count == 0)
+        {
+            users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
+            pendingRegistrations = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
+        }
+   }
 
     @* private void ShowButtons()
     {
@@ -148,7 +229,7 @@
         copyLink!.Hide();
     }
 
-        private async Task CopyLinkToClipboard(string? id)
+    private async Task CopyLinkToClipboard(string? id)
     {
         if(id != null)
         {
@@ -175,8 +256,8 @@
     private void RefreshGrid()
     {
         // grid may be null during initial render
-        if (grid is not null)
-            InvokeAsync(() => grid.RefreshDataAsync());
+        if (gridPendingRegistrations is not null)
+            InvokeAsync(() => gridPendingRegistrations.RefreshDataAsync());
     }
 
 }
