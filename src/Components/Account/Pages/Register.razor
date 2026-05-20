@@ -97,7 +97,6 @@
         if (initialUser && (NumberOfPendingRegistrations == 1))
         {
             await UserManager.AddToRoleAsync(user, "Admin");
-            Console.WriteLine("User nun Admin");
         } else {
             if (!await PendingRegistration.Check(Input.Email, @id))
             {
