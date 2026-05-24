@@ -1,0 +1,25 @@
+@rendermode InteractiveServer
+
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<FluentDesignTheme @bind-Mode="CMode" StorageName="theme" /> @*Two Way binding, wenn Cmode sich ändert, ändert sich Mode auch*@
+
+<FluentButton onclick="ToggleTheme">
+    <FluentIcon Value="@ThemeIcon" />
+</FluentButton>
+
+@code {
+    private DesignThemeModes CMode = DesignThemeModes.System;
+
+    private void ToggleTheme()
+    {
+        CMode = CMode == DesignThemeModes.Dark
+            ? DesignThemeModes.Light
+            : DesignThemeModes.Dark;
+    }
+
+    private Icon ThemeIcon =>
+    CMode == DesignThemeModes.Dark
+        ? new Icons.Regular.Size24.WeatherSunny()
+        : new Icons.Regular.Size24.WeatherMoon();
+}
