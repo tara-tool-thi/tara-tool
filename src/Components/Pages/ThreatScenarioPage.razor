@@ -43,7 +43,7 @@
 
 <div style="height: 1rem;"></div>
 
-<FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto 1fr auto; align-items: stretch;">
+<FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
     <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
         <FluentTextField @bind-Value="@TSName"
                         Immediate="true"
@@ -52,10 +52,12 @@
     </FluentStack>
 
     <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center" Style="@($"background-color: {BgColor};")">
-        <span style="font-weight: 600; margin-right: 8px;">
+        <span class="ts-header-description-field">
             <FluentTextArea @bind-Value="@TSDescription"
                         Immediate="true"
                         ImmediateDelay="500"
+                        Class="ts-header-description-input"
+                        Style="width: 100%;"
                         @bind-Value:after="@NotifyTSAutosave" />
         </span>
     </FluentStack>
@@ -187,11 +189,10 @@
         TSName = thisTS.Name;
         TSDescription = thisTS.Description;
 
+        (ImpactCategory, ImpactRating) = FindWorstImpactCategoryAndRating(thisTS.DamageScenarios!.ImpactRating);
+
         await CalculateRiskValue();
-
         TSRiskValue = thisTS.RiskValue.ToString();
-
-        (ImpactCategory, ImpactRating) = await FindWorstImpactCategoryAndRating(thisTS.DamageScenarios!.ImpactRating);
 
         AttackPaths.Clear();
 
@@ -283,7 +284,7 @@
         StateHasChanged();
     }
 
-    private async Task<(string, float)> FindWorstImpactCategoryAndRating((ImpactRatingValue Safety, ImpactRatingValue Financial, ImpactRatingValue Operational, ImpactRatingValue Privacy) impactRatings)
+    private (string, float) FindWorstImpactCategoryAndRating((ImpactRatingValue Safety, ImpactRatingValue Financial, ImpactRatingValue Operational, ImpactRatingValue Privacy) impactRatings)
     {
         // Find the category with the worst value (check enums)
         // IF two have the same value decide based on this priority list (von Prio high bis Prio low): 1. Safety, 2. Privacy, 3. Operational, 4. Financial
@@ -298,11 +299,31 @@
         //Bsp. Safety und Operational sind beide "Major" bewertet. Safety hat eine höhere priorität also kommt Safety in worstImpactCategory
 
 
-        string worstImpactCategory = "Test";
+        (string Category, ImpactRatingValue Value)[] prioritizedImpactRatings =
+        [
+            ("S", impactRatings.Safety),
+            ("P", impactRatings.Privacy),
+            ("O", impactRatings.Operational),
+            ("F", impactRatings.Financial)
+        ];
 
-        float worstImpactRating = (float)impactRatings.Safety; //Zum Beispiel
+        int worstImpactValue = prioritizedImpactRatings.Max(impactRating => (int)impactRating.Value);
+        (string Category, ImpactRatingValue Value) worstImpactRating = prioritizedImpactRatings
+            .First(impactRating => (int)impactRating.Value == worstImpactValue);
 
-        return (worstImpactCategory.ElementAt(0).ToString(), (float)1.5);
+        return (worstImpactRating.Category, MapImpactRatingToRiskFactor(worstImpactRating.Value));
+    }
+
+    private static float MapImpactRatingToRiskFactor(ImpactRatingValue impactRating)
+    {
+        return impactRating switch
+        {
+            ImpactRatingValue.Severe => 2,
+            ImpactRatingValue.Major => 1.5f,
+            ImpactRatingValue.Moderate => 1,
+            ImpactRatingValue.Negligible => 0,
+            _ => 0
+        };
     }
 
 }

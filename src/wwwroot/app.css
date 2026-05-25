@@ -393,6 +393,10 @@ h6 {
 
 /* ThreatScenarioPage header bar */
 .ts-header-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0;
     border: 1px solid #8a8886;
     width: 100%;
     margin-bottom: 4px;
@@ -405,8 +409,23 @@ h6 {
 }
 
 .ts-header-description {
+    display: flex;
+    align-items: center;
     flex-grow: 1;
+    min-width: 0;
     padding: 8px 15px;
+}
+
+.ts-header-description-field {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    margin-right: 8px;
+    font-weight: 600;
+}
+
+.ts-header-description-input {
+    width: 100%;
 }
 
 .ts-header-risk {
