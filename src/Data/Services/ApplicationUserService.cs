@@ -1,7 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
 using tara_tool.Data;
-using tara_tool.Data.Tables;
 
 public class ApplicationUserService(IDbContextFactory<ApplicationDbContext> contextFactory)
 {
