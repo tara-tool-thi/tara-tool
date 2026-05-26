@@ -7,5 +7,7 @@ namespace tara_tool.Data.Tables;
 public class ApplicationUser : IdentityUser
 {
     public string? Organization { get; set; }
+    public string? NameOfUser { get; set; }
     public virtual ICollection<AccessControl> Projects { get; set; } = [];
+
 }
