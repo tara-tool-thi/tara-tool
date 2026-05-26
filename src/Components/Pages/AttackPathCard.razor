@@ -262,7 +262,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await CalculateAndSetAttackFeasiblityScore();
+        await CalculateAndSetAttackFeasibilityScore();
         await CalculateRiskValue();
     }
 
@@ -273,7 +273,7 @@
         if (Enum.TryParse<ElapsedTime>(val, out ElapsedTime result))
         {
             attackPath.ElapsedTime = result;
-            await CalculateAndSetAttackFeasiblityScore();
+            await CalculateAndSetAttackFeasibilityScore();
             await CalculateRiskValue();
             await OnFieldChanged.InvokeAsync();
         }
@@ -284,7 +284,7 @@
         if (Enum.TryParse<SpecialistExpertise>(val, out SpecialistExpertise result))
         {
             attackPath.SpecialistExpertise = result;
-            await CalculateAndSetAttackFeasiblityScore();
+            await CalculateAndSetAttackFeasibilityScore();
             await CalculateRiskValue();
             await OnFieldChanged.InvokeAsync();
         }
@@ -295,7 +295,7 @@
         if (Enum.TryParse<KnowledgeOfComponents>(val, out KnowledgeOfComponents result))
         {
             attackPath.KnowledgeOfComponents = result;
-            await CalculateAndSetAttackFeasiblityScore();
+            await CalculateAndSetAttackFeasibilityScore();
             await CalculateRiskValue();
             await OnFieldChanged.InvokeAsync();
         }
@@ -306,7 +306,7 @@
         if (Enum.TryParse<WindowOfOpportunity>(val, out WindowOfOpportunity result))
         {
             attackPath.WindowOfOpportunity = result;
-            await CalculateAndSetAttackFeasiblityScore();
+            await CalculateAndSetAttackFeasibilityScore();
             await CalculateRiskValue();
             await OnFieldChanged.InvokeAsync();
         }
@@ -317,13 +317,13 @@
         if (Enum.TryParse<Equipment>(val, out Equipment result))
         {
             attackPath.Equipment = result;
-            await CalculateAndSetAttackFeasiblityScore();
+            await CalculateAndSetAttackFeasibilityScore();
             await CalculateRiskValue();
             await OnFieldChanged.InvokeAsync();
         }
     }
 
-    private async Task CalculateAndSetAttackFeasiblityScore()
+    private async Task CalculateAndSetAttackFeasibilityScore()
     {
         ElapsedTime ET = attackPath.ElapsedTime;
 
