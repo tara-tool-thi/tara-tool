@@ -309,6 +309,24 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         };
     }
 
+    private static float GetFeasibilityRiskFactor(AttackFeasibilityRating rating)
+        => rating switch
+        {
+            AttackFeasibilityRating.Critical => 2,
+            AttackFeasibilityRating.High => 2,
+            AttackFeasibilityRating.Medium => 1.5f,
+            AttackFeasibilityRating.Low => 1,
+            AttackFeasibilityRating.VeryLow => 0,
+            _ => 0,
+        };
+
+    public string CalculateAttackPathRiskValue(AttackPath attackPath, float impactRating)
+    {
+        float risk = 1 + impactRating * GetFeasibilityRiskFactor(attackPath.AttackFeasibilityRating);
+        attackPath.Value = (long)risk;
+        return ((long)risk).ToString();
+    }
+
     public async Task<AttackFeasibilityRating> FindMostCriticalRiskValue(ThreatScenario thisTS)
     {
         // 1. Ensure we have data to work with to avoid errors
@@ -327,20 +345,11 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
     public async Task<string> CalculateRiskValue(ThreatScenario thisTS, float ImpactRating)
     {
-        float mostCriticalRating = await FindMostCriticalRiskValue(thisTS) switch
-        {
-            AttackFeasibilityRating.Critical => 2,
-            AttackFeasibilityRating.High => 2,
-            AttackFeasibilityRating.Medium => (float)1.5,
-            AttackFeasibilityRating.Low => 1,
-            AttackFeasibilityRating.VeryLow => 0,
-            _ => 0,
-        };
+        AttackFeasibilityRating mostCritical = await FindMostCriticalRiskValue(thisTS);
+        float risk = 1 + ImpactRating * GetFeasibilityRiskFactor(mostCritical);
 
-        float Risk = 1 + ImpactRating * mostCriticalRating;
+        thisTS!.RiskValue = (long)risk;
 
-        thisTS!.RiskValue = (long)Risk;
-
-        return ((long)Risk).ToString();
+        return ((long)risk).ToString();
     }
 }
