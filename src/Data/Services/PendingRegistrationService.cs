@@ -47,14 +47,6 @@ public class PendingRegistrationService(
         return await context.PendingRegistrations.AnyAsync(p => p.Id == id && p.Email == email);
     }
 
-    /*
-    public async Task<bool> CheckOtherIds(string id)
-    {
-        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-
-        return await context.PendingRegistrations.AnyAsync(p => p.Id != id);
-    }
-    */
 
     public async Task Delete(string id)
     {

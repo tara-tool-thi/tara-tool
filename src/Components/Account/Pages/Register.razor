@@ -93,22 +93,8 @@
 
         bool initialUser = !UserManager.Users.Any();
 
-        // bool onlyOneId = await PendingRegistration.CheckOtherIds(@id);
-
         List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
         int NumberOfPendingRegistrations = pendingRegistrations.Count();
-
-        if (initialUser)
-        {
-            Console.WriteLine("iU is true");
-        }
-
-        Console.WriteLine("initialUser: " + initialUser + "NumPenReg: " + NumberOfPendingRegistrations);
-
-        if (await PendingRegistration.Check(Input.Email, @id, initialUser))
-        {
-            Console.WriteLine("PendCheck is true");
-        }
 
         if (initialUser && (NumberOfPendingRegistrations == 1) && (await PendingRegistration.Check(Input.Email, @id, initialUser)))
         {
