@@ -92,9 +92,6 @@
         .ThenInclude(g => g != null ? g.ItemDefinition : null)
         .ThenInclude(h => h != null ? h.Project : null)));
 
-        // Temporary measure to allow building this page before ardwetha implements the add button on the assets page
-        // TODO: Remove
-        if (damageScenario is null) damageScenario = await DamageScenarioService.CreateNew(1);
     }
 
     private async Task OnDelete()
