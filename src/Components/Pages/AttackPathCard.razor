@@ -329,14 +329,17 @@
 
         int AttackFeasibilityScoreInt = (int)attackPath.ElapsedTime + (int)attackPath.SpecialistExpertise + (int)attackPath.KnowledgeOfComponents + (int)attackPath.WindowOfOpportunity + (int)attackPath.Equipment;
 
-        AttackFeasibilityRating rating = AttackFeasibilityScoreInt switch
-        {
-            < 10 => AttackFeasibilityRating.Critical,
-            < 14 => AttackFeasibilityRating.High,
-            < 20 => AttackFeasibilityRating.Medium,
-            < 24 => AttackFeasibilityRating.Low,
-            _    => AttackFeasibilityRating.VeryLow
-        };
+        AttackFeasibilityRating rating;
+        if (10 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.Critical;
+        else if (14 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.High;
+        else if (20 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.Medium;
+        else if (24 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.Low;
+        else
+            rating = AttackFeasibilityRating.VeryLow;
 
         attackPath.AttackFeasibilityRating = rating;
 
