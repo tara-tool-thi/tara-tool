@@ -40,13 +40,11 @@
     {
         if (IdProject is null || IdProject == -1)
         {
-            //Please do not ask but here the explanation: ParameterSet is also called, when you navigate away from the URL, aka the
-            //query and thereby the parameters change. This leads to a race (I think, or it is predetermine, I do not know exactly),
-            //which then
-            //triggers this condition -> if we are not on the overview, we do not care what IdIs.
-            //Why not using another function to override? Well that will kill the current way of how it works -> For real can
-            //someone please make a web framewor
-            //where the programmers do not have to do such hacks -> Would be highly appriciated - Ardwetha
+            // Note: ParameterSet is also invoked when navigating away from the current URL, causing the query
+            // and its parameters to change. This can trigger a race condition (or a predetermined execution order)
+            // that activates the following condition. Since we only care about the IdIs value when on the overview,
+            // we safely ignore it otherwise.
+            // Overriding with a separate function was considered, but would break the existing behavior.
             if (Navigator.Uri.Contains("Overview"))
             {
                 //Id Project must no be null

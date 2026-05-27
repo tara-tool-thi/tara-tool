@@ -1,5 +1,4 @@
 @using Microsoft.CodeAnalysis
-@using System.Security.Cryptography
 
 @rendermode InteractiveServer
 @inject ItemDefinitionService ItemService
@@ -134,10 +133,6 @@
                     DamageScenarioGrid.RefreshGrid();
                 }
 
-                @* else if (ThreatScenarioGrid is not null)
-                {
-                    ThreatScenarioGrid.RefreshDataAsync();
-                } *@
             }
             else if (isLastLayer is false)
             {

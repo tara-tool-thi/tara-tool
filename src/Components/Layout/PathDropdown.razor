@@ -298,26 +298,11 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
             }
         }
 
-        @* else if (urlPrefix == "ThreatScenario")
-        {
-            if (long.TryParse(id, out long ThreatScenarioId))
-            {
-                Threa? damageScenario = await Threa.GetItemByIdAsync(ThreatScenarioId, null);
-                if(damageScenario is null) return;
-
-                OnDamageScenarioChange(damageScenario);
-            }
-        } *@
         addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
-
-
     private string currentUrl = string.Empty;
-    //Sorry to everyone, who needs to review this garbage -> I should have probably rewritten this from scratch. If you find
-    // a better way/try to optimize this, please increase this number.Hours worked on this: 5 (I guess)
-
 
     private Project? selectedProject = null;
     private ItemDefinition? selectedItem = null;
