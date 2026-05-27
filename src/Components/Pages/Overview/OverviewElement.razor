@@ -168,7 +168,6 @@
     private DamageScenarioTable? DamageScenarioGrid { get; set; } = null;
 
     private string randomToStopDoubleKey = string.Empty;
-    //private FluentDataGrid<ThreatScenario>? ThreatScenarioGrid { get; set; } = null;
 
     private Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>> ItemFilter =>
     q => q.Where(i => i.IdProject == IdProject).Where(i => string.IsNullOrWhiteSpace(SearchText) ||
