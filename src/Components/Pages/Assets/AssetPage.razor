@@ -44,9 +44,13 @@
         <div>
             <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
                 <div>
-                    <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)" OptionValue=@(t => t == null ? "None" :
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              t.Name) TOption="Tag" @bind-Value="@selectedTagName" OptionSelected="@(t => t == asset.Tag)"
-                                  Label="Select Group" Items=@GroupOptions />
+                    <FluentSelect OptionText="@(t => t == null ? "None" : t.Name)"
+                        OptionValue=@(t => t == null ? "None" : t.Name)
+                        TOption="Tag"
+                        @bind-Value="@selectedTagName"
+                        OptionSelected="@(t => t == asset.Tag)"
+                        Label="Select Group"
+                        Items=@GroupOptions />
                 </div>
                 <FluentButton IconStart="@(new Icons.Regular.Size20.Add())" Appearance="Appearance.Accent"
                               OnClick="CreateTag" Id="AddGroupButton" />
@@ -140,7 +144,7 @@
         }
     }
 
-    private async void CreateDamageScenario()
+    private async Task CreateDamageScenario()
     {
         DamageScenario? ds = await DamageScenarioService.CreateNew(IdAsset);
         if (ds is not null)
