@@ -1,5 +1,6 @@
 @page "/UserManagement"
 @using System.Security.Claims
+@using System.Net.Mail
 @rendermode InteractiveServer
 
 @inject NavigationManager NavigationManager
@@ -19,16 +20,16 @@
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <FluentSpacer />
-        <FluentButton OnClick="OpenDialog" IconStart=@(new Icons.Regular.Size20.Add())>
+        <FluentButton OnClick="OpenDialogInviteUser" IconStart=@(new Icons.Regular.Size20.Add())>
             New User
         </FluentButton>
     </FluentStack>
 
-@if(paginationUsers is not null)
+@if(paginationPendingRegistrations is not null)
 {
     <h4 style="margin: 16px 0;">Pending Registrations</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
-    <FluentDataGrid Items="filterdRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationUsers.pagination" Class="management-data-grid, margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations">
+    <FluentDataGrid Items="filterdRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="management-data-grid, margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations">
         <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
         <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
             @GenerateRegistrationLink(pendingRow.Id)
@@ -41,24 +42,29 @@
         </TemplateColumn>
     </FluentDataGrid>
 }
-<PaginationUI @ref=@paginationUsers />
+<PaginationUI @ref=@paginationPendingRegistrations />
 
-@if (paginationPendingRegistrations is not null)
+@if (paginationUsers is not null)
 {
     <h4 style="margin: 16px 0;">Registered Users</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
-    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="management-data-grid, margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationPendingRegistrations.pagination" AutoFit="true" @ref="gridUsers"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="management-data-grid, margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" @ref="gridUsers"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
         <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
         <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
         <TemplateColumn Context="userRow">
-            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeleteUser(userRow.Id))">
+            @* <FluentButton aria-label="Delete pending registration" OnClick="@deleteUserDialog.Show"> *@
+            @* <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeleteUser(userRow.Id))"> *@
+            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
+            @* <FluentButton aria-label="Delete pending registration" > *@
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
+            @* <DeleteUser userName="userRow.email" OnDeleteUser="@(() => @DeleteUser(userRow.Id)" @ref=@deleteUserDialog /> *@
         </TemplateColumn>
      </FluentDataGrid>
 }
-<PaginationUI @ref=@paginationPendingRegistrations />
+<PaginationUI @ref=@paginationUsers />
+
 
 @* Dialog that contains the invite link *@
 <div>
@@ -201,11 +207,7 @@
         }
    }
 
-    @* private void ShowButtons()
-    {
-        Console.WriteLine("Row focused");
-    } *@
-    private async Task OpenDialog()
+    private async Task OpenDialogInviteUser()
     {
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
         DialogResult? result = await dialog.Result;
@@ -223,6 +225,16 @@
         link = GenerateRegistrationLink(id);
         await DialogService.CloseAsync(dialog);
         copyLink!.Show();
+    }
+
+    private async Task OpenDialogDeleteUser(ApplicationUser userToDelete)
+    {
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != false)
+        {
+
+        }
     }
 
     private string GenerateRegistrationLink(string id)
@@ -260,8 +272,14 @@
 
     private async Task DeleteUser(string id)
     {
-        await UserManager.DeleteAsync(await UserManager.FindByIdAsync(id));
-        ToastService.ShowSuccess("Deleted user");
+        ApplicationUser? userToDelete = await UserManager.FindByIdAsync(id);
+        if(userToDelete != null)
+        {
+            await UserManager.DeleteAsync(userToDelete);
+            ToastService.ShowSuccess("Deleted user");
+        } else {
+            Console.WriteLine("Failed to delete user");
+        }
     }
 
     private void RefreshGrid()

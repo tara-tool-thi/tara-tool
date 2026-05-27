@@ -1,0 +1,61 @@
+@using System.ComponentModel.DataAnnotations
+@implements IDialogContentComponent<ApplicationUser>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <h3>Delete user</h3>
+</FluentDialogHeader>
+
+
+<FluentDialogBody>
+        Are you sure you want to delete <strong>@Content.Email</strong>? This cannot be undone.
+</FluentDialogBody>
+
+
+<FluentDialogFooter>
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+            <FluentSpacer />
+            <FluentButton Appearance="Appearance.Outline" OnClick="@Hide">Cancel
+            </FluentButton>
+            @* <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" OnClick="OnDeleteUser">Delete *@
+            <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" >Delete
+            </FluentButton>
+        </FluentStack>
+ </FluentDialogFooter>
+
+
+@code
+{
+    @* [Parameter, EditorRequired]
+    public required string userName { get; set; } *@
+
+    @* [Parameter, EditorRequired]
+    public required EventCallback OnDeleteUser { get; set; } *@
+
+    [Parameter]
+    public ApplicationUser Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    @* [Parameter]
+    public ApplicationUser userToDelete { get; set; } = default!; *@
+
+    @* [Parameter]
+    public required string userName { get; set; } = default!;
+
+    [Parameter]
+    public required string userId { get; set; } = default!; *@
+
+    private bool showDeleteDialog { get; set; } = false;
+
+    public void Show()
+    {
+        showDeleteDialog = true;
+    }
+
+    public void Hide()
+    {
+        showDeleteDialog = false;
+    }
+}
