@@ -1,0 +1,12 @@
+services:
+  tara-tool:
+    image: ${TARA_TOOL_IMAGE}
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /srv/tara-tool/data:/app/Data
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=DataSource=/app/Data/app.db;Cache=Shared
