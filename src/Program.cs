@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Components;
 using tara_tool.Components.Account;
@@ -83,6 +84,15 @@ app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+// Apply pending migrations automatically on startup.
+// Required for docker deployments
+using (IServiceScope migrationScope = app.Services.CreateScope())
+{
+    ApplicationDbContext db = migrationScope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 // Create Roles that do not exist. Currently only Admin, but it’s still set up to quickly accommodate new roles.
 // Add a new role by adding its name to the string[] below.
