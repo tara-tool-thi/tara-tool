@@ -303,3 +303,7 @@ h6 {
     margin: 0 auto;
     overflow-x: auto;
 }
+
+.theme-toggle-spacing {
+    margin-right: 12px;
+}

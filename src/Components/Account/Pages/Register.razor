@@ -8,10 +8,12 @@
 @using tara_tool.Data
 @using tara_tool.Data.Tables
 
+
+@inject ApplicationUserService ApplicationUserService
+@inject PendingRegistrationService PendingRegistration
 @inject UserManager<ApplicationUser> UserManager
 @inject IUserStore<ApplicationUser> UserStore
 @inject SignInManager<ApplicationUser> SignInManager
-@inject IEmailSender<ApplicationUser> EmailSender
 @inject ILogger<Register> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
@@ -20,16 +22,16 @@
 
 <h1>Register</h1>
 
+@*Needs to be removed at a later time!*@
 <h1 style="color: red;">MAKE ADMIN TOGGLE HAS NOT BEEN REMOVED!</h1>
 
 <FluentGrid>
     <FluentGridItem xs="12" sm="4">
-        <StatusMessage Message="@Message" />
+        <StatusMessage Message="@errorMessage" />
         <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
             <DataAnnotationsValidator />
-            <h2>Create a new Account</h2>
+            <h3>Create a new Account</h3>
             <hr />
-            <FluentValidationSummary class="text-danger" role="alert" />
             <FluentStack Orientation="Orientation.Vertical">
                 <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.Email" class="text-danger" />
@@ -45,6 +47,8 @@
 
                 <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword" Label="Confirm Password" Placeholder="*******" Required="true" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+
+                @*Needs to be removed at a later time!*@
                 <FluentCheckbox Name="Input.MakeAdmin" @bind-Value="Input.MakeAdmin" Label="MAKE ADMIN" Disabled="firstUser"/>
 
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%" >Register</FluentButton>
@@ -54,7 +58,11 @@
 </FluentGrid>
 
 @code {
-    private IEnumerable<IdentityError>? identityErrors;
+    [SupplyParameterFromQuery(Name = "id")]
+    public string? id { get; set; }
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm]
     private InputModel Input { get; set; } = default!;
@@ -64,8 +72,9 @@
 
     private bool firstUser { get; set; } = false;
 
-    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+    private string? errorMessage;
 
+    // Needs to be removed at a later time!
     protected override void OnInitialized()
     {
         firstUser = !UserManager.Users.Any();
@@ -74,46 +83,69 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
-        var user = CreateUser();
-
-        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        var emailStore = GetEmailStore();
-        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        var result = await UserManager.CreateAsync(user, Input.Password);
-        user.Organization = Input.Organization;
-        await UserManager.UpdateAsync(user);
-
-        if (!result.Succeeded)
+        if (@id == null)
         {
-            identityErrors = result.Errors;
+            errorMessage = "Error: You are not priviledged to register for this project without an invitation.";
             return;
         }
 
+        ApplicationUser? user = CreateUser();
+
+        bool initialUser = !UserManager.Users.Any();
+
+        List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
+        int NumberOfPendingRegistrations = pendingRegistrations.Count();
+
+
+         if (!await PendingRegistration.Check(Input.Email, @id, initialUser))
+         {
+             errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
+             return;
+         }
+            
+        if (initialUser && (NumberOfPendingRegistrations == 1))
+        {
+             await UserManager.AddToRoleAsync(user, "Admin");
+        } 
+
+        if (await ApplicationUserService.CheckEmailDuplicate(Input.Email))
+        {
+            errorMessage = "Error: The email address is already taken.";
+            return;
+        }
+
+
+        if (await ApplicationUserService.CheckNameOfUserDuplicate(Input.Username))
+        {
+            errorMessage = "Error: The username is already taken.";
+            return;
+        }
+
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        IUserEmailStore<ApplicationUser>? emailStore = GetEmailStore();
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        IdentityResult? result = await UserManager.CreateAsync(user, Input.Password);
+        user.Organization = Input.Organization;
+        await UserManager.UpdateAsync(user);
+        user.NameOfUser = Input.Username;
+        await UserManager.UpdateAsync(user);
+
+        // Needs to be removed at a later time!
         if (Input.MakeAdmin)
             await UserManager.AddToRoleAsync(user, "Admin");
 
+        HttpContext.Response.Cookies.Append
+        (
+            IdentityRedirectManager.StatusCookieName,
+            "Successfully Registered.\nPlease log in using your new credentials."
+        );
+
         Logger.LogInformation("User created a new account with password.");
 
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
-            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+        await PendingRegistration.Delete(@id);
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
-
-        if (UserManager.Options.SignIn.RequireConfirmedAccount)
-        {
-            RedirectManager.RedirectTo(
-                "Account/RegisterConfirmation",
-                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
-        }
-        else
-        {
-            await SignInManager.SignInAsync(user, isPersistent: false);
-            RedirectManager.RedirectTo(ReturnUrl);
-        }
+        RedirectManager.RedirectTo(
+                 "Account/Login");
     }
 
     private ApplicationUser CreateUser()
@@ -165,6 +197,7 @@
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
 
+        //ToDo: Needs to be removed at a later time!
         [Display(Name = "Make Admin")]
         public bool MakeAdmin { get; set; }
     }

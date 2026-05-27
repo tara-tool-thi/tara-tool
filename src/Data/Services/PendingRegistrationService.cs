@@ -35,9 +35,14 @@ public class PendingRegistrationService(
         return true;
     }
 
-    public async Task<bool> Check(string email, string id)
+    public async Task<bool> Check(string email, string id, bool firstUser)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        if (firstUser)
+        {
+            return await context.PendingRegistrations.AnyAsync(p => p.Id == id);
+        }
 
         return await context.PendingRegistrations.AnyAsync(p => p.Id == id && p.Email == email);
     }
