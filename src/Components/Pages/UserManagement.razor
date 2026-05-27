@@ -53,13 +53,9 @@
         <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
         <TemplateColumn Context="userRow">
-            @* <FluentButton aria-label="Delete pending registration" OnClick="@deleteUserDialog.Show"> *@
-            @* <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeleteUser(userRow.Id))"> *@
             <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
-            @* <FluentButton aria-label="Delete pending registration" > *@
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
-            @* <DeleteUser userName="userRow.email" OnDeleteUser="@(() => @DeleteUser(userRow.Id)" @ref=@deleteUserDialog /> *@
         </TemplateColumn>
      </FluentDataGrid>
 }
@@ -139,7 +135,7 @@
         {
             if(userSearch != null)
             {
-                field = users.Where(r => r.Email.Contains(userSearch)).ToList();
+                field = users.Where(r => r.Email!.Contains(userSearch)).ToList();
             }
             else
             {
@@ -148,6 +144,7 @@
             return field;
         }
     } = new List<ApplicationUser>();
+
 
     // variables catching the search fields
     private string? _registrationSearch;
@@ -231,9 +228,9 @@
     {
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
         DialogResult? result = await dialog.Result;
-        if(result.Cancelled != false)
+        if(result.Cancelled != true)
         {
-
+            await DeleteUser(userToDelete.Id);
         }
     }
 
@@ -288,5 +285,4 @@
         if (gridPendingRegistrations is not null)
             InvokeAsync(() => gridPendingRegistrations.RefreshDataAsync());
     }
-
 }

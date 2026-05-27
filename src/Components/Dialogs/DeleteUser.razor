@@ -15,10 +15,9 @@
 <FluentDialogFooter>
         <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
             <FluentSpacer />
-            <FluentButton Appearance="Appearance.Outline" OnClick="@Hide">Cancel
+            <FluentButton Appearance="Appearance.Outline" OnClick="@CancelDialog">Cancel
             </FluentButton>
-            @* <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" OnClick="OnDeleteUser">Delete *@
-            <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" >Delete
+            <FluentButton Appearance="Appearance.Accent" OnClick=@CloseDialog BackgroundColor="var(--error)" >Delete
             </FluentButton>
         </FluentStack>
  </FluentDialogFooter>
@@ -26,36 +25,18 @@
 
 @code
 {
-    @* [Parameter, EditorRequired]
-    public required string userName { get; set; } *@
-
-    @* [Parameter, EditorRequired]
-    public required EventCallback OnDeleteUser { get; set; } *@
-
     [Parameter]
     public ApplicationUser Content { get; set; } = default!;
 
     [CascadingParameter]
     public FluentDialog? Dialog { get; set; }
 
-    @* [Parameter]
-    public ApplicationUser userToDelete { get; set; } = default!; *@
-
-    @* [Parameter]
-    public required string userName { get; set; } = default!;
-
-    [Parameter]
-    public required string userId { get; set; } = default!; *@
-
-    private bool showDeleteDialog { get; set; } = false;
-
-    public void Show()
+    private async Task CloseDialog()
     {
-        showDeleteDialog = true;
+        await Dialog!.CloseAsync();
     }
-
-    public void Hide()
+    private async Task CancelDialog()
     {
-        showDeleteDialog = false;
+        await Dialog!.CancelAsync();
     }
 }
