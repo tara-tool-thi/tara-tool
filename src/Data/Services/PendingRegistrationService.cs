@@ -35,18 +35,24 @@ public class PendingRegistrationService(
         return true;
     }
 
-    public async Task<bool> Check(string email, string id)
+    public async Task<bool> Check(string email, string id, bool firstUser)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        if (firstUser)
+        {
+            return await context.PendingRegistrations.AnyAsync(p => p.Id == id);
+        }
 
         return await context.PendingRegistrations.AnyAsync(p => p.Id == id && p.Email == email);
     }
 
-    public async Task Delete(string email)
+
+    public async Task Delete(string id)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
-        PendingRegistration? pendingRegistration = await context.PendingRegistrations.FirstOrDefaultAsync(p => p.Email == email);
+        PendingRegistration? pendingRegistration = await context.PendingRegistrations.FirstOrDefaultAsync(p => p.Id == id);
 
         if (pendingRegistration is null)
         {
@@ -55,6 +61,21 @@ public class PendingRegistrationService(
 
         context.PendingRegistrations.Remove(pendingRegistration);
         await context.SaveChangesAsync();
+    }
+
+
+
+    public async Task<List<PendingRegistration>> GetAllPendingRegistrations()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        return await context.PendingRegistrations.ToListAsync();
+    }
+
+    public async Task<bool> Any()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        return await context.PendingRegistrations.AnyAsync();
     }
 
 }
