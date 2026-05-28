@@ -372,7 +372,8 @@ h6 {
     font-weight: bold;
     color: #323130;
     border: 1px solid #8a8886;
-    padding: 2px 8px;
+    padding: 0px 8px;
+    height: 32px;
     width: 48px;
     box-sizing: border-box;
     text-align: center;
