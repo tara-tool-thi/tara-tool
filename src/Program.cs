@@ -34,25 +34,17 @@ builder.Services.AddDbContextFactory<ApplicationDbContext>(
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-
-
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {
-      options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
+        options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddTransient<AccessControlService>();
-builder.Services.AddTransient<PendingRegistrationService>();
-builder.Services.AddTransient<ProjectService>();
-builder.Services.AddTransient<ItemDefinitionService>();
-builder.Services.AddTransient<SessionService>();
-builder.Services.AddTransient<AssetService>();
-builder.Services.AddTransient<TagService>();
+builder.Services.AddDatabaseServices();
 builder.Services.AddTransient<ApplicationUserService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
@@ -89,17 +81,20 @@ app.MapAdditionalIdentityEndpoints();
 // Required for docker deployments
 using (IServiceScope migrationScope = app.Services.CreateScope())
 {
-    ApplicationDbContext db = migrationScope.ServiceProvider
-        .GetRequiredService<ApplicationDbContext>();
+    ApplicationDbContext db =
+        migrationScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     await db.Database.MigrateAsync();
 }
 
-// Create Roles that do not exist. Currently only Admin, but it’s still set up to quickly accommodate new roles.
-// Add a new role by adding its name to the string[] below.
+// Create Roles that do not exist. Currently only Admin, but it’s still set up
+// to quickly accommodate new roles. Add a new role by adding its name to the
+// string[] below.
 IServiceScope scope = app.Services.CreateScope();
-RoleManager<IdentityRole> roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-string[] roles = [ "Admin" ];
-foreach (string role in roles.Where(role => !roleManager.RoleExistsAsync(role).Result))
-     await roleManager.CreateAsync(new IdentityRole(role));
+RoleManager<IdentityRole> roleManager =
+    scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+string[] roles = ["Admin"];
+foreach (string role in roles.Where(
+             role => !roleManager.RoleExistsAsync(role).Result))
+    await roleManager.CreateAsync(new IdentityRole(role));
 
 app.Run();

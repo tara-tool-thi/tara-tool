@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using tara_tool.Data.Enums;
 using tara_tool.Data.Tables;
 
 
@@ -19,7 +20,6 @@ public class ApplicationDbContext(
     public DbSet<Asset> Assets { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<DamageScenario> DamageScenarios { get; set; }
-    public DbSet<ImpactRating> ImpactRatings { get; set; }
     public DbSet<TreatmentDecision> TreatmentDecisions { get; set; }
     public DbSet<ThreatScenario> ThreatScenarios { get; set; }
     public DbSet<AttackPath> AttackPaths { get; set; }
@@ -65,25 +65,19 @@ public class ApplicationDbContext(
             .WithMany()
             .HasForeignKey(e => e.IdTag)
             .IsRequired(false);
-        builder.Entity<Asset>()
-            .HasMany(e => e.DamageScenarios)
-            .WithMany(e => e.Assets);
+        builder.Entity<DamageScenario>().HasKey(e => e.Id);
         builder.Entity<DamageScenario>()
-            .HasMany(e => e.ThreatScenarios)
-            .WithMany(e => e.DamageScenarios);
+            .HasOne(e => e.Asset)
+            .WithMany(e => e.DamageScenarios)
+            .IsRequired();
         builder.Entity<ThreatScenario>()
-            .HasMany(e => e.AttackPaths)
-            .WithMany(e => e.ThreatScenarios);
-        builder.Entity<ImpactRating>()
-            .HasOne(e => e.DamageScenario)
-            .WithOne(e => e.ImpactRating)
-            .HasForeignKey<ImpactRating>(e => e.DamageScenarioId)
-            .IsRequired(true);
-        builder.Entity<TreatmentDecision>()
-            .HasOne(e => e.ImpactRating)
-            .WithOne(e => e.TreatmentDecision)
-            .HasForeignKey<TreatmentDecision>(e => e.ImpactRatingId)
-            .IsRequired(true);
+            .HasOne(e => e.DamageScenarios)
+            .WithMany(e => e.ThreatScenarios)
+            .IsRequired();
+        builder.Entity<AttackPath>()
+            .HasOne(e => e.ThreatScenarios)
+            .WithMany(e => e.AttackPaths)
+            .IsRequired();
         builder.Entity<Tag>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Tags)

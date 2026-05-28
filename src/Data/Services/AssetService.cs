@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data;
@@ -41,7 +42,13 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         Project? project = await context.Projects.Include(a => a.ItemDefinitions).ThenInclude(i => i.Assets).FirstOrDefaultAsync(p => p.Id == itemDefinition.IdProject);
         if (project is null) return null;
 
-        long number = project.ItemDefinitions.SelectMany(a => a.Assets.Select(i => i.AssetNumber)).OrderBy(a => a).FirstOrDefault() + 1;
+        IEnumerable<Asset> assets = project.ItemDefinitions.SelectMany(a => a.Assets);
+        long number = 0;
+        if (assets.Count() > 0)
+        {
+            number = assets.Max(a => a.AssetNumber) + 1;
+        }
+
         Asset newAsset = new Asset
         {
             AssetNumber = number,
@@ -72,10 +79,11 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         return async request =>
         {
             await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync(request.CancellationToken);
-            if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
-            {
-                return GridItemsProviderResult.From(new List<Asset>(), 0);
-            }
+
+
+
+            if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false) return GridItemsProviderResult.From(new List<Asset>(), 0);
+
             IQueryable<Asset> Asset = context.Assets.AsNoTracking().Where(a => a.ItemDefinition!.IdProject == ProjectId);
 
             if (include != null)
@@ -127,12 +135,57 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
         {
             assets = include(assets);
         }
-        Asset? asset = await assets.FirstOrDefaultAsync(a => a.Id == Id);
+        Asset? asset = await assets.Include(a => a.ItemDefinition).FirstOrDefaultAsync(a => a.Id == Id);
         if (asset is null || await accessControlService.CheckUserAccessRightsRead(asset.ItemDefinition!.IdProject) is false)
         {
             return null;
         }
 
         return asset;
+    }
+
+    public async Task<(List<Asset>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<Asset>, IQueryable<Asset>>? include = null, Func<IQueryable<Asset>, IQueryable<Asset>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return ([], 0);
+        }
+
+        IQueryable<Asset> assets = context.Assets;
+
+        if (include is not null)
+        {
+            assets = include(assets);
+        }
+
+        assets = assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
+
+        if (filter is not null)
+        {
+            assets = filter(assets);
+        }
+
+        return (await assets.ToListAsync(), await assets.CountAsync());
+    }
+
+    public async Task<int> CountAllItems(long ProjectId, Func<IQueryable<Asset>, IQueryable<Asset>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return 0;
+        }
+
+        IQueryable<Asset> assets = context.Assets;
+
+        assets = assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
+
+        if (filter is not null)
+        {
+            assets = filter(assets);
+        }
+
+        return await assets.CountAsync();
     }
 }

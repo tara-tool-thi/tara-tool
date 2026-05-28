@@ -286,6 +286,14 @@ h6 {
     margin-right: 4px;
 }
 
+.impact-negligible { color: #6b7280; }
+.impact-moderate  { color: #f59e0b; }
+.impact-major     { color: #ea580c; }
+.impact-severe    { color: #dc2626; }
+
+.margin-box {
+    margin: 1em;
+}
 .theme-toggle-spacing {
     margin-right: 12px;
 }

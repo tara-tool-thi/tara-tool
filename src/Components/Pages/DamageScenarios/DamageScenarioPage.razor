@@ -1,0 +1,103 @@
+@page "/DamageScenario/{IdDamageScenario:long}"
+
+@rendermode InteractiveServer
+@using tara_tool.Data.Services
+@using tara_tool.Components
+@inject DamageScenarioService DamageScenarioService;
+@inject NavigationManager NavigationManager
+@attribute [Authorize]
+
+@if (damageScenario is not null)
+{
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <h1>Damage Scenario</h1>
+        <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
+        <FluentTooltip Anchor="iso-help-button">
+            <p><strong>ISO/SAE 21434 - Asset</strong></p>
+            <p>The following aspects must be defined:</p>
+            <ul>
+                <li><strong>Placeholder:</strong> Placeholder</li>
+            </ul>
+        </FluentTooltip>
+        <GenericAutosave TEntity="DamageScenario" Entity="@damageScenario" SaveService="@DamageScenarioService"
+                         @ref=@genericAutosave />
+        <FluentSpacer />
+        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
+            Delete Damage Scenario
+        </FluentButton>
+    </FluentStack>
+    <p class="tiny-text">
+        Map threat scenarios to damage scenarios, assess the impact of each damage scenario,
+        and define their CIA properties.
+    </p>
+
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap=4>
+        <FluentStack VerticalAlignment="VerticalAlignment.Center">
+            <h4 class="margin-box">DS&nbsp;@damageScenario?.DamageScenarioNumber</h4>
+            <FluentTextArea Class="fullwidth" @bind-Value=@damageScenario!.Description
+                            @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />@*This warns of null deref, but null
+        check happens above…*@
+        </FluentStack>
+
+        <FluentAccordion Class="fullwidth">
+            <FluentAccordionItem Expanded=true Heading="Affected Security Goals">
+                <FluentStack>
+                    <FluentCheckbox @bind-Value=@damageScenario.ConfidentialityAffected
+                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        Confidentiality
+                    </FluentCheckbox>
+                    <FluentCheckbox @bind-Value=@damageScenario.IntegrityAffected
+                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        Integrity
+                    </FluentCheckbox>
+                    <FluentCheckbox @bind-Value=@damageScenario.AvailabilityAffected
+                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        Availability
+                    </FluentCheckbox>
+                </FluentStack>
+            </FluentAccordionItem>
+            <FluentAccordionItem Expanded=true Heading="Impact Rating">
+                <FluentStack>
+                    <ImpactRatingCard @bind-Value=@damageScenario.Safety @bind-Value:after=@genericAutosave.ScheduleAutoSave
+                                      CategoryName="Safety" />
+                    <ImpactRatingCard @bind-Value=@damageScenario.Financial
+                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Financial" />
+                    <ImpactRatingCard @bind-Value=@damageScenario.Operational
+                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Operational" />
+                    <ImpactRatingCard @bind-Value=@damageScenario.Privacy
+                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
+                </FluentStack>
+            </FluentAccordionItem>
+        </FluentAccordion>
+    </FluentStack>
+}
+
+
+<DeletionDialog ItemName="@damageScenario?.DescriptionTruncated" OnDelete="@OnDelete" @ref=@deletionDialog />
+
+@code {
+    [Parameter]
+    public long IdDamageScenario { get; set; }
+
+    private DamageScenario? damageScenario { get; set; }
+
+    private GenericAutosave<DamageScenario> genericAutosave { get; set; } = default!;
+    private DeletionDialog deletionDialog { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        damageScenario = await DamageScenarioService.GetItemByIdAsync(IdDamageScenario,
+        include: (e => e.Include(f => f.Asset)
+        .ThenInclude(g => g != null ? g.ItemDefinition : null)
+        .ThenInclude(h => h != null ? h.Project : null)));
+
+    }
+
+    private async Task OnDelete()
+    {
+        long? assetId = damageScenario?.Asset?.Id;
+        if (damageScenario is not null) await DamageScenarioService.Delete(damageScenario);
+        if (assetId is not null) NavigationManager.NavigateTo($"/Asset/{assetId}");
+    }
+}
