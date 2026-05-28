@@ -421,31 +421,31 @@
     }
 
     private async Task DropBelow(AttackStep targetItem)
-{
-    if (draggedItem is null || draggedItem == targetItem)
     {
+        if (draggedItem is null || draggedItem == targetItem)
+        {
+            hoverAbove = null;
+            hoverBelow = null;
+            return;
+        }
+
+        int oldIndex = attackPath.Steps.IndexOf(draggedItem);
+        int targetIndex = attackPath.Steps.IndexOf(targetItem);
+
+        attackPath.Steps.RemoveAt(oldIndex);
+
+        if (oldIndex < targetIndex)
+            targetIndex--;
+
+        attackPath.Steps.Insert(targetIndex + 1, draggedItem);
+
         hoverAbove = null;
         hoverBelow = null;
-        return;
+        draggedItem = null;
+
+        StateHasChanged();
+        await HandleFieldChanged();
     }
-
-    int oldIndex = attackPath.Steps.IndexOf(draggedItem);
-    int targetIndex = attackPath.Steps.IndexOf(targetItem);
-
-    attackPath.Steps.RemoveAt(oldIndex);
-
-    if (oldIndex < targetIndex)
-        targetIndex--;
-
-    attackPath.Steps.Insert(targetIndex + 1, draggedItem);
-
-    hoverAbove = null;
-    hoverBelow = null;
-    draggedItem = null;
-
-    StateHasChanged();
-    await HandleFieldChanged();
-}
 
     private async Task OnDeleteClick()
     {
