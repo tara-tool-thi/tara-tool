@@ -62,10 +62,10 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         long? projectId = await GetProjectIdForScenarioAsync(context, threatScenarioId);
 
 
-        /*if (projectId == 0 || await accessControlService.CheckUserAccessRightsWrite(projectId) == false)
+        if (projectId == null || await accessControlService.CheckUserAccessRightsWrite(projectId) == false)
         {
             return null;
-        }*/
+        }
 
         // 3. Create and Link the AttackPath
         newPath.Id = 0; // Ensure it's treated as a new entity
