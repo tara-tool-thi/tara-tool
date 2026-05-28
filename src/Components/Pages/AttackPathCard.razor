@@ -12,7 +12,7 @@
             <FluentStack Orientation="Orientation.Horizontal" Class="attackpath-header">
                 <FluentLabel Class="attackpath-badge">@("AP" + attackPath.Id)</FluentLabel>
                 <FluentSpacer Width="12"/>
-                <FluentTextField @bind-Value="@attackPath.Name" Style="width: 30%"
+                <FluentTextField @bind-Value="@attackPath.Name" Style="width: 100%"
                                  Immediate="true"
                                  ImmediateDelay="500"
                                  @bind-Value:after="HandleFieldChanged" />
