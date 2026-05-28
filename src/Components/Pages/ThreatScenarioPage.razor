@@ -67,8 +67,8 @@
     </FluentStack>
 </FluentStack>
 
-<FluentStack HorizontalAlignment="HorizontalAlignment.Center">
-    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%;" HorizontalAlignment="HorizontalAlignment.Center">
+<FluentStack HorizontalAlignment="HorizontalAlignment.Center" Style="overflow-x: auto;">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%; min-width: 700px;" HorizontalAlignment="HorizontalAlignment.Center">
         @if (FilteredAttackPaths.Any())
         {
             <FluentAccordion Class="fullwidth">
