@@ -237,8 +237,8 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         long? projectId = await GetProjectIdForScenarioAsync(context, threatScenarioId);
 
 
-        /*if (projectId == 0 || !await accessControlService.CheckUserAccessRightsWrite(projectId))
-            return;*/
+        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId))
+            return;
 
         // 2. Find the attack path to remove
         AttackPath? attackPathToRemove = scenario.AttackPaths.FirstOrDefault(ap => ap.Id == attackPathId);
