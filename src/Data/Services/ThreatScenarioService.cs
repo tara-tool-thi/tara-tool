@@ -62,7 +62,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         long? projectId = await GetProjectIdForScenarioAsync(context, threatScenarioId);
 
 
-        if (projectId == null || await accessControlService.CheckUserAccessRightsWrite(projectId) == false)
+        if (projectId is null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
         {
             return null;
         }
@@ -92,41 +92,14 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
         if (scenario is null) return null;
 
-        // Deep Security Check
-        /*long? projectId = await GetProjectIdForScenarioAsync(context, id);
-        if (projectId == null || await accessControlService.CheckUserAccessRightsRead(projectId.Value) is false)
+        long? projectId = await GetProjectIdForScenarioAsync(context, id);
+        if (projectId is null || !await accessControlService.CheckUserAccessRightsRead(projectId.Value))
         {
             return null;
-        }*/
+        }
 
         return scenario;
     }
-
-    /*public async Task<List<ThreatScenario>> GetThreatScenariosAsync(long projectID, Func<DbSet<ThreatScenario>, IQueryable<ThreatScenario>>? extend = null)
-    {
-        // Since ThreatScenario has no direct IdProject, we must filter by the relationship chain
-        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-
-        IQueryable<ThreatScenario> query = context.ThreatScenarios;
-
-        if (extend != null)
-        {
-            query = extend.Invoke(context.ThreatScenarios);
-        }
-
-        // Filter scenarios that are connected to assets belonging to this project
-        query = query.Where(ts => ts.DamageScenarios
-                        .SelectMany(ds => ds.Assets)
-                        .Any(a => a.ItemDefinition!.IdProject == projectID));
-
-        // Check access for the project itself before returning results
-        if (await accessControlService.CheckUserAccessRightsRead(projectID) is false)
-        {
-            return new List<ThreatScenario>();
-        }
-
-        return await query.ToListAsync();
-    }*/
 
     public async Task<ThreatScenario?> Save(ThreatScenario scenario)
     {
@@ -141,9 +114,9 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         if (existingScenario == null) return null;
 
         // Security Check: Verify the user has rights to the project this scenario belongs to
-        /*long? projectId = await GetProjectIdForScenarioAsync(context, scenario.Id);
-        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
-            return null;*/
+        long? projectId = await GetProjectIdForScenarioAsync(context, scenario.Id);
+        if (projectId is null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
+            return null;
 
         // Update scalar properties
         context.Entry(existingScenario).CurrentValues.SetValues(scenario);
@@ -237,7 +210,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
         long? projectId = await GetProjectIdForScenarioAsync(context, threatScenarioId);
 
 
-        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId))
+        if (projectId is null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
             return;
 
         // 2. Find the attack path to remove
@@ -273,7 +246,7 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
 
         // Security Check
         long? projectId = await GetProjectIdForScenarioAsync(context, scenario.Id);
-        if (projectId == null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
+        if (projectId is null || !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
             return;
 
         context.ThreatScenarios.Remove(existingScenario);

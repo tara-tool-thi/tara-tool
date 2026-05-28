@@ -57,7 +57,7 @@
                         Immediate="true"
                         ImmediateDelay="500"
                         Class="ts-header-description-input"
-                        Style="width: 100%;"
+                        Style="width: 100%; min-height: 120px; height: auto; overflow: hidden;"
                         @bind-Value:after="@NotifyTSAutosave" />
         </span>
     </FluentStack>
@@ -73,7 +73,7 @@
         @if (FilteredAttackPaths.Any())
         {
             <FluentAccordion Class="fullwidth">
-            @foreach (var path in FilteredAttackPaths)
+            @foreach (AttackPath path in FilteredAttackPaths)
             {
                 @* Each box is now its own component *@
                 <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave" OnDelete="DeleteAttackPathAsync" ImpactRating="@ImpactRating" ImpactCategory="@ImpactCategory"/>
