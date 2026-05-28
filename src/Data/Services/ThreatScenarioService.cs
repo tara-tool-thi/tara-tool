@@ -23,10 +23,10 @@ public class ThreatScenarioService(IDbContextFactory<ApplicationDbContext> conte
     public async Task<ThreatScenario?> CreateThreatScenarioAsync(long projectID, string name, DamageScenario DS)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        /*if (await accessControlService.CheckUserAccessRightsWrite(projectID) == false)
+        if (await accessControlService.CheckUserAccessRightsWrite(projectID) == false)
         {
             return null;
-        }*/
+        }
 
         context.Attach(DS);
 

@@ -48,13 +48,17 @@
                                         @ondragend="() => hoverAbove = null">
                                     </div>
 
-                                    <div class="drag-cell"
-                                        draggable="true"
-                                        @ondragstart="() => DragStart(context)">
-                                    <FluentTextField @bind-Value="context.Text"
-                                                                    Immediate="true"
-                                                                    ImmediateDelay="500"
-                                                                    @bind-Value:after="HandleFieldChanged" />
+                                    <div class="drag-cell">
+                                        <div class="drag-handle"
+                                            draggable="true"
+                                            @ondragstart="() => DragStart(context)"
+                                            title="Drag to reorder">
+                                            <FluentIcon Value="@(new Icons.Regular.Size20.Reorder())" Color="Color.Neutral" />
+                                        </div>
+                                        <FluentTextField @bind-Value="context.Text"
+                                                        Immediate="true"
+                                                        ImmediateDelay="500"
+                                                        @bind-Value:after="HandleFieldChanged" />
                                     </div>
 
                                     @if(context == attackPath.Steps.Last())
@@ -83,7 +87,7 @@
                     <FluentLabel>Add a new step here:</FluentLabel>
                     <FluentTextField Placeholder="Type step and press Enter..."
                                      @bind-Value="newStepText"
-                                     @onkeyup="HandleNewStepKeyPress"/>
+                                     @onkeyup="HandleNewStepKeyPress" />
                 </FluentStack>
 
                     @* Risk Decision Section *@
@@ -102,7 +106,7 @@
                 @* RIGHT COLUMN: Dropdown Inputs *@
                 <FluentGridItem xs="6" Class="attackpath-rightcol">
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
-                        <div>
+                        <div style="width:100%;">
                             <span class="attackpath-small">Elapsed Time</span>
                             <FluentSelect Value="@(attackPath.ElapsedTime.ToString() ?? "")"
                                 ValueChanged="@OnElapsedTimeChanged"
@@ -112,7 +116,7 @@
                                 Style="width: 100%;" />
                         </div>
 
-                        <div>
+                        <div style="width:100%;">
                             <span class="attackpath-small">Specialist Expertise</span>
                             <FluentSelect Value="@(attackPath.SpecialistExpertise.ToString() ?? "")"
                                 ValueChanged="@OnExpertiseChanged"
@@ -122,7 +126,7 @@
                                 Style="width: 100%;" />
                         </div>
 
-                        <div>
+                        <div style="width:100%;">
                             <span class="attackpath-small">Knowledge of Item</span>
                             <FluentSelect Value="@(attackPath.KnowledgeOfComponents.ToString() ?? "")"
                                 ValueChanged="@OnKnowledgeChanged"
@@ -132,7 +136,7 @@
                                 Style="width: 100%;" />
                         </div>
 
-                        <div>
+                        <div style="width:100%;">
                             <span class="attackpath-small">Window of Opportunity</span>
                             <FluentSelect Value="@(attackPath.WindowOfOpportunity.ToString() ?? "")"
                                 ValueChanged="@OnWindowChanged"
@@ -142,7 +146,7 @@
                                 Style="width: 100%;" />
                         </div>
 
-                        <div>
+                        <div style="width:100%;">
                             <span class="attackpath-small">Equipment</span>
                             <FluentSelect Value="@(attackPath.Equipment.ToString() ?? "")"
                                 ValueChanged="@OnEquipmentChanged"

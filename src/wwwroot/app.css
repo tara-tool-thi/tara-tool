@@ -289,11 +289,29 @@ h6 {
 /* AttackPathCard reusable styles (moved from component-specific CSS) */
 .drag-cell {
     cursor: grab;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     user-select: none;
 }
 
-.drag-cell:active {
+.drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: grab;
+}
+
+.drag-handle:active {
     cursor: grabbing;
+}
+
+.drag-cell > :not(.drag-handle) {
+    flex: 1;
+    min-width: 0;
 }
 
 .drop-target {
