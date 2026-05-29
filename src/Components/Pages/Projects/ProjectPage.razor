@@ -33,30 +33,29 @@
 
 <br />
 <FluentStack>
-<h2>
-    <FluentStack @key="@retrievedProjectLastModifiedDate">
-        @projectName
-        @if (isArchived)
-        {
-            <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
-                Archived
-            </FluentBadge>
-        }
-        <FluentSpacer />
+    <h2>
+        <FluentStack @key="@retrievedProjectLastModifiedDate">
+            @projectName
+            @if (isArchived)
+            {
+                <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
+                    Archived
+                </FluentBadge>
+            }
+            <FluentSpacer />
         </FluentStack>
-</h2>
-        <FluentSpacer/>
-        <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
+    </h2>
+    <FluentSpacer />
+    <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
 
 
-        @if (canManage)
-        {
-            <FluentButton Appearance="Appearance.Outline"
-                          Title="Project Settings"
-                          IconStart="@(new Icons.Regular.Size20.Settings())"
-                          OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
-        }
+    @if (canManage)
+    {
+        <FluentButton Appearance="Appearance.Outline" Title="Project Settings"
+                      IconStart="@(new Icons.Regular.Size20.Settings())"
+                      OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
+    }
 
 </FluentStack>
 
@@ -81,54 +80,12 @@
 </FluentStack>
 
 <br />
-<FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@pagination"
-                OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;"
-                @key="@searchText">
-    <EmptyContent>
-        <div style="padding:40px; text-align:center; opacity:0.7;">
-            <div style="font-size:18px; margin-bottom:8px;">
-                No items found
-            </div>
-            <div style="font-size:14px;">
-                Try adjusting your filters or adding new data.
-            </div>
-        </div>
-    </EmptyContent>
-
-    <ChildContent>
-        <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name" />
-        <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function" />
-        <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true"
-                        Title="Operational Environment" />
-    </ChildContent>
-</FluentDataGrid>
-
-<FluentPaginator State="@pagination">
-    <SummaryTemplate>
-        <FluentStack VerticalAlignment="VerticalAlignment.Center">
-            <span><b>@pagination.TotalItemCount</b>&nbsp;items</span>
-            <FluentSpacer />
-            <span>Items per page:</span>
-            <FluentSelect TOption="int" Width="min-content" ValueChanged="@(value => onPageCountChange(value))">
-                <FluentOption Value="5">
-                    5
-                </FluentOption>
-                <FluentOption Value="10" Selected>
-                    10
-                </FluentOption>
-                <FluentOption Value="25">
-                    25
-                </FluentOption>
-                <FluentOption Value="50">
-                    50
-                </FluentOption>
-                <FluentOption Value="100">
-                    100
-                </FluentOption>
-            </FluentSelect>
-        </FluentStack>
-    </SummaryTemplate>
-</FluentPaginator>
+<ItemDefinitionTable @ref="@table" ProjectId="@urlId"
+                     Filters="@(e => e.Where(i => i.IdProject == urlId).Where(i =>
+                                                                                   string.IsNullOrWhiteSpace(searchText) ||
+                                                                                   EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
+                                                                                   EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
+                                                                                   EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%")))" />
 
 @code {
     [Parameter]
@@ -140,10 +97,6 @@
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
-
-    private PaginationState pagination = new PaginationState() { ItemsPerPage = 10 };
-
-    private string lastEdit = string.Empty;
 
     private string searchText
     {
@@ -159,19 +112,14 @@
             {
                 field = value;
             }
+            table?.RefreshGrid();
         }
     } = string.Empty;
 
-    private GridItemsProvider<ItemDefinition> FilteredItemsProvider = default!;
+    private ItemDefinitionTable? table;
 
     protected override async Task OnParametersSetAsync()
     {
-        FilteredItemsProvider = ItemsService.GetItemsProvider(ProjectId: urlId, filter: e => e.Where(i => i.IdProject == urlId).Where(i =>
-            string.IsNullOrWhiteSpace(searchText) ||
-                EF.Functions.Like(i.ItemName, $"%{searchText}%") ||
-                EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
-                EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%"))
-        );
         //New project has to be created when urlId == -1
         if (urlId == -1)
         {
@@ -252,18 +200,4 @@
     }
 
 
-    private async Task onRowClick(FluentDataGridRow<ItemDefinition> row)
-    {
-        if (row.Item is null)
-        {
-            return;
-        }
-
-        NavigationManager.NavigateTo($"/Item/{row.Item.Id}");
-    }
-
-    private async Task onPageCountChange(string newValue)
-    {
-        await pagination.SetItemsPerPageAsync(int.Parse(newValue));
-    }
 }
