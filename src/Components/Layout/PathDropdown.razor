@@ -12,6 +12,7 @@
 @inject ItemDefinitionService ItemService
 @inject DamageScenarioService DamageScenarioService
 @inject AssetService AssetService
+@inject ThreatScenarioService ThreatScenarioService
 
 
 <div @key=@(rerenderdKey.ToString() + addtion.ToString())>
@@ -86,6 +87,25 @@
                             <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
                                         OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario))" />
                         </FluentBreadcrumbItem>
+
+                        if (selectedDamageScenario is not null)
+                        {
+                            <FluentBreadcrumbItem @key="@selectedThreatScenario">
+                                @if (showDeleteIconWithRespectToLayer("ThreatScenario"))
+                                {
+                                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                                                OnClick="@(() => HandleDeletion("ThreatScenario"))" />
+                                }
+                                <FluentSelect TOption="ThreatScenario" Height="250px" Class="path-dropdown-select"
+                                              Style="min-width: max(220px, 24ch);" Items="@AllThreatScenarios"
+                                              OptionText="@(p => p.Id == -1 ? "*" : p.Name)"
+                                              OptionSelected="@(p => p.Id == selectedThreatScenario?.Id)"
+                                              SelectedOptionChanged="@OnThreatScenarioChange" Placeholder="Select"
+                                              OptionValue="@(p => p.Id.ToString())" @key="@selectedThreatScenario" />
+                                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                                            OnClick="@(() => HandleThreatScenarioChange(selectedThreatScenario))" />
+                            </FluentBreadcrumbItem>
+                        }
                     }
                 }
             }
@@ -298,6 +318,22 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
             }
         }
 
+        else if (urlPrefix == "ThreatScenario")
+        {
+            if (long.TryParse(id, out long ThreatScenarioId))
+            {
+                ThreatScenario? threatScenario = await ThreatScenarioService.GetItemByIdAsync(ThreatScenarioId,
+                    q => q.Include(t => t.DamageScenarios).ThenInclude(d => d!.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
+                if (threatScenario is null) return;
+
+                await HandleProjectChange(threatScenario.DamageScenarios!.Asset!.ItemDefinition!.Project, false);
+                await HandleItemChange(threatScenario.DamageScenarios!.Asset!.ItemDefinition!, false);
+                await HandleAssetChange(threatScenario.DamageScenarios!.Asset!, false);
+                await HandleDamageScenarioChange(threatScenario.DamageScenarios!, false);
+                await HandleThreatScenarioChange(threatScenario, false);
+            }
+        }
+
         addtion++;
         await InvokeAsync(StateHasChanged);
     }
@@ -465,7 +501,9 @@ a.Asset!.Id == asset.Id))).Item1);
             {
                 Id = -1,
             });
-            //ToDo: Add ThreatScenarios here
+            AllThreatScenarios.AddRange((await ThreatScenarioService.GetItems(
+                selectedProject?.Id ?? 0,
+                filter: q => q.Where(t => t.DamageScenarios!.Id == damageScenario.Id))).Item1);
             if (navigate) Navigator.NavigateTo($"/DamageScenario/{damageScenario.Id}");
         }
 
@@ -489,12 +527,21 @@ a.Asset!.Id == asset.Id))).Item1);
 
     private async Task HandleThreatScenarioChange(ThreatScenario? threatScenario, bool navigate = true)
     {
+        if (threatScenario == null) return;
+        selectedThreatScenario = threatScenario;
 
+        if (threatScenario.Id != -1)
+        {
+            if (navigate) Navigator.NavigateTo($"/ThreatScenario/{threatScenario.Id}");
+        }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnThreatScenarioChange(ThreatScenario threatScenario)
     {
-
+        if (selectedThreatScenario?.Id == threatScenario.Id) return;
+        await HandleThreatScenarioChange(threatScenario);
     }
 
     public void Dispose()

@@ -8,8 +8,8 @@
 @if (topLayer is not null && bottomLayer is not null)
 {
     <OverviewElement IdProject="@IdProject" IdAsset="@IdAsset" IdDamageScenario=@IdDamageScenario IdItem=@IdItem
-                     LastLayer=@((LayerType)bottomLayer) CurrentLayer="@((LayerType)topLayer)" SearchText="@searchText"
-                     @key=@renderKey />
+                     IdThreatScenario="@IdThreatScenario" LastLayer=@((LayerType)bottomLayer)
+                     CurrentLayer="@((LayerType)topLayer)" SearchText="@searchText" @key=@renderKey />
 }
 
 
@@ -71,7 +71,11 @@
             topLayer = LayerType.ThreatScenario;
         }
 
-        if (IdDamageScenario == -1)
+        if (IdThreatScenario == -1)
+        {
+            bottomLayer = LayerType.ThreatScenario;
+        }
+        else if (IdDamageScenario == -1)
         {
             bottomLayer = LayerType.DamageScenario;
         }

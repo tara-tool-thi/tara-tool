@@ -410,4 +410,31 @@ public class ThreatScenarioService(
 
         return (returnList, returnList.Count());
     }
+
+    public async Task<int> CountAllItems(
+        long ProjectId,
+        Func<IQueryable<ThreatScenario>, IQueryable<ThreatScenario>>? filter =
+            null)
+    {
+        using ApplicationDbContext context =
+            await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) ==
+            false)
+        {
+            return 0;
+        }
+
+        IQueryable<ThreatScenario> threatScenarios = context.ThreatScenarios;
+
+        threatScenarios = threatScenarios.Where(
+            t => t.DamageScenarios!.Asset!.ItemDefinition!.IdProject ==
+                 ProjectId);
+
+        if (filter is not null)
+        {
+            threatScenarios = filter(threatScenarios);
+        }
+
+        return await threatScenarios.CountAsync();
+    }
 }

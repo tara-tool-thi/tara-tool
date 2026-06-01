@@ -3,7 +3,9 @@
 @rendermode InteractiveServer
 @using tara_tool.Data.Services
 @using tara_tool.Components
+@using tara_tool.Components.Pages.ThreatScenarios
 @inject DamageScenarioService DamageScenarioService;
+@inject ThreatScenarioService ThreatScenarioService
 @inject NavigationManager NavigationManager
 @attribute [Authorize]
 
@@ -69,6 +71,24 @@
                                       @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
                 </FluentStack>
             </FluentAccordionItem>
+            <FluentAccordionItem Expanded=true>
+                <HeadingTemplate>
+                    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+                             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
+                        <span><strong>Threat Scenarios</strong></span>
+                        <FluentSpacer />
+                        <div @onclick:stopPropagation="true">
+                            <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateThreatScenario">
+                                New Threat Scenario
+                            </FluentButton>
+                        </div>
+                    </FluentStack>
+                </HeadingTemplate>
+                <ChildContent>
+                    <ThreatScenarioTable ProjectId="@damageScenario!.Asset!.ItemDefinition!.IdProject"
+                                         Filters="@(t => t.Where(x => x.DamageScenarios!.Id == IdDamageScenario))" />
+                </ChildContent>
+            </FluentAccordionItem>
         </FluentAccordion>
     </FluentStack>
 }
@@ -99,5 +119,14 @@
         long? assetId = damageScenario?.Asset?.Id;
         if (damageScenario is not null) await DamageScenarioService.Delete(damageScenario);
         if (assetId is not null) NavigationManager.NavigateTo($"/Asset/{assetId}");
+    }
+
+    private async Task CreateThreatScenario()
+    {
+        ThreatScenario? ts = await ThreatScenarioService.CreateThreatScenarioAsync(damageScenario!.Asset!.ItemDefinition!.IdProject, "New Threat Scenario" ,damageScenario);
+        if (ts is not null)
+        {
+            NavigationManager.NavigateTo($"/ThreatScenario/{ts.Id}");
+        }
     }
 }
