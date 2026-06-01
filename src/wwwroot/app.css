@@ -342,8 +342,8 @@ h6 {
 }
 
 .drop-hover {
-    border-top-color: #3b82f6;
-    background-color: #cce5ff;
+    border-top-color: var(--accent-fill-rest);
+    background-color: var(--neutral-layer-2);
 }
 
 .drop-target-below {
@@ -351,9 +351,36 @@ h6 {
     border-bottom: 2px solid transparent;
 }
 
+.step-textarea-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.step-textarea-wrapper > :not(.remove-step-button) {
+    flex: 1;
+    min-width: 0;
+}
+
+.remove-step-button {
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.add-step-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.add-step-container .fluent-button {
+    gap: 0.5rem;
+}
+
 .drop-hover-below {
-    border-bottom-color: #3b82f6;
-    background-color: #cce5ff;
+    border-bottom-color: var(--accent-fill-rest);
+    background-color: var(--neutral-layer-2);
 }
 
 .attack-step-empty-table {
@@ -361,7 +388,7 @@ h6 {
 }
 
 .empty-step-cell {
-    color: #605e5c;
+    color: var(--neutral-foreground-rest);
     opacity: 0.8;
     padding: 18px 10px;
     text-align: center;
@@ -369,15 +396,15 @@ h6 {
 
 /* AttackPathCard layout classes */
 .attackpath-card {
-    border: 1px solid #8a8886;
+    border: 1px solid var(--neutral-stroke-divider-rest);
     border-radius: 4px;
-    background-color: #ffffff;
+    background-color: var(--neutral-layer-1);
     overflow: visible;
     width: 100%;
 }
 
 .attackpath-header {
-    background-color: #f3f2f1;
+    background-color: transparent;
     padding: 8px 15px;
     display: flex;
     align-items: center;
@@ -388,8 +415,8 @@ h6 {
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    color: #323130;
-    border: 1px solid #8a8886;
+    color: var(--neutral-foreground-rest);
+    border: 1px solid var(--neutral-stroke-divider-rest);
     padding: 0px 8px;
     height: 32px;
     width: 48px;
@@ -403,18 +430,18 @@ h6 {
 
 .attackpath-risk {
     margin-top: 15px;
-    border: 1px solid #8a8886;
+    border: 1px solid var(--neutral-stroke-divider-rest);
     padding: 10px;
-    background-color: #faf9f8;
+    background-color: transparent;
 }
 
 .attackpath-rightcol {
-    border-left: 1px solid #8a8886;
+    border-left: 1px solid var(--neutral-stroke-divider-rest);
 }
 
 .attackpath-small {
     font-size: 0.8rem;
-    color: #605e5c;
+    color: var(--neutral-foreground-rest);
     display: block;
     margin-bottom: 2px;
 }

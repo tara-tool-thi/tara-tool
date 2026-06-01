@@ -49,22 +49,22 @@
                                     </div>
 
                                     <div class="drag-cell">
-                                        <div class="drag-handle"
-                                            draggable="true"
-                                            @ondragstart="() => DragStart(context)"
-                                            title="Drag to reorder">
-                                            <FluentIcon Value="@(new Icons.Regular.Size20.Reorder())" Color="Color.Neutral" />
-                                        </div>
-                                        <div class="step-textarea-wrapper" style="display: flex; gap: 8px; align-items: flex-start; width: 100%;">
+                                        <div class="step-textarea-wrapper">
                                             <FluentTextArea @bind-Value="context.Text"
                                                 Rows="1"
                                                 Immediate="true"
                                                 ImmediateDelay="500"
                                                 @bind-Value:after="HandleFieldChanged"
                                                 Style="flex: 1;" />
-                                            <FluentButton Appearance="Appearance.Outline" Class="remove-step-button" OnClick="() => RemoveStep(context)" Title="Remove step" Style="flex-shrink: 0; margin-top: 4px;">
+                                            <FluentButton Appearance="Appearance.Outline" Class="remove-step-button" OnClick="() => RemoveStep(context)" Title="Remove step">
                                                 <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
                                             </FluentButton>
+                                        </div>
+                                        <div class="drag-handle"
+                                            draggable="true"
+                                            @ondragstart="() => DragStart(context)"
+                                            title="Drag to reorder">
+                                            <FluentIcon Value="@(new Icons.Regular.Size20.Reorder())" Color="Color.Neutral" />
                                         </div>
                                     </div>
 
@@ -90,12 +90,11 @@
                         </FluentLabel>
                     }
 
-                <FluentStack VerticalAlignment="VerticalAlignment.Center">
-                    <FluentLabel>Add a new step here:</FluentLabel>
-                    <FluentTextField Placeholder="Type step and press Enter..."
-                                     @bind-Value="newStepText"
-                                     @onkeyup="HandleNewStepKeyPress" />
-                </FluentStack>
+                    <div class="add-step-container">
+                        <FluentButton Appearance="Appearance.Outline" IconStart="@(new Icons.Regular.Size20.Add())" OnClick="AddNewStep" Title="Add step">
+                            Add step
+                        </FluentButton>
+                    </div>
 
                     @* Risk Decision Section *@
                     <FluentStack Class="attackpath-risk" Orientation="Orientation.Vertical">
@@ -216,8 +215,6 @@
     [Parameter] public float ImpactRating { get; set; }
 
     [Parameter] public string ImpactCategory { get; set; } = string.Empty;
-
-    private string newStepText = string.Empty;
 
     private bool showDeleteDialog = false;
 
@@ -365,32 +362,16 @@
         }
     }
 
+    private async Task AddNewStep()
+    {
+        attackPath.Steps.Add(new AttackStep { Text = string.Empty });
+        await OnFieldChanged.InvokeAsync();
+    }
+
     private async Task RemoveStep(AttackStep step)
     {
         attackPath.Steps.Remove(step);
         await OnFieldChanged.InvokeAsync();
-    }
-
-    private async Task HandleNewStepKeyPress(KeyboardEventArgs e)
-    {
-        // Only trigger if the user pressed 'Enter' and the text isn't empty
-        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(newStepText))
-        {
-            // 1. Create the new step object
-            AttackStep newStep = new AttackStep
-            {
-                Text = newStepText.Trim()
-            };
-
-            // 2. Add it to the collection
-            attackPath.Steps.Add(newStep);
-
-            // 3. Clear the input field for the next step
-            newStepText = string.Empty;
-
-            // 4. Notify the parent (ThreatScenarioPage) to trigger Autosave!
-            await OnFieldChanged.InvokeAsync();
-        }
     }
 
     private async Task DragStart(AttackStep item)
