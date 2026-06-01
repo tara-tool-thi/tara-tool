@@ -1,6 +1,5 @@
 namespace tara_tool.Data.Tables;
 
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 using tara_tool.Data.Enums;
 
@@ -9,16 +8,18 @@ public class DamageScenario
     public long Id { get; set; }
     public virtual Asset? Asset { get; set; }
     public string Description { get; set; } = string.Empty;
-    [NotMapped] public string DescriptionTruncated => Description switch
-    {
-        { Length: >= 25 } => $"{Description[..25]}…",
-        _ => Description
-    };
+    [NotMapped]
+    public string DescriptionTruncated =>
+        Description switch
+        { { Length: >= 25 } => $"{Description[..25]}…",
+            _ => Description
+        };
 
     public long DamageScenarioNumber { get; set; } = 0;
 
     [NotMapped]
-    public (bool Confidentiality, bool Integrity, bool Availability) AffectedSecurityGoals
+    public (bool Confidentiality, bool Integrity,
+            bool Availability) AffectedSecurityGoals
     {
         get => (ConfidentialityAffected, IntegrityAffected, AvailabilityAffected);
         set
@@ -35,7 +36,8 @@ public class DamageScenario
 
     [NotMapped]
     public (ImpactRatingValue Safety, ImpactRatingValue Financial,
-        ImpactRatingValue Operational, ImpactRatingValue Privacy) ImpactRating
+            ImpactRatingValue Operational,
+            ImpactRatingValue Privacy) ImpactRating
     {
         get => (Safety, Financial, Operational, Privacy);
         set
@@ -48,8 +50,10 @@ public class DamageScenario
     }
 
     public ImpactRatingValue Safety { get; set; } = ImpactRatingValue.Negligible;
-    public ImpactRatingValue Financial { get; set; } = ImpactRatingValue.Negligible;
-    public ImpactRatingValue Operational { get; set; } = ImpactRatingValue.Negligible;
+    public ImpactRatingValue Financial { get; set; } =
+        ImpactRatingValue.Negligible;
+    public ImpactRatingValue Operational { get; set; } =
+        ImpactRatingValue.Negligible;
     public ImpactRatingValue Privacy { get; set; } = ImpactRatingValue.Negligible;
 
     public virtual ICollection<ThreatScenario> ThreatScenarios { get; set; } = [];

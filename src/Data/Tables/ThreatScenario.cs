@@ -1,5 +1,4 @@
 using tara_tool.Data.Enums;
-using tara_tool.Data.Tables;
 namespace tara_tool.Data.Tables;
 
 public class ThreatScenario
@@ -12,4 +11,3 @@ public class ThreatScenario
     public long RiskValue { get; set; }
     public virtual ICollection<AttackPath> AttackPaths { get; set; } = [];
 }
-
