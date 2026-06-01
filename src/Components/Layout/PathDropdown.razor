@@ -1,6 +1,3 @@
-@using Humanizer
-@using Microsoft.EntityFrameworkCore.Metadata.Internal
-@using Mono.TextTemplating
 @using tara_tool.Data.Tables
 @using tara_tool.Data.Services
 
@@ -533,6 +530,10 @@ a.Asset!.Id == asset.Id))).Item1);
         if (threatScenario.Id != -1)
         {
             if (navigate) Navigator.NavigateTo($"/ThreatScenario/{threatScenario.Id}");
+        }
+        if (threatScenario.Id == -1)
+        {
+            Navigator.NavigateTo(SerializeCurrentState());
         }
         addtion++;
         await InvokeAsync(StateHasChanged);
