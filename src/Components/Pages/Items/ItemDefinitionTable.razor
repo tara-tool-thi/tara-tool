@@ -1,0 +1,55 @@
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@inject ItemDefinitionService ItemDefinitionService
+
+@if (paginationUI is not null)
+{
+    <FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
+                    OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
+        <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name" />
+        <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function" />
+        <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true" Title="Operational Environment" />
+    </FluentDataGrid>
+}
+
+<PaginationUI @ref=@paginationUI />
+
+@code {
+    [Parameter]
+    public required long ProjectId { get; set; }
+
+    [Parameter]
+    public Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>>? Filters { get; set; }
+
+    private GridItemsProvider<ItemDefinition> FilteredItemsProvider { get; set; } = default!;
+    private PaginationUI paginationUI { get; set; } = default!;
+    private FluentDataGrid<ItemDefinition> grid = default!;
+
+    public void RefreshGrid()
+    {
+        if (grid is not null)
+            InvokeAsync(() => grid.RefreshDataAsync());
+    }
+
+    private void onRowClick(FluentDataGridRow<ItemDefinition> row)
+    {
+        if (row.Item is null)
+        {
+            return;
+        }
+        NavigationManager.NavigateTo($"/Item/{row.Item.Id}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FilteredItemsProvider = ItemDefinitionService.GetItemsProvider(ProjectId, null, Filters);
+    }
+}

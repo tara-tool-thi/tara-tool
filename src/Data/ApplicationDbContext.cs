@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using tara_tool.Data.Enums;
 using tara_tool.Data.Tables;
 
 
@@ -19,7 +20,6 @@ public class ApplicationDbContext(
     public DbSet<Asset> Assets { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<DamageScenario> DamageScenarios { get; set; }
-    public DbSet<ImpactRating> ImpactRatings { get; set; }
     public DbSet<TreatmentDecision> TreatmentDecisions { get; set; }
     public DbSet<ThreatScenario> ThreatScenarios { get; set; }
     public DbSet<AttackPath> AttackPaths { get; set; }

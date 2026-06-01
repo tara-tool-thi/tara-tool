@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data;
 using tara_tool.Data.Services;
@@ -171,10 +172,42 @@ public class ProjectService(
         return project;
     }
 
-    //Not yet relevant
+    public GridItemsProvider<Project> GetItemsProvider(Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    {
+        return GetItemsProvider(0, include, filter);
+    }
+
     public GridItemsProvider<Project> GetItemsProvider(long ProjectId, Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
     {
-        throw new NotImplementedException();
+        return async request =>
+        {
+            await using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync(request.CancellationToken);
+            ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+            if (user is null)
+            {
+                return GridItemsProviderResult.From(new List<Project>(), 0);
+            }
+
+            IQueryable<Project> projects = context.Projects.AsNoTracking()
+                .Where(p => p.Access.Any(a => a.ApplicationUser.Id == user.Id));
+
+            if (include != null)
+            {
+                projects = include(projects);
+            }
+
+            if (filter != null)
+            {
+                projects = filter(projects);
+            }
+
+            int total = await projects.CountAsync();
+            List<Project> items = await request.ApplySorting(projects)
+                .Skip(request.StartIndex)
+                .Take(request.Count ?? 20)
+                .ToListAsync(request.CancellationToken);
+            return GridItemsProviderResult.From(items, total);
+        };
     }
 
     public async Task<List<AccessControl>> GetProjectMembersAsync(long projectId)
@@ -392,5 +425,37 @@ public class ProjectService(
         await context.AccessControls.AddAsync(accessControl);
         await context.SaveChangesAsync();
         return null;
+    }
+
+    //Overload, because the interface forces projectId which we do not have, when checking all projects
+    public async Task<(List<Project>, int TotalItems)> GetItems(Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    {
+        return await GetItems(0, include, filter);
+    }
+
+    public async Task<(List<Project>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<Project>, IQueryable<Project>>? include = null, Func<IQueryable<Project>, IQueryable<Project>>? filter = null)
+    {
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        //Manual check for this one, because what Project ID should I choose? Using everysingle one will break tracking -> killing the performance
+        string? IdUser = (await sessionService.GetApplicationUserAsync())?.Id;
+        if (IdUser == null) return ([], 0);
+
+        //We need to check the access rights of the user right here
+        IQueryable<Project> projects = context.Projects.Where(p => p.Access.Any(a => a.ApplicationUser.Id == IdUser));
+
+
+        if (include is not null)
+        {
+            projects = include(projects);
+        }
+        if (filter is not null)
+        {
+            projects = filter(projects);
+        }
+
+
+
+        return (await projects.ToListAsync(), await projects.CountAsync());
     }
 }

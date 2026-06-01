@@ -1,8 +1,19 @@
 @typeparam TEntity where TEntity : class
 @implements IDisposable
 
-<FluentIcon Id="SaveIcon" Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus />
-<FluentTooltip Anchor="SaveIcon">@tooltipString</FluentTooltip>
+<div id="SaveIcon"><FluentIcon Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus /></div>
+@switch(saveStatus)
+{
+    case SaveStatus.Saved:
+        <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>All Changes Saved.</FluentTooltip>
+        break;
+    case SaveStatus.Saving:
+        <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>Saving Changes…</FluentTooltip>
+        break;
+    case SaveStatus.Unsaved:
+        <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>Unsaved changes…</FluentTooltip>
+        break;
+}
 
 @code {
 
@@ -37,18 +48,10 @@
 
     private Icon GetIcon => saveStatus switch
     {
-        SaveStatus.Saved => new Icons.Regular.Size20.CloudCheckmark(),
-        SaveStatus.Saving => new Icons.Regular.Size20.CloudSync(),
-        SaveStatus.Unsaved => new Icons.Regular.Size20.CloudEdit(),
-        _ => new Icons.Regular.Size20.CloudCheckmark(),
-    };
-
-    private string tooltipString => saveStatus switch
-    {
-        SaveStatus.Saved => "All changes saved.",
-        SaveStatus.Saving => "Saving changes…",
-        SaveStatus.Unsaved => "Unsaved changes…",
-        _ => "Unclear status…"
+        SaveStatus.Saved => new Icons.Regular.Size24.CloudCheckmark(),
+        SaveStatus.Saving => new Icons.Regular.Size24.CloudSync(),
+        SaveStatus.Unsaved => new Icons.Regular.Size24.CloudEdit(),
+        _ => new Icons.Regular.Size24.CloudCheckmark(),
     };
 
     public void Dispose()

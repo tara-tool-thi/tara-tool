@@ -1,3 +1,4 @@
+using Microsoft.Build.Framework;
 using Microsoft.FluentUI.AspNetCore.Components;
 
 public interface IDataService<T> where T : class
@@ -28,4 +29,5 @@ public interface IDataService<T> where T : class
     public Task Delete(T itemToDelete);
 
 
+    public Task<(List<T>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<T>, IQueryable<T>>? include = null, Func<IQueryable<T>, IQueryable<T>>? filter = null);
 }

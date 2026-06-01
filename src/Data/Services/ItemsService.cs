@@ -160,4 +160,51 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
         };
     }
 
+    public async Task<(List<ItemDefinition>, int TotalItems)> GetItems(long ProjectId, Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>>? include = null, Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return ([], 0);
+        }
+
+        IQueryable<ItemDefinition> items = context.ItemDefinitions;
+
+        if (include is not null)
+        {
+            items = include(items);
+        }
+
+        items = items.Where(i => i.IdProject == ProjectId);
+
+        if (filter is not null)
+        {
+            items = filter(items);
+        }
+
+
+
+        return (await items.ToListAsync(), await items.CountAsync());
+    }
+
+    public async Task<int> CountAllItems(long ProjectId, Func<IQueryable<ItemDefinition>, IQueryable<ItemDefinition>>? filter = null)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        if (await accessControlService.CheckUserAccessRightsRead(ProjectId) is false)
+        {
+            return 0;
+        }
+
+        IQueryable<ItemDefinition> items = context.ItemDefinitions;
+
+        items = items.Where(a => a.IdProject == ProjectId);
+
+        if (filter is not null)
+        {
+            items = filter(items);
+        }
+
+        return await items.CountAsync();
+    }
 }
