@@ -55,10 +55,17 @@
                                             title="Drag to reorder">
                                             <FluentIcon Value="@(new Icons.Regular.Size20.Reorder())" Color="Color.Neutral" />
                                         </div>
-                                        <FluentTextField @bind-Value="context.Text"
-                                                        Immediate="true"
-                                                        ImmediateDelay="500"
-                                                        @bind-Value:after="HandleFieldChanged" />
+                                        <div class="step-textarea-wrapper" style="display: flex; gap: 8px; align-items: flex-start; width: 100%;">
+                                            <FluentTextArea @bind-Value="context.Text"
+                                                Rows="1"
+                                                Immediate="true"
+                                                ImmediateDelay="500"
+                                                @bind-Value:after="HandleFieldChanged"
+                                                Style="flex: 1;" />
+                                            <FluentButton Appearance="Appearance.Outline" Class="remove-step-button" OnClick="() => RemoveStep(context)" Title="Remove step" Style="flex-shrink: 0; margin-top: 4px;">
+                                                <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
+                                            </FluentButton>
+                                        </div>
                                     </div>
 
                                     @if(context == attackPath.Steps.Last())
@@ -352,18 +359,16 @@
 
     private async Task HandleFieldChanged()
     {
-        if (OnFieldChanged.HasDelegate) // Might become useful when making a read-only version of this component
+        if (OnFieldChanged.HasDelegate)
         {
             await OnFieldChanged.InvokeAsync();
         }
+    }
 
-        for (int i = attackPath.Steps.Count - 1; i >= 0; i--)
-        {
-            if (string.IsNullOrWhiteSpace(attackPath.Steps[i].Text))
-            {
-                attackPath.Steps.RemoveAt(i);
-            }
-        }
+    private async Task RemoveStep(AttackStep step)
+    {
+        attackPath.Steps.Remove(step);
+        await OnFieldChanged.InvokeAsync();
     }
 
     private async Task HandleNewStepKeyPress(KeyboardEventArgs e)
