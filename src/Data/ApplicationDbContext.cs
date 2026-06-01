@@ -85,7 +85,6 @@ public class ApplicationDbContext(
         builder.Entity<Tag>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Tags)
-            .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
     }
 }

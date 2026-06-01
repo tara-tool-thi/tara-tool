@@ -1,14 +1,18 @@
-namespace tara_tool.Data.Tables;
-
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using tara_tool.Data.Enums;
+
+namespace tara_tool.Data.Tables;
 
 public class DamageScenario
 {
+    [JsonIgnore]
     public long Id { get; set; }
+    [JsonIgnore]
     public virtual Asset? Asset { get; set; }
     public string Description { get; set; } = string.Empty;
-    [NotMapped]
+    
+    [NotMapped, JsonIgnore]
     public string DescriptionTruncated =>
         Description switch
         { { Length: >= 25 } => $"{Description[..25]}…",
@@ -17,7 +21,7 @@ public class DamageScenario
 
     public long DamageScenarioNumber { get; set; } = 0;
 
-    [NotMapped]
+    [NotMapped, JsonIgnore]
     public (bool Confidentiality, bool Integrity,
             bool Availability) AffectedSecurityGoals
     {
@@ -34,7 +38,7 @@ public class DamageScenario
     public bool IntegrityAffected { get; set; } = false;
     public bool AvailabilityAffected { get; set; } = false;
 
-    [NotMapped]
+    [NotMapped, JsonIgnore]
     public (ImpactRatingValue Safety, ImpactRatingValue Financial,
             ImpactRatingValue Operational,
             ImpactRatingValue Privacy) ImpactRating

@@ -1,7 +1,10 @@
+using System.Text.Json.Serialization;
+
 namespace tara_tool.Data.Tables;
 
 public class ItemDefinition
 {
+    [JsonIgnore]
     public long Id { get; set; }
     public string ItemName { get; set; } = string.Empty;
     public string ItemDescription { get; set; } = string.Empty;
@@ -14,10 +17,9 @@ public class ItemDefinition
     public virtual Image? ItemBoundary { get; set; } = null;
     public virtual Image? OperationalEnvironmentImage { get; set; } = null;
 
-    // Adding the foreign Key here explicitly -> might safe us some extra entity
-    // loading, when we want to filter/search/order the ItemDefinitions by Project
-    // Id
+    [JsonIgnore]
     public long IdProject { get; set; }
-    public required virtual Project Project { get; set; }
+    [JsonIgnore]
+    public virtual Project Project { get; set; } = null!;
     public virtual ICollection<Asset> Assets { get; set; } = [];
 }

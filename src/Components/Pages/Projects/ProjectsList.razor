@@ -1,20 +1,16 @@
-@using System.Reflection.Metadata.Ecma335
-@using System.Runtime.InteropServices
-@using System.Security.Claims
-@using Microsoft.AspNetCore.HttpLogging
 @using tara_tool.Data.Tables
 
 @rendermode InteractiveServer
 @inject ProjectService ProjectService
 @inject SessionService SessionService
 @inject NavigationManager NavigationManager
+@inject IToastService ToastService
 
-<FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
+<FluentStack Class="toolbar-stack" Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
              HorizontalAlignment="HorizontalAlignment.Left">
-    <FluentSearch Placeholder="Search projects by name…" Style="width: 25%;" @bind-Value=@TitleSearch Immediate=true
+    <FluentSearch Placeholder="Search projects by name…" Class="search-field" @bind-Value=@TitleSearch Immediate=true
                   ImmediateDelay="500" />
     <FluentButton id="SelectOwnerPopoverButton" OnClick="@(() => openOwnerPopover = !openOwnerPopover)">
-        @*The creation of an inline creation of the icon via ? true : false doesnt work - Ardwetha*@
         @if (openOwnerPopover)
         {
             <FluentIcon Value=@(new Icons.Regular.Size16.ChevronUp()) Color="Color.Neutral" Slot="end" />
@@ -36,7 +32,7 @@
             else
             {
                 <FluentSelect TOption="string" Placeholder="Select an Owner..." Items=@allEmails Multiple=@true
-                              Style="--elevation-shadow-flyout: none;" @bind-SelectedOptions="@selectedMails">
+                              Class="fullwidth" @bind-SelectedOptions="@selectedMails">
                     <OptionTemplate>
                         @context
                     </OptionTemplate>
@@ -51,9 +47,41 @@
         <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Slot="start" />
         Archived
     </FluentButton>
+
+    <FluentButton Appearance="Appearance.Outline"
+                  Title="Import project"
+                  OnClick="@(() => showImportDialog = true)">
+        <FluentIcon Value="@(new Icons.Regular.Size16.ArrowImport())" Slot="start" />
+        Import
+    </FluentButton>
 </FluentStack>
 
-<br />
+<!-- Import Dialog -->
+<FluentDialog Hidden="@(!showImportDialog)" Modal="true" TrapFocus="true" aria-label="Import project">
+    <FluentDialogHeader>
+        <h3>Import project</h3>
+    </FluentDialogHeader>
+    <FluentDialogBody>
+        <FluentStack Orientation="Orientation.Vertical">
+            <span>Paste the project JSON string here:</span>
+            <FluentTextArea @bind-Value="importJson"
+                             Placeholder="Paste JSON..."
+                             Class="fullwidth" />
+        </FluentStack>
+    </FluentDialogBody>
+    <FluentDialogFooter>
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%">
+            <FluentSpacer />
+            <FluentButton Appearance="Appearance.Outline"
+                          OnClick="@(() => { showImportDialog = false; importJson = string.Empty; })">
+                Cancel
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Accent" OnClick="ImportAsync">
+                Import
+            </FluentButton>
+        </FluentStack>
+    </FluentDialogFooter>
+</FluentDialog>
 
 @if (allProjectsWithAccess.Count() != 0)
 {
@@ -77,6 +105,8 @@
 
     private bool openOwnerPopover = false;
     private bool showArchived = false;
+    private bool showImportDialog = false;
+    private string importJson = string.Empty;
 
     private string? _titleSearchBack = null;
     private string? TitleSearch
@@ -107,7 +137,7 @@
             NavigationManager.NavigateTo("Account/InvalidUser");
             return;
         }
-    
+
         allProjectsWithAccess = await ProjectService.GetProjectsAsync((value) => value.Include(a =>
         a.Access).ThenInclude(a => a.ApplicationUser));
         allEmails = allProjectsWithAccess.SelectMany(a => a.Access).Where(a => a.Owner == true).Select(a =>
@@ -118,6 +148,32 @@ a.ApplicationUser).Where(m =>
     private async Task OnSearchAsync(OptionsSearchEventArgs<string> e)
     {
         e.Items = allEmails.Where(s => s.Contains(e.Text, StringComparison.OrdinalIgnoreCase)).OrderBy(s => s);
+    }
+
+    private async Task ImportAsync()
+    {
+        if (string.IsNullOrWhiteSpace(importJson))
+        {
+            ToastService.ShowError("Please paste project JSON.");
+            return;
+        }
+
+        bool success = await ProjectService.ImportProjectAsync(importJson);
+        if (success)
+        {
+            showImportDialog = false;
+            importJson = string.Empty;
+            ToastService.ShowSuccess("Project imported successfully.");
+
+            // Refresh list
+            allProjectsWithAccess = await ProjectService.GetProjectsAsync((value) => value.Include(a =>
+                a.Access).ThenInclude(a => a.ApplicationUser));
+            StateHasChanged();
+        }
+        else
+        {
+            ToastService.ShowError("Failed to import project.");
+        }
     }
 }
 

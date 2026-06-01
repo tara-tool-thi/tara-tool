@@ -78,7 +78,8 @@ public class DamageScenarioService(
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
         DamageScenario? damageScenario =
-            await context.DamageScenarios.Include(e => e.Asset)
+            await context.DamageScenarios.AsNoTracking()
+                .Include(e => e.Asset)
                 .ThenInclude(e => e != null ? e.ItemDefinition : null)
                 .FirstOrDefaultAsync(a => a.Id == entityToSave.Id);
 
@@ -103,7 +104,7 @@ public class DamageScenarioService(
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
         IQueryable<DamageScenario> damageScenarios =
-            context.DamageScenarios.AsQueryable();
+            context.DamageScenarios.AsNoTracking().AsQueryable();
 
         if (include is not null)
             damageScenarios = include(damageScenarios);
@@ -169,7 +170,8 @@ public class DamageScenarioService(
             return ([], 0);
         }
 
-        IQueryable<DamageScenario> damageScenarios = context.DamageScenarios;
+        IQueryable<DamageScenario> damageScenarios =
+            context.DamageScenarios.AsNoTracking();
 
         if (include is not null)
         {

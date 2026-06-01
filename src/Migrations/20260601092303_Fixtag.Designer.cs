@@ -11,8 +11,8 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260601063523_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260601092303_Fixtag")]
+    partial class Fixtag
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -432,10 +432,6 @@ namespace tara_tool.Migrations
                         .IsRequired()
                         .HasColumnType("BLOB");
 
-                    b.Property<byte[]>("Hash")
-                        .IsRequired()
-                        .HasColumnType("BLOB");
-
                     b.HasKey("Id");
 
                     b.ToTable("Images");
@@ -545,16 +541,16 @@ namespace tara_tool.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("IdProject")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("ProjectId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("IdProject");
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("Tags");
                 });
@@ -820,7 +816,7 @@ namespace tara_tool.Migrations
                 {
                     b.HasOne("tara_tool.Data.Tables.Project", "Project")
                         .WithMany("Tags")
-                        .HasForeignKey("IdProject")
+                        .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

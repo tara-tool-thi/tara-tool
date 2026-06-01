@@ -298,6 +298,16 @@ h6 {
     margin-right: 12px;
 }
 
+.toolbar-stack {
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.search-field {
+    flex-grow: 1;
+}
+
 /* AttackPathCard reusable styles (moved from component-specific CSS) */
 .drag-cell {
     cursor: grab;
