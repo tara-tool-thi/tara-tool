@@ -11,8 +11,8 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260602090215_update")]
-    partial class update
+    [Migration("20260602144347_problemSolving2")]
+    partial class problemSolving2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
