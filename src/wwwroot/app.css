@@ -262,6 +262,22 @@ table th {
     width: 100%;
 }
 
+.margin-bottom-16 {
+    margin: 16px 0;
+}
+
+.margin-bottom-0 {
+    margin-bottom: 0;
+}
+
+.margin-top-10 {
+    margin-top: 10px;
+}
+
+.min-width-24 {
+    min-width: 24px;
+}
+
 h1,
 h2,
 h3,
@@ -286,6 +302,12 @@ h6 {
     margin-right: 4px;
 }
 
+.management-data-grid {
+    width: 100%;
+    margin: 0 auto;
+    overflow-x: auto;
+}
+
 .impact-negligible { color: #6b7280; }
 .impact-moderate  { color: #f59e0b; }
 .impact-major     { color: #ea580c; }
@@ -294,6 +316,7 @@ h6 {
 .margin-box {
     margin: 1em;
 }
+
 .theme-toggle-spacing {
     margin-right: 12px;
 }
