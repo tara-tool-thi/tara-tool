@@ -449,6 +449,16 @@ h6 {
 
 .attackpath-rightcol {
     border-left: 1px solid var(--neutral-stroke-divider-rest);
+    min-width: 0;
+}
+
+.attackpath-select-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.attackpath-select-field fluent-select {
+    max-width: 100%;
 }
 
 .attackpath-small {
@@ -524,6 +534,38 @@ h6 {
 
 .ts-header-risk-label {
     font-size: 0.9rem;
+}
+
+.threat-scenario-attackpaths-shell {
+    width: 100%;
+    overflow-x: clip;
+    display: flex;
+    justify-content: center;
+}
+
+.threat-scenario-attackpaths {
+    box-sizing: border-box;
+    padding: 20px;
+    width: 100%;
+    max-width: 900px;
+    min-width: 0;
+    flex: 0 1 900px;
+}
+
+@media (max-width: 900px) {
+    .threat-scenario-attackpaths {
+        padding-inline: 12px;
+    }
+
+    .attackpath-grid fluent-grid-item {
+        grid-column: span 12;
+    }
+
+    .attackpath-rightcol {
+        border-left: 0;
+        border-top: 1px solid var(--neutral-stroke-divider-rest);
+        padding-top: 12px;
+    }
 }
 
 .breadcrumb-scroll {

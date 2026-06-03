@@ -29,7 +29,7 @@
         <ChildContent>
             <FluentGrid Spacing="2" Class="attackpath-grid">
                 @* LEFT COLUMN: The Steps Table *@
-                <FluentGridItem xs="7">
+                <FluentGridItem xs="9">
                     @if (attackPath.Steps.Any())
                     {
                         <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="min-height: 50px; overflow: visible;">
@@ -111,56 +111,56 @@
 
 
                 @* RIGHT COLUMN: Dropdown Inputs *@
-                <FluentGridItem xs="5" Class="attackpath-rightcol">
+                <FluentGridItem xs="3" Class="attackpath-rightcol">
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
-                        <div style="width:100%;">
+                        <div class="attackpath-select-field">
                             <span class="attackpath-small">Elapsed Time</span>
                             <FluentSelect Value="@(attackPath.ElapsedTime.ToString() ?? "")"
                                 ValueChanged="@OnElapsedTimeChanged"
                                 Items="@ElapsedTimeOptions"
                                 OptionText="@(opt => opt.Text)"
                                 OptionValue="@(opt => opt.Value.ToString())"
-                                Style="width: 100%;" />
+                                Style="width: 100%; min-width: 0;" />
                         </div>
 
-                        <div style="width:100%;">
+                        <div class="attackpath-select-field">
                             <span class="attackpath-small">Specialist Expertise</span>
                             <FluentSelect Value="@(attackPath.SpecialistExpertise.ToString() ?? "")"
                                 ValueChanged="@OnExpertiseChanged"
                                 Items="@ExpertiseOptions"
                                 OptionText="@(opt => opt.Text)"
                                 OptionValue="@(opt => opt.Value.ToString())"
-                                Style="width: 100%;" />
+                                Style="width: 100%; min-width: 0;" />
                         </div>
 
-                        <div style="width:100%;">
+                        <div class="attackpath-select-field">
                             <span class="attackpath-small">Knowledge of Item</span>
                             <FluentSelect Value="@(attackPath.KnowledgeOfComponents.ToString() ?? "")"
                                 ValueChanged="@OnKnowledgeChanged"
                                 Items="@KnowledgeOptions"
                                 OptionText="@(opt => opt.Text)"
                                 OptionValue="@(opt => opt.Value.ToString())"
-                                Style="width: 100%;" />
+                                Style="width: 100%; min-width: 0;" />
                         </div>
 
-                        <div style="width:100%;">
+                        <div class="attackpath-select-field">
                             <span class="attackpath-small">Window of Opportunity</span>
                             <FluentSelect Value="@(attackPath.WindowOfOpportunity.ToString() ?? "")"
                                 ValueChanged="@OnWindowChanged"
                                 Items="@WindowOptions"
                                 OptionText="@(opt => opt.Text)"
                                 OptionValue="@(opt => opt.Value.ToString())"
-                                Style="width: 100%;" />
+                                Style="width: 100%; min-width: 0;" />
                         </div>
 
-                        <div style="width:100%;">
+                        <div class="attackpath-select-field">
                             <span class="attackpath-small">Equipment</span>
                             <FluentSelect Value="@(attackPath.Equipment.ToString() ?? "")"
                                 ValueChanged="@OnEquipmentChanged"
                                 Items="@EquipmentOptions"
                                 OptionText="@(opt => opt.Text)"
                                 OptionValue="@(opt => opt.Value.ToString())"
-                                Style="width: 100%;" />
+                                Style="width: 100%; min-width: 0;" />
                         </div>
 
                         <FluentDivider Style="margin-top: 10px; margin-bottom: 10px;" />
