@@ -250,7 +250,7 @@ table th {
 }
 
 .tiny-text {
-    color: #333333;
+    color: var(--neutral-fill-strong-hover);
     font-size: 1em;
 }
 
@@ -308,10 +308,21 @@ h6 {
     overflow-x: auto;
 }
 
-.impact-negligible { color: #6b7280; }
-.impact-moderate  { color: #f59e0b; }
-.impact-major     { color: #ea580c; }
-.impact-severe    { color: #dc2626; }
+.impact-negligible {
+    color: #6b7280;
+}
+
+.impact-moderate {
+    color: #f59e0b;
+}
+
+.impact-major {
+    color: #ea580c;
+}
+
+.impact-severe {
+    color: #dc2626;
+}
 
 .margin-box {
     margin: 1em;
