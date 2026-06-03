@@ -29,7 +29,7 @@
         <ChildContent>
             <FluentGrid Spacing="2" Class="attackpath-grid">
                 @* LEFT COLUMN: The Steps Table *@
-                <FluentGridItem xs="6">
+                <FluentGridItem xs="7">
                     @if (attackPath.Steps.Any())
                     {
                         <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="min-height: 50px; overflow: visible;">
@@ -110,7 +110,7 @@
 
 
                 @* RIGHT COLUMN: Dropdown Inputs *@
-                <FluentGridItem xs="6" Class="attackpath-rightcol">
+                <FluentGridItem xs="5" Class="attackpath-rightcol">
                     <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
                         <div style="width:100%;">
                             <span class="attackpath-small">Elapsed Time</span>
@@ -222,8 +222,15 @@
 
     private string APRiskValue = string.Empty;
 
-    private string FeasibilityColor => attackPath.AttackFeasibilityRating <= AttackFeasibilityRating.High
-        ? "#d13438" : "#605e5c";
+    private string FeasibilityColor => attackPath.AttackFeasibilityRating switch
+    {
+        AttackFeasibilityRating.VeryLow => "#0b6a0b",
+        AttackFeasibilityRating.Low => "#13a10e",
+        AttackFeasibilityRating.Medium => "#f7630c",
+        AttackFeasibilityRating.High => "#d13438",
+        AttackFeasibilityRating.Critical => "#a4262c",
+        _ => "#605e5c"
+    };
 
 
     private AttackStep? hoverAbove;

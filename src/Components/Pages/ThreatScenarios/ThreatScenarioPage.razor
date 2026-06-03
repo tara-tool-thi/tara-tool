@@ -69,7 +69,7 @@
 </FluentStack>
 
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center" Style="overflow-x: auto;">
-    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 50%; min-width: 700px;" HorizontalAlignment="HorizontalAlignment.Center">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Style="padding: 20px; width: 60%; min-width: 820px; max-width: 980px;" HorizontalAlignment="HorizontalAlignment.Center">
         @if (FilteredAttackPaths.Any())
         {
             <FluentAccordion Class="fullwidth">
@@ -158,7 +158,7 @@
     private string ImpactCategory = "T";
 
     public string BgColor { get; set; } = "#dff6ff"; // Default light blue
-    public string RiskColor { get; set; } = "#d13438"; // Default red
+    private string RiskColor => GetRiskColor();
 
     List<AttackPath> AttackPaths = new();
 
@@ -224,6 +224,7 @@
         if (pathToRemove != null)
         {
             AttackPaths.Remove(pathToRemove);
+            thisTS?.AttackPaths.Remove(pathToRemove);
         }
 
         // Call the service to delete it from the database
@@ -282,6 +283,27 @@
         TSRiskValue = await threatScenarioService.CalculateRiskValue(thisTS!, ImpactRating);
 
         StateHasChanged();
+    }
+
+    private string GetRiskColor()
+    {
+        if (thisTS?.AttackPaths == null || !thisTS.AttackPaths.Any())
+        {
+            return "#605e5c";
+        }
+
+        AttackFeasibilityRating mostCriticalRating =
+            thisTS.AttackPaths.Min(ap => ap.AttackFeasibilityRating);
+
+        return mostCriticalRating switch
+        {
+            AttackFeasibilityRating.VeryLow => "#0b6a0b",
+            AttackFeasibilityRating.Low => "#13a10e",
+            AttackFeasibilityRating.Medium => "#f7630c",
+            AttackFeasibilityRating.High => "#d13438",
+            AttackFeasibilityRating.Critical => "#a4262c",
+            _ => "#605e5c"
+        };
     }
 
     private (string, float) FindWorstImpactCategoryAndRating((ImpactRatingValue Safety, ImpactRatingValue Financial, ImpactRatingValue Operational, ImpactRatingValue Privacy) impactRatings)
