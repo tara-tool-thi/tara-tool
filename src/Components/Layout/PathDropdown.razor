@@ -12,7 +12,9 @@
 @inject ThreatScenarioService ThreatScenarioService
 
 
-<div @key=@(rerenderdKey.ToString() + addtion.ToString()) style="width: 80%;">
+<FluentSpacer Width="50"/>
+
+<div @key=@(rerenderdKey.ToString() + addtion.ToString()) class="breadcrumb-scroll">
 
         <FluentBreadcrumb @key=@(rerenderdKey.ToString() + addtion.ToString())>
                 @if (selectedProject is not null)
