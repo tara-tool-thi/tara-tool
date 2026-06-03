@@ -56,6 +56,16 @@ public class ProjectService(
         return await projectQuery.ToListAsync();
     }
 
+    public async Task<List<Project>> GetOwnedProjectsAsync(ApplicationUser user)
+    {
+        using ApplicationDbContext context =
+            await _contextFactory.CreateDbContextAsync();
+
+        if (user is null) return [];
+
+        return [.. context.Projects.Where(p => p.Access.Any(a => a.Owner == true && a.ApplicationUser.Id == user.Id))];
+    }
+
     public async Task<Project?> CreateNewProjectAsync(string name)
     {
         ApplicationUser? user = await sessionService.GetApplicationUserAsync();
@@ -323,6 +333,57 @@ public class ProjectService(
         newOwnerAc.WriteAccess = true;
         newOwnerAc.ReadAccess = true;
 
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    /// <summary>
+    /// This overload does not require the new owner to already be a member of the project.
+    /// It exists in order to allow a user to transfer their projects to someone else when deleting their account.
+    /// </summary>
+    public async Task<bool> TransferOwnershipAsync(long projectId, ApplicationUser newOwner)
+    {
+        if (newOwner is null) return false;
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        ApplicationUser? currentUser = await sessionService.GetApplicationUserAsync();
+        if (currentUser is null) return false;
+
+        Project? project = context.Projects.Include(p => p.Access).First(p => p.Id == projectId);
+        if (project is null) return false;
+
+        if (!project.Access.Any(a => a.ApplicationUser.Id == currentUser.Id && a.Owner)) return false;
+
+        AccessControl? currentOwnerAc = await context.AccessControls
+            .FirstOrDefaultAsync(a => a.Project.Id == projectId && a.ApplicationUser.Id == currentUser.Id && a.Owner);
+        if (currentOwnerAc is null) return false;
+
+        AccessControl? newOwnerAc = await context.AccessControls
+            .FirstOrDefaultAsync(a => a.ApplicationUser.Id == newOwner.Id && a.Project.Id == projectId && !a.Owner);
+
+        currentOwnerAc.Owner = false;
+
+        if (newOwnerAc is null)
+        {
+            newOwnerAc = new AccessControl
+            {
+                Project = project,
+                ApplicationUser = newOwner,
+                Owner = true,
+                Manage = true,
+                WriteAccess = true,
+                ReadAccess = true
+            };
+            context.AccessControls.Add(newOwnerAc);
+        }
+        else
+        {
+            newOwnerAc.Owner = true;
+            newOwnerAc.Manage = true;
+            newOwnerAc.WriteAccess = true;
+            newOwnerAc.ReadAccess = true;
+        }
         await context.SaveChangesAsync();
         return true;
     }

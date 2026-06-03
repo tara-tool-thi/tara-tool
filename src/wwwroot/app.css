@@ -250,7 +250,7 @@ table th {
 }
 
 .tiny-text {
-    color: #333333;
+    color: var(--neutral-foreground-rest);
     font-size: 1em;
 }
 
@@ -319,4 +319,8 @@ h6 {
 
 .theme-toggle-spacing {
     margin-right: 12px;
+}
+
+.text-danger {
+    color: red;
 }
