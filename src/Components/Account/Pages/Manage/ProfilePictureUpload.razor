@@ -1,9 +1,8 @@
 @rendermode InteractiveServer
 
-@using tara_tool.Data
 @using tara_tool.Data.Tables
 
-@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject ApplicationUserService UserService
 @inject tara_tool.Data.Services.ProfilePictureStateService PicState
 @inject IJSRuntime JS
 
@@ -14,30 +13,27 @@
     @* ── Normal: Avatar + Buttons ── *@
     <FluentStack Orientation="Orientation.Horizontal"
                  VerticalAlignment="VerticalAlignment.Center"
-                 Style="gap:16px">
+                 Class="pic-avatar-row">
 
         @if (pictureDataUrl is not null)
         {
             <img src="@pictureDataUrl"
-                 alt="Profilbild"
-                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;
-                        flex-shrink:0;border:2px solid var(--accent-fill-rest)" />
+                 alt="Profile picture"
+                 class="pic-avatar-img" />
         }
         else
         {
-            <div style="width:80px;height:80px;border-radius:50%;flex-shrink:0;
-                        background:var(--accent-fill-rest);color:white;
-                        display:flex;align-items:center;justify-content:center;
-                        font-size:2rem;font-weight:600;user-select:none;">
+            <div class="pic-avatar-initials">
                 @initial
             </div>
         }
 
-        <FluentStack Orientation="Orientation.Vertical" Style="gap:8px">
-            <InputFile id="pic-file-input"
-                       OnChange="OnFileSelected"
-                       accept="image/*"
-                       style="display:none" />
+        <FluentStack Orientation="Orientation.Vertical" Class="pic-button-col">
+            <div class="pic-file-input-hidden">
+                <InputFile id="pic-file-input"
+                           OnChange="OnFileSelected"
+                           accept="image/*" />
+            </div>
             <FluentButton Appearance="Appearance.Neutral"
                           OnClick="OpenPicker"
                           IconStart="@(new Icons.Regular.Size20.ImageAdd())">
@@ -57,14 +53,12 @@
 else
 {
     @* ── Crop UI ── *@
-    <div style="max-width:420px">
-        <p style="margin:0 0 8px;font-size:13px;color:var(--neutral-foreground-hint)">
-            Wähle deinen Ausschnitt (quadratisch):
-        </p>
-        <div style="max-height:350px;overflow:hidden;border-radius:4px;background:#111">
-            <img id="pic-crop-img" style="display:block;max-width:100%" alt="" />
+    <div class="pic-crop-container">
+        <FluentLabel Class="pic-crop-hint">Select your square crop:</FluentLabel>
+        <div class="pic-crop-preview-wrapper">
+            <img id="pic-crop-img" class="pic-crop-preview-img" alt="" />
         </div>
-        <FluentStack Orientation="Orientation.Horizontal" Style="gap:8px;margin-top:12px">
+        <FluentStack Orientation="Orientation.Horizontal" Class="pic-crop-actions">
             <FluentButton Appearance="Appearance.Accent"
                           OnClick="SaveCropped"
                           IconStart="@(new Icons.Regular.Size20.Checkmark())">
@@ -81,7 +75,7 @@ else
 
 @if (errorMsg is not null)
 {
-    <FluentMessageBar Intent="MessageIntent.Error" Style="margin-top:8px">
+    <FluentMessageBar Intent="MessageIntent.Error" Class="pic-error-bar">
         @errorMsg
     </FluentMessageBar>
 }
@@ -101,8 +95,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        using var ctx = await DbContextFactory.CreateDbContextAsync();
-        var user = await ctx.ApplicationUsers.FindAsync(UserId);
+        ApplicationUser? user = await UserService.GetUserByIdAsync(UserId);
         if (user?.ProfilePicture is { Length: > 0 })
             pictureDataUrl =
                 $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";
@@ -116,7 +109,7 @@ else
         if (_shouldInitCropper && _pendingCropDataUrl is not null)
         {
             _shouldInitCropper  = false;
-            var url             = _pendingCropDataUrl;
+            string url          = _pendingCropDataUrl;
             _pendingCropDataUrl = null;
             await JS.InvokeVoidAsync("profilePic_initCropper", url);
         }
@@ -132,21 +125,21 @@ else
     private async Task OnFileSelected(InputFileChangeEventArgs e)
     {
         errorMsg = null;
-        var file = e.File;
-        const long max = 5 * 1024 * 1024;
+        IBrowserFile file = e.File;
+        const long max    = 5 * 1024 * 1024;
 
         if (!file.ContentType.StartsWith("image/"))
         {
-            errorMsg = "Bitte eine Bilddatei wählen.";
+            errorMsg = "Please select an image file.";
             return;
         }
         if (file.Size > max)
         {
-            errorMsg = "Bild muss kleiner als 5 MB sein.";
+            errorMsg = "Image must be smaller than 5 MB.";
             return;
         }
 
-        using var ms = new MemoryStream();
+        using MemoryStream ms = new MemoryStream();
         await file.OpenReadStream(max).CopyToAsync(ms);
         _pendingCropDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
         _shouldInitCropper  = true;
@@ -155,22 +148,15 @@ else
 
     private async Task SaveCropped()
     {
-        var dataUrl = await JS.InvokeAsync<string?>("profilePic_getCropped");
+        string? dataUrl = await JS.InvokeAsync<string?>("profilePic_getCropped");
         if (dataUrl is null)
         {
-            errorMsg = "Crop fehlgeschlagen — bitte erneut versuchen.";
+            errorMsg = "Crop failed — please try again.";
             return;
         }
 
-        var bytes = Convert.FromBase64String(dataUrl.Split(',').Last());
-
-        using var ctx = await DbContextFactory.CreateDbContextAsync();
-        var user = await ctx.ApplicationUsers.FindAsync(UserId);
-        if (user is not null)
-        {
-            user.ProfilePicture = bytes;
-            await ctx.SaveChangesAsync();
-        }
+        byte[] bytes = Convert.FromBase64String(dataUrl.Split(',').Last());
+        await UserService.UpdateProfilePictureAsync(UserId, bytes);
 
         pictureDataUrl          = dataUrl;
         PicState.PictureDataUrl = dataUrl;
@@ -188,13 +174,7 @@ else
 
     private async Task DeletePicture()
     {
-        using var ctx = await DbContextFactory.CreateDbContextAsync();
-        var user = await ctx.ApplicationUsers.FindAsync(UserId);
-        if (user is not null)
-        {
-            user.ProfilePicture = null;
-            await ctx.SaveChangesAsync();
-        }
+        await UserService.UpdateProfilePictureAsync(UserId, null);
         pictureDataUrl          = null;
         PicState.PictureDataUrl = null;
     }

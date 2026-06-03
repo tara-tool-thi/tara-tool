@@ -1,7 +1,6 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
-@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
-@inject AuthenticationStateProvider AuthStateProvider
+@inject SessionService Session
 @inject tara_tool.Data.Services.ProfilePictureStateService PicState
 @rendermode InteractiveServer
 @implements IDisposable
@@ -89,12 +88,7 @@
         PicState.OnChange += OnPicChanged;
 
         // Load initial picture from DB
-        var auth   = await AuthStateProvider.GetAuthenticationStateAsync();
-        var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        if (userId is null) return;
-
-        using var ctx = await DbContextFactory.CreateDbContextAsync();
-        var user = await ctx.ApplicationUsers.FindAsync(userId);
+        ApplicationUser? user = await Session.GetApplicationUserAsync();
         if (user?.ProfilePicture is { Length: > 0 })
         {
             pictureDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";

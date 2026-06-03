@@ -17,11 +17,11 @@
 <FluentGrid>
     <FluentGridItem xs="12" sm="6">
 
-        @* ── Profilbild (interaktive Insel) ── *@
+        @* Profile picture (interactive island) *@
         @if (user is not null)
         {
-            <div style="margin-bottom:24px">
-                <FluentLabel Typo="Typography.Subject" Style="display:block;margin-bottom:12px">
+            <div class="profile-picture-section">
+                <FluentLabel Typo="Typography.Subject" Class="profile-picture-label">
                     Profile Picture
                 </FluentLabel>
                 <ProfilePictureUpload UserId="@user.Id" Username="@(username ?? string.Empty)" />
