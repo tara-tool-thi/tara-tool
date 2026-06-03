@@ -27,20 +27,12 @@
 
 <FluentStack VerticalAlignment="VerticalAlignment.Center">
     <p class="tiny-text">Identify attack paths, assess attack feasibility, and determine the risk for each threat scenario.</p>
-
-</FluentStack>
-
-<FluentStack VerticalAlignment="VerticalAlignment.Center">
-    <FluentSearch Placeholder="Free text search" Style="width: 25%;" @bind-Value=@searchText Immediate=true
-                  ImmediateDelay="500" />
     <FluentSpacer/>
     <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
         Delete
     </FluentButton>
 </FluentStack>
-
-<div style="height: 1rem;"></div>
 
 <FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
     <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
@@ -63,6 +55,11 @@
         <span class="ts-header-risk-label">Risk:</span>
         <span style="color: @RiskColor; font-weight: bold;">@(ImpactCategory + TSRiskValue)</span>
     </FluentStack>
+</FluentStack>
+
+<FluentStack VerticalAlignment="VerticalAlignment.Center">
+    <FluentSearch Placeholder="Free text search" Style="width: 25%;" @bind-Value=@searchText Immediate=true
+                  ImmediateDelay="500" />
 </FluentStack>
 
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center" Style="overflow-x: auto;">
