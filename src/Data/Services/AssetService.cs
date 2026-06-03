@@ -60,7 +60,7 @@ public class AssetService(
 
         IEnumerable<Asset> assets =
             project.ItemDefinitions.SelectMany(a => a.Assets);
-        long number = 0;
+        long number = 1;
         if (assets.Count() > 0)
         {
             number = assets.Max(a => a.AssetNumber) + 1;

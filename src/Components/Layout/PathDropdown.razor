@@ -11,108 +11,183 @@
 @inject AssetService AssetService
 @inject ThreatScenarioService ThreatScenarioService
 
-
-<FluentSpacer Width="30"/>
-
-<div @key=@(rerenderdKey.ToString() + addtion.ToString()) class="breadcrumb-scroll">
-
-        <FluentBreadcrumb @key=@(rerenderdKey.ToString() + addtion.ToString())>
-                @if (selectedProject is not null)
-    {
-            <FluentBreadcrumbItem @key="@(selectedProject.GetHashCode() + addtion.ToString())">
+<div class="path-dropdown-scroll-container">
+    <FluentStack Orientation="Orientation.Horizontal">
+        @if (selectedProject is not null)
+        {
+            <div class="path-dropdown-step" @key="@($"selected-project-{selectedProject.Id}")">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"/>
                 @if (showDeleteIconWithRespectToLayer("Project"))
                 {
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
                                 OnClick="@(() => HandleDeletion("Project"))" />
                 }
-                <FluentSelect TOption="Project" Height="250px" Class="path-dropdown-select"
-                              Style="min-width: max(220px, 24ch);" Items="@AllProjects"
-                              OptionText="@(p => p.Id == -1 ? "*" :  p.ProjectName)" SelectedOptionChanged="@OnProjectChange"
-                              Placeholder="Select" OptionSelected="@(p => p.Id == selectedProject?.Id)"
-                              OptionValue="@(p => p.Id.ToString())" @key="@selectedProject" />
-                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
-                            OnClick="@(() => HandleProjectChange(selectedProject))" />
 
-            </FluentBreadcrumbItem>
+                <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
+                              OnClick="@(() => HandleProjectChange(selectedProject, true))">
+                    @(selectedProject.Id == -1 ? "*" : selectedProject.ProjectName)
+                </FluentButton>
+                <FluentButton Id="project-menu-anchor" Appearance="Appearance.Lightweight" Class="path-dropdown-select" OnClick="@(() => _projectMenuOpen = !_projectMenuOpen)">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"/>
+                </FluentButton>
+                <FluentMenu Anchor="project-menu-anchor" @bind-Open="_projectMenuOpen" UseMenuService="true">
+                    @foreach (Project p in AllProjects)
+                    {
+                        <FluentMenuItem OnClick="@(() => OnProjectChange(p))"
+                                        Selected="@(p.Id == selectedProject?.Id)">
+                            @(p.Id == -1 ? "*" : p.ProjectName)
+                        </FluentMenuItem>
+                    }
+                </FluentMenu>
+            </div>
 
-            @if (selectedProject is not null)
-            {
-                <FluentBreadcrumbItem @key="@selectedItem">
+            <div class="path-dropdown-step" @key="@($"selected-item-{selectedItem?.Id ?? 0}")">
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                @if (selectedItem is not null)
+                {
                     @if (showDeleteIconWithRespectToLayer("Item"))
                     {
-                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
                                     OnClick="@(() => HandleDeletion("Item"))" />
                     }
-                    <FluentSelect TOption="ItemDefinition" Height="250px" Class="path-dropdown-select"
-                                  Style="min-width: max(220px, 24ch);" Items="@AllItems"
-                                  OptionText="@(i => i.Id == -1 ? "*" :  i.ItemName)" OptionSelected="@(i => i.Id == selectedItem?.Id)"
-                                  SelectedOptionChanged="@OnItemChanged" Placeholder="Select" OptionValue="@(p => p.Id.ToString())"
-                                  @key="@selectedItem" />
-                    <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
-                                OnClick="@(() => HandleItemChange(selectedItem))" />
-                </FluentBreadcrumbItem>
-
-                if (selectedItem is not null)
+                    <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
+                                  OnClick="@(() => HandleItemChange(selectedItem, true))">
+                        @(selectedItem.Id == -1 ? "*" : selectedItem.ItemName)
+                    </FluentButton>
+                }
+                else
                 {
-                    <FluentBreadcrumbItem @key="@selectedAsset">
+                    <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select path-dropdown-select-placeholder" OnClick="@(() => _itemMenuOpen = !_itemMenuOpen)">
+                        Select Item
+                    </FluentButton>
+                }
+                <FluentButton Id="item-menu-anchor" Appearance="Appearance.Lightweight" Class="path-dropdown-select" OnClick="@(() => _itemMenuOpen = !_itemMenuOpen)">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                </FluentButton>
+                <FluentMenu Anchor="item-menu-anchor" @bind-Open="_itemMenuOpen" UseMenuService="true">
+                    @foreach (ItemDefinition i in AllItems)
+                    {
+                        <FluentMenuItem OnClick="@(() => OnItemChanged(i))"
+                                        Selected="@(i.Id == selectedItem?.Id)">
+                            @(i.Id == -1 ? "*" : i.ItemName)
+                        </FluentMenuItem>
+                    }
+                </FluentMenu>
+            </div>
+
+            @if (selectedItem is not null)
+            {
+                <div class="path-dropdown-step" @key="@($"selected-asset-{selectedAsset?.Id ?? 0}")">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                    @if (selectedAsset is not null)
+                    {
                         @if (showDeleteIconWithRespectToLayer("Asset"))
                         {
-                            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
                                         OnClick="@(() => HandleDeletion("Asset"))" />
                         }
-                        <FluentSelect TOption="Asset" Height="250px" Class="path-dropdown-select"
-                                      Style="min-width: max(220px, 24ch);" Items="@AllAssets"
-                                      OptionText="@(a => a.Id == -1 ? "*" : a.AssetName)" SelectedOptionChanged="OnAssetChange"
-                                      OptionSelected="@(p => p.Id == selectedAsset?.Id)" Placeholder="Select"
-                                      OptionValue="@(p => p.Id.ToString())" @key="@selectedAsset" />
-                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
-                                    OnClick="@(() => HandleAssetChange(selectedAsset))" />
-                    </FluentBreadcrumbItem>
-
-                    if (selectedAsset is not null)
+                        <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
+                                      OnClick="@(() => HandleAssetChange(selectedAsset, true))">
+                            @(selectedAsset.Id == -1 ? "*" : selectedAsset.AssetName)
+                        </FluentButton>
+                    }
+                    else
                     {
-                        <FluentBreadcrumbItem @key="@selectedDamageScenario">
+                        <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select path-dropdown-select-placeholder" OnClick="@(() => _assetMenuOpen = !_assetMenuOpen)">
+                            Select Asset
+                        </FluentButton>
+                    }
+                    <FluentButton Id="asset-menu-anchor" Appearance="Appearance.Lightweight" Class="path-dropdown-select" OnClick="@(() => _assetMenuOpen = !_assetMenuOpen)">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                    </FluentButton>
+                    <FluentMenu Anchor="asset-menu-anchor" @bind-Open="_assetMenuOpen" UseMenuService="true">
+                        @foreach (Asset a in AllAssets)
+                        {
+                            <FluentMenuItem OnClick="@(() => OnAssetChange(a))"
+                                            Selected="@(a.Id == selectedAsset?.Id)">
+                                @(a.Id == -1 ? "*" : a.AssetName)
+                            </FluentMenuItem>
+                        }
+                    </FluentMenu>
+                </div>
+
+                @if (selectedAsset is not null)
+                {
+                    <div class="path-dropdown-step" @key="@($"selected-damage-{selectedDamageScenario?.Id ?? 0}")">
+                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                        @if (selectedDamageScenario is not null)
+                        {
                             @if (showDeleteIconWithRespectToLayer("DamageScenario"))
                             {
-                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
                                             OnClick="@(() => HandleDeletion("DamageScenario"))" />
                             }
-                            <FluentSelect TOption="DamageScenario" Height="250px" Class="path-dropdown-select"
-                                          Style="min-width: max(220px, 24ch);" Items="@AllDamadgeScenarios"
-                                          OptionText="@(p => p.Id == -1 ? "*" : p.DamageScenarioNumber.ToString())"
-                                          OptionSelected="@(p => p.Id == selectedDamageScenario?.Id)"
-                                          SelectedOptionChanged="@OnDamageScenarioChange" Placeholder="Select"
-                                          OptionValue="@(p => p.Id.ToString())" @key="@selectedDamageScenario" />
-                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
-                                        OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario))" />
-                        </FluentBreadcrumbItem>
-
-                        if (selectedDamageScenario is not null)
+                            <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
+                                          OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario, true))">
+                                @(selectedDamageScenario.Id == -1 ? "*" : selectedDamageScenario.DamageScenarioNumber.ToString())
+                            </FluentButton>
+                        }
+                        else
                         {
-                            <FluentBreadcrumbItem @key="@selectedThreatScenario" >
+                            <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select path-dropdown-select-placeholder" OnClick="@(() => _damageMenuOpen = !_damageMenuOpen)">
+                                Select Damage Scenario
+                            </FluentButton>
+                        }
+                        <FluentButton Id="damagescenario-menu-anchor" Appearance="Appearance.Lightweight" Class="path-dropdown-select" OnClick="@(() => _damageMenuOpen = !_damageMenuOpen)">
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                        </FluentButton>
+                        <FluentMenu Anchor="damagescenario-menu-anchor" @bind-Open="_damageMenuOpen" UseMenuService="true">
+                            @foreach (DamageScenario d in AllDamadgeScenarios)
+                            {
+                                <FluentMenuItem OnClick="@(() => OnDamageScenarioChange(d))"
+                                                Selected="@(d.Id == selectedDamageScenario?.Id)">
+                                    @(d.Id == -1 ? "*" : d.DamageScenarioNumber.ToString())
+                                </FluentMenuItem>
+                            }
+                        </FluentMenu>
+                    </div>
+
+                    @if (selectedDamageScenario is not null)
+                    {
+                        <div class="path-dropdown-step" @key="@($"selected-threat-{selectedThreatScenario?.Id ?? 0}")">
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                            @if (selectedThreatScenario is not null)
+                            {
                                 @if (showDeleteIconWithRespectToLayer("ThreatScenario"))
                                 {
-                                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
                                                 OnClick="@(() => HandleDeletion("ThreatScenario"))" />
                                 }
-                                <FluentSelect TOption="ThreatScenario" Height="250px" Class="path-dropdown-select"
-                                              Style="min-width: max(220px, 24ch);" Items="@AllThreatScenarios"
-                                              OptionText="@(p => p.Id == -1 ? "*" : p.Name)"
-                                              OptionSelected="@(p => p.Id == selectedThreatScenario?.Id)"
-                                              SelectedOptionChanged="@OnThreatScenarioChange" Placeholder="Select"
-                                              OptionValue="@(p => p.Id.ToString())" @key="@selectedThreatScenario" />
-                                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
-                                            OnClick="@(() => HandleThreatScenarioChange(selectedThreatScenario))" />
-                            </FluentBreadcrumbItem>
-                        }
+                                <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
+                                              OnClick="@(() => HandleThreatScenarioChange(selectedThreatScenario, true))">
+                                    @(selectedThreatScenario.Id == -1 ? "*" : selectedThreatScenario.Name)
+                                </FluentButton>
+                            }
+                            else
+                            {
+                                <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select path-dropdown-select-placeholder" OnClick="@(() => _threatMenuOpen = !_threatMenuOpen)">
+                                    Select Threat Scenario
+                                </FluentButton>
+                            }
+                            <FluentButton Id="threatscenario-menu-anchor" Appearance="Appearance.Lightweight" Class="path-dropdown-select" OnClick="@(() => _threatMenuOpen = !_threatMenuOpen)">
+                                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
+                            </FluentButton>
+                            <FluentMenu Anchor="threatscenario-menu-anchor" @bind-Open="_threatMenuOpen" UseMenuService="true">
+                                @foreach (ThreatScenario t in AllThreatScenarios)
+                                {
+                                    <FluentMenuItem OnClick="@(() => OnThreatScenarioChange(t))"
+                                                    Selected="@(t.Id == selectedThreatScenario?.Id)">
+                                        @(t.Id == -1 ? "*" : t.Name)
+                                    </FluentMenuItem>
+                                }
+                            </FluentMenu>
+                        </div>
                     }
                 }
             }
-    }
-        </FluentBreadcrumb>
-
+        }
+    </FluentStack>
 </div>
-<FluentSpacer Width="30"/>
 
 @code {
     private List<Project> AllProjects = [];
@@ -120,6 +195,12 @@
     private List<Asset> AllAssets = [];
     private List<DamageScenario> AllDamadgeScenarios = [];
     private List<ThreatScenario> AllThreatScenarios = [];
+
+    private bool _projectMenuOpen;
+    private bool _itemMenuOpen;
+    private bool _assetMenuOpen;
+    private bool _damageMenuOpen;
+    private bool _threatMenuOpen;
 
     private bool showDeleteIconWithRespectToLayer(string layer)
     {
@@ -130,19 +211,6 @@
         else if (layer == "Project" && selectedProject is not null && selectedItem is null) return true;
 
         return false;
-    }
-
-    private long addtion = 0;
-    private long rerenderdKey
-    {
-        get
-        {
-            return (selectedProject?.GetHashCode() ?? 0) ^
-                (selectedItem?.GetHashCode() ?? 0) ^
-                (selectedAsset?.GetHashCode() ?? 0) ^
-                (selectedThreatScenario?.GetHashCode() ?? 0) ^
-                (selectedDamageScenario?.GetHashCode() ?? 0);
-        }
     }
 
     private async Task PerformActionBasedOnState()
@@ -245,6 +313,11 @@
             selectedDamageScenario = null;
             selectedThreatScenario = null;
             selectedProject = null;
+            _projectMenuOpen = false;
+            _itemMenuOpen = false;
+            _assetMenuOpen = false;
+            _damageMenuOpen = false;
+            _threatMenuOpen = false;
             StateHasChanged();
             return;
         }
@@ -333,7 +406,6 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
             }
         }
 
-        addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -395,12 +467,12 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
             if (navigate)
                 Navigator.NavigateTo($"/Project/{project.Id}");
         }
-        addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
     private async void OnProjectChange(Project project)
     {
+        _projectMenuOpen = false;
         if (selectedProject?.Id == project.Id) return;
         await HandleProjectChange(project);
     }
@@ -408,6 +480,7 @@ d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
     private async Task HandleItemChange(ItemDefinition? itemDefinition, bool navigate = true)
     {
         if (itemDefinition == null) return;
+        _itemMenuOpen = false;
         AllAssets.Clear();
         AllDamadgeScenarios.Clear();
         AllThreatScenarios.Clear();
@@ -436,12 +509,12 @@ itemDefinition.Id))).Item1);
             });
             Navigator.NavigateTo(SerializeCurrentState());
         }
-        addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnItemChanged(ItemDefinition itemDefinition)
     {
+        _itemMenuOpen = false;
         if (selectedItem?.Id == itemDefinition.Id) return;
         await HandleItemChange(itemDefinition);
     }
@@ -449,6 +522,7 @@ itemDefinition.Id))).Item1);
     private async Task HandleAssetChange(Asset? asset, bool navigate = true)
     {
         if (asset == null) return;
+        _assetMenuOpen = false;
         AllDamadgeScenarios.Clear();
         AllThreatScenarios.Clear();
         selectedAsset = asset;
@@ -474,12 +548,12 @@ a.Asset!.Id == asset.Id))).Item1);
             });
             Navigator.NavigateTo(SerializeCurrentState());
         }
-        addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnAssetChange(Asset asset)
     {
+        _assetMenuOpen = false;
         if (selectedAsset?.Id == asset.Id) return;
         await HandleAssetChange(asset);
     }
@@ -489,6 +563,7 @@ a.Asset!.Id == asset.Id))).Item1);
     private async Task HandleDamageScenarioChange(DamageScenario? damageScenario, bool navigate = true)
     {
         if (damageScenario == null) return;
+        _damageMenuOpen = false;
         AllThreatScenarios.Clear();
         selectedDamageScenario = damageScenario;
         selectedThreatScenario = null;
@@ -514,12 +589,12 @@ a.Asset!.Id == asset.Id))).Item1);
             });
             Navigator.NavigateTo(SerializeCurrentState());
         }
-        addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnDamageScenarioChange(DamageScenario damageScenario)
     {
+        _damageMenuOpen = false;
         if (selectedDamageScenario?.Id == damageScenario.Id) return;
         await HandleDamageScenarioChange(damageScenario);
     }
@@ -527,6 +602,7 @@ a.Asset!.Id == asset.Id))).Item1);
     private async Task HandleThreatScenarioChange(ThreatScenario? threatScenario, bool navigate = true)
     {
         if (threatScenario == null) return;
+        _threatMenuOpen = false;
         selectedThreatScenario = threatScenario;
 
         if (threatScenario.Id != -1)
@@ -537,12 +613,12 @@ a.Asset!.Id == asset.Id))).Item1);
         {
             Navigator.NavigateTo(SerializeCurrentState());
         }
-        addtion++;
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnThreatScenarioChange(ThreatScenario threatScenario)
     {
+        _threatMenuOpen = false;
         if (selectedThreatScenario?.Id == threatScenario.Id) return;
         await HandleThreatScenarioChange(threatScenario);
     }

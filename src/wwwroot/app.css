@@ -84,6 +84,32 @@ footer a:hover {
     border-color: rgba(255, 255, 255, 0.28);
 }
 
+.path-dropdown-select-placeholder::part(control) {
+    color: var(--neutral-foreground-hint);
+    font-style: italic;
+}
+
+.path-dropdown-scroll-container {
+    overflow-x: auto;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.path-dropdown-scroll-container-icon {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: -0.125em;
+    cursor: pointer;
+}
+
+.path-dropdown-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
 .alert {
     border: 1px dashed var(--accent-fill-rest);
     padding: 5px;
@@ -601,4 +627,11 @@ h6 {
     -webkit-overflow-scrolling: touch;
     /* smooth scroll on iOS */
     scrollbar-width: thin;
+hr {
+    color: var(--accent-base-color);
+}
+
+.overview-accordion-spacing {
+    margin-top: 10px;
+    padding: 10px;
 }
