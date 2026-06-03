@@ -6,6 +6,7 @@
 
 <FluentLayout>
     <FluentHeader>
+    <FluentStack Orientation="Orientation.Horizontal" Width="100%">
         <HomeButton/>
         <FluentSpacer Width= "16" />
             <PathDropdown/>
@@ -14,6 +15,8 @@
             <ThemeToggle />
         </div>
         <TaraProfileMenu EMail=@email />
+        <FluentSpacer Width="16"/>
+    </FluentStack>
     </FluentHeader>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <FluentBodyContent Class="body-content">
