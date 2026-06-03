@@ -56,10 +56,11 @@
                                                 ImmediateDelay="500"
                                                 @bind-Value:after="HandleFieldChanged"
                                                 Style="flex: 1;" />
-                                            <FluentButton Appearance="Appearance.Outline" Class="remove-step-button" OnClick="() => RemoveStep(context)" Title="Remove step">
-                                                <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
-                                            </FluentButton>
+
                                         </div>
+                                        <FluentButton Style="max-width: 40px" Appearance="Appearance.Outline" Class="remove-step-button" OnClick="() => RemoveStep(context)" Title="Remove step">
+                                                <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
+                                        </FluentButton>
                                         <div class="drag-handle"
                                             draggable="true"
                                             @ondragstart="() => DragStart(context)"
