@@ -486,6 +486,14 @@ h6 {
     border-right: 1px solid #8a8886;
     padding: 0 20px;
     font-weight: bold;
+    min-width: 180px;
+    max-width: 280px;
+}
+
+.ts-header-name-text {
+    display: block;
+    overflow-wrap: anywhere;
+    text-align: center;
 }
 
 .ts-header-description {

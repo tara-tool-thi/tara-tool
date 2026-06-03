@@ -44,10 +44,7 @@
 
 <FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
     <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
-        <FluentTextField @bind-Value="@TSName"
-                        Immediate="true"
-                        ImmediateDelay="500"
-                        @bind-Value:after="@NotifyTSAutosave" />
+        <span class="ts-header-name-text">@TSName</span>
     </FluentStack>
 
     <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
@@ -212,9 +209,10 @@
 
         await threatScenarioService.Delete(thisTS);
 
-        // Close dialog and navigate away (back to home)
+        long? damageScenarioId = thisTS.DamageScenarios?.Id;
+
         showDeleteDialog = false;
-        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo(damageScenarioId is not null ? $"/DamageScenario/{damageScenarioId}" : "/");
     }
 
     async Task DeleteAttackPathAsync(long attackPathId)
@@ -261,8 +259,6 @@
 
     async void NotifyTSAutosave()
     {
-        thisTS!.Name = TSName;
-
         thisTS!.Description = TSDescription;
 
         genericAutosave.ScheduleAutoSave();
