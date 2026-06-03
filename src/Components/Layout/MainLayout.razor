@@ -7,8 +7,8 @@
 <FluentLayout>
     <FluentHeader>
         <HomeButton/>
-        <FluentSpacer Width= "16" />
-            <PathDropdown/>
+        <FluentSpacer Width="16" />
+        <PathDropdown/>
         <FluentSpacer />
         <div class="theme-toggle-spacing">
             <ThemeToggle />
@@ -44,14 +44,11 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
-    private ApplicationUser? user { get; set; }
     private string email { get; set; } = "";
-
-    private bool openProfileMenu { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
-        user = await UserManager.GetUserAsync(HttpContext.User);
+        ApplicationUser? user = await UserManager.GetUserAsync(HttpContext.User);
         email = user is not null ? await UserManager.GetEmailAsync(user) ?? "" : "";
     }
 }
