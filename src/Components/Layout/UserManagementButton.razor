@@ -1,20 +1,17 @@
 @rendermode InteractiveServer
 
 @using Microsoft.FluentUI.AspNetCore.Components
-@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 
 <AuthorizeView Roles="Admin">
     <FluentButton @onclick="RedirectUserManagement">
-        <FluentIcon Value="@(new Icons.Regular.Size24.Settings())"/>
+        <FluentIcon Value="@(new Icons.Regular.Size24.ShieldSettings())"/>
     </FluentButton>
 </AuthorizeView>
 
 
 @code{
-
-    private ClaimsPrincipal? user { get; set; }
 
     private void RedirectUserManagement(){
         NavigationManager.NavigateTo("/UserManagement");
