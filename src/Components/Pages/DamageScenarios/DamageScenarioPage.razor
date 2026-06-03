@@ -78,7 +78,7 @@
                         <span><strong>Threat Scenarios</strong></span>
                         <FluentSpacer />
                         <div @onclick:stopPropagation="true">
-                            <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="ShowCreateThreatScenarioDialog">
+                            <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateThreatScenario">
                                 New Threat Scenario
                             </FluentButton>
                         </div>
@@ -96,32 +96,6 @@
 
 <DeletionDialog ItemName="@damageScenario?.DescriptionTruncated" OnDelete="@OnDelete" @ref=@deletionDialog />
 
-<FluentDialog Hidden="@(!showCreateThreatScenarioDialog)" Modal="true" TrapFocus="true" aria-label="Create threat scenario">
-    <FluentDialogHeader>
-        <h3>Name your Threat Scenario</h3>
-    </FluentDialogHeader>
-    <FluentDialogBody>
-        <FluentTextField Label="Name"
-                         Placeholder="Threat Scenario name"
-                         Class="fullwidth"
-                         @bind-Value="@newThreatScenarioName"
-                         Immediate="true" />
-    </FluentDialogBody>
-    <FluentDialogFooter>
-        <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalGap="8">
-            <FluentSpacer />
-            <FluentButton Appearance="Appearance.Outline" OnClick="HideCreateThreatScenarioDialog">
-                Cancel
-            </FluentButton>
-            <FluentButton Appearance="Appearance.Accent"
-                          Disabled="@string.IsNullOrWhiteSpace(newThreatScenarioName)"
-                          OnClick="CreateThreatScenario">
-                Create
-            </FluentButton>
-        </FluentStack>
-    </FluentDialogFooter>
-</FluentDialog>
-
 @code {
     [Parameter]
     public long IdDamageScenario { get; set; }
@@ -130,8 +104,6 @@
 
     private GenericAutosave<DamageScenario> genericAutosave { get; set; } = default!;
     private DeletionDialog deletionDialog { get; set; } = default!;
-    private bool showCreateThreatScenarioDialog;
-    private string newThreatScenarioName = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -149,30 +121,13 @@
         if (assetId is not null) NavigationManager.NavigateTo($"/Asset/{assetId}");
     }
 
-    private void ShowCreateThreatScenarioDialog()
-    {
-        newThreatScenarioName = string.Empty;
-        showCreateThreatScenarioDialog = true;
-    }
-
-    private void HideCreateThreatScenarioDialog()
-    {
-        showCreateThreatScenarioDialog = false;
-        newThreatScenarioName = string.Empty;
-    }
-
     private async Task CreateThreatScenario()
     {
-        string threatScenarioName = newThreatScenarioName.Trim();
-        if (string.IsNullOrWhiteSpace(threatScenarioName))
-        {
-            return;
-        }
-
-        ThreatScenario? ts = await ThreatScenarioService.CreateThreatScenarioAsync(damageScenario!.Asset!.ItemDefinition!.IdProject, threatScenarioName, damageScenario);
+        ThreatScenario? ts = await ThreatScenarioService.CreateThreatScenarioAsync(damageScenario!.Asset!.ItemDefinition!.IdProject, "Threat Scenario", damageScenario);
         if (ts is not null)
         {
-            HideCreateThreatScenarioDialog();
+            ts.Name = $"Threat Scenario {ts.Id}";
+            await ThreatScenarioService.Save(ts);
             NavigationManager.NavigateTo($"/ThreatScenario/{ts.Id}");
         }
     }
