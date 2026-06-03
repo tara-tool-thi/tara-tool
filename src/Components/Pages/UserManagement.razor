@@ -29,7 +29,7 @@
 {
     <h4 class="margin-bottom-16">Pending Registrations</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
-    <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations">
+    <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations" @key=pendingRegistrations>
         <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
         <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
             @GenerateRegistrationLink(pendingRow.Id)
@@ -48,7 +48,7 @@
 {
     <h4 class="margin-bottom-16">Registered Users</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
-    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" @ref="gridUsers"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
         <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
         <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
@@ -199,10 +199,25 @@
         if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
         if(users.Count == 0 || pendingRegistrations.Count == 0)
         {
-            users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
-            pendingRegistrations = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
+            @* users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen *@
+            await OnRefreshUsers();
+            await OnRefreshPendingRegistrations();
         }
    }
+
+    public async Task OnRefreshPendingRegistrations() {
+        pendingRegistrations = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
+        if(gridPendingRegistrations != null) {
+            await gridPendingRegistrations.RefreshDataAsync(true);
+        }
+    }
+
+    public async Task OnRefreshUsers() {
+        users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
+        if(gridUsers != null) {
+            await gridUsers.RefreshDataAsync(true);
+        }
+    }
 
     private async Task OpenDialogInviteUser()
     {
@@ -239,9 +254,10 @@
         return NavigationManager.BaseUri + "Account/Register?id=" + id;
     }
 
-    private void CloseCopyLink()
+    private async Task CloseCopyLink()
     {
         copyLink!.Hide();
+        await OnRefreshPendingRegistrations();
     }
 
     private async Task CopyLinkToClipboard(string? id)
@@ -265,6 +281,7 @@
     {
         await PendingRegistrationService.Delete(id);
         ToastService.ShowSuccess("Deleted pending registration");
+        await OnRefreshPendingRegistrations();
     }
 
     private async Task DeleteUser(string id)
@@ -274,15 +291,10 @@
         {
             await UserManager.DeleteAsync(userToDelete);
             ToastService.ShowSuccess("Deleted user");
+            await OnRefreshUsers();
         } else {
             Console.WriteLine("Failed to delete user");
         }
     }
 
-    private void RefreshGrid()
-    {
-        // grid may be null during initial render
-        if (gridPendingRegistrations is not null)
-            InvokeAsync(() => gridPendingRegistrations.RefreshDataAsync());
-    }
 }

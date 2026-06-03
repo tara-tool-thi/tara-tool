@@ -105,12 +105,12 @@ foreach (string role in roles.Where(
     await roleManager.CreateAsync(new IdentityRole(role));
 
 string asciiArt = """
-        ________  _________    ____  ___    
-       /_  __/ / / /  _/   |  / __ \/   |   
-        / / / /_/ // // /| | / /_/ / /| |   
-       / / / __  // // ___ |/ _, _/ ___ |   
-      /_/ /_/ /_/___/_/  |_/_/ |_/_/  |_|   
-                                      
+        ________  _________    ____  ___
+       /_  __/ / / /  _/   |  / __ \/   |
+        / / / /_/ // // /| | / /_/ / /| |
+       / / / __  // // ___ |/ _, _/ ___ |
+      /_/ /_/ /_/___/_/  |_/_/ |_/_/  |_|
+
 
     """;
 
@@ -125,7 +125,7 @@ if(newId)
 }
 
 Console.WriteLine(asciiArt);
-Console.WriteLine("Welcome to TARA tool :)");
+Console.WriteLine("Welcome to THIARA :)");
 
 if(newId)
 {
