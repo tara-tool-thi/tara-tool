@@ -11,6 +11,7 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 @inject ApplicationUserService ApplicationUserService
+@inject SessionService SessionService
 
 <AuthorizeView Roles="Admin">
     <PageTitle>User Management</PageTitle>
@@ -52,6 +53,17 @@
         <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
         <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
+                <TemplateColumn Title="Role" Context="user">
+            @GetRolesForUser(user).Result
+        </TemplateColumn>
+        <TemplateColumn Context="userRow">
+            @if (IsCurrentUser(userRow.Id).Result){
+            } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
+                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract())>Remove from Admin group</FluentButton>
+            } else {
+            <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown())>Add to Admin group</FluentButton>
+            }
+        </TemplateColumn>
         <TemplateColumn Context="userRow">
             <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
@@ -295,6 +307,59 @@
         } else {
             Console.WriteLine("Failed to delete user");
         }
+    }
+
+    private async Task OpenDialogChangeRoleToAdmin(string id)
+    {
+        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
+        if (userToChangeRole == null) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToAdmin>(userToChangeRole, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != true)
+        {
+            await ChangeRoleToAdmin(userToChangeRole);
+            return;
+        }
+    }
+
+    private async Task OpenDialogChangeRoleToUser(string id)
+    {
+        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
+        if (userToChangeRole == null) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToUser>(userToChangeRole, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != true)
+        {
+            await ChangeRoleToUser(userToChangeRole);
+            return;
+        }
+    }
+
+    private async Task<string> GetRolesForUser (ApplicationUser user)
+    {
+        IList<string> roles = await UserManager.GetRolesAsync(user);
+        return string.Join(", ", roles);
+    }
+
+    private async Task ChangeRoleToAdmin (ApplicationUser userToCangeRole)
+    {
+        await UserManager.AddToRoleAsync(userToCangeRole, "Admin");
+        return;
+    }
+
+    private async Task ChangeRoleToUser (ApplicationUser userToChangeRole)
+    {
+        await UserManager.RemoveFromRoleAsync(userToChangeRole, "Admin");
+        return;
+    }
+
+    private async Task<bool> IsCurrentUser (string id)
+    {
+        //user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
+        ApplicationUser? currentUser = SessionService.GetApplicationUserAsync().Result;
+        if (currentUser == null) return false;
+        return (currentUser.Id == id);
+
     }
 
 }
