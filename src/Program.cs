@@ -44,8 +44,15 @@ builder.Services
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-builder.Services.AddDatabaseServices();
+builder.Services.AddTransient<AccessControlService>();
+builder.Services.AddTransient<PendingRegistrationService>();
 builder.Services.AddTransient<ApplicationUserService>();
+builder.Services.AddTransient<ProjectService>();
+builder.Services.AddTransient<ItemDefinitionService>();
+builder.Services.AddTransient<SessionService>();
+builder.Services.AddTransient<AssetService>();
+builder.Services.AddTransient<TagService>();
+builder.Services.AddDatabaseServices();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
@@ -96,5 +103,36 @@ string[] roles = ["Admin"];
 foreach (string role in roles.Where(
              role => !roleManager.RoleExistsAsync(role).Result))
     await roleManager.CreateAsync(new IdentityRole(role));
+
+string asciiArt = """
+        ________  _________    ____  ___    
+       /_  __/ / / /  _/   |  / __ \/   |   
+        / / / /_/ // // /| | / /_/ / /| |   
+       / / / __  // // ___ |/ _, _/ ___ |   
+      /_/ /_/ /_/___/_/  |_/_/ |_/_/  |_|   
+                                      
+
+    """;
+
+UserManager<ApplicationUser> UserManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
+string link = "";
+bool newId = !UserManager.Users.Any() && !await PendingRegistrationService.Any();
+if(newId)
+{
+    string? id = await PendingRegistrationService.Create("");
+    link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
+}
+
+Console.WriteLine(asciiArt);
+Console.WriteLine("Welcome to TARA tool :)");
+
+if(newId)
+{
+    Console.WriteLine("Use the following link to register the first user: ");
+    Console.WriteLine(link);
+}
+
+Console.WriteLine();
 
 app.Run();

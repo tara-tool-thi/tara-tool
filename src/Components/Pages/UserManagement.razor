@@ -1,13 +1,16 @@
 @page "/UserManagement"
 @using System.Security.Claims
+@using System.Net.Mail
 @rendermode InteractiveServer
 
 @inject NavigationManager NavigationManager
+@inject UserManager<ApplicationUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IDialogService DialogService
 @inject PendingRegistrationService PendingRegistrationService
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
+@inject ApplicationUserService ApplicationUserService
 
 <AuthorizeView Roles="Admin">
     <PageTitle>User Management</PageTitle>
@@ -16,51 +19,192 @@
 
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-        <FluentSearch Placeholder="Type to search for user..." Style="Width: 25%" @bind-Value=@UserSearch />
-        <FluentButton OnClick="OpenDialog" IconStart=@(new Icons.Regular.Size20.Add())>
-          New User
+        <FluentSpacer />
+        <FluentButton OnClick="OpenDialogInviteUser" IconStart=@(new Icons.Regular.Size20.Add())>
+            New User
         </FluentButton>
-
     </FluentStack>
-</AuthorizeView>
 
+@if(paginationPendingRegistrations is not null)
+{
+    <h4 class="margin-bottom-16">Pending Registrations</h4>
+    <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
+    <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations">
+        <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
+        <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
+            @GenerateRegistrationLink(pendingRow.Id)
+        </TemplateColumn>
+        <TemplateColumn Context="pendingRow">
+            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) />
+            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+            </FluentButton>
+        </TemplateColumn>
+    </FluentDataGrid>
+}
+<PaginationUI @ref=@paginationPendingRegistrations />
+
+@if (paginationUsers is not null)
+{
+    <h4 class="margin-bottom-16">Registered Users</h4>
+    <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
+    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" @ref="gridUsers"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+        <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
+        <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
+        <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
+        <TemplateColumn Context="userRow">
+            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+            </FluentButton>
+        </TemplateColumn>
+     </FluentDataGrid>
+}
+<PaginationUI @ref=@paginationUsers />
+
+
+@* Dialog that contains the invite link *@
 <div>
-    <FluentDialog @ref="copyLink" @bind-Hidden="@Hidden" @ondialogdismiss=CloseCopyLink>
-        <FluentDialogHeader Visible="false" />
+    <FluentDialog title="Invite link" @ref="copyLink" @bind-Hidden="@inviteLinkHidden" @ondialogdismiss=CloseCopyLink>
+        <FluentDialogHeader ShowDismiss="true">
+            <FluentStack VerticalAlignment="VerticalAlignment.Center">
+                <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
+                <h3>Invite link</h3>
+            </FluentStack>
+        </FluentDialogHeader>
         <FluentDialogBody>
             <FluentStack Orientation="Orientation.Vertical">
-                <p>This is the register link for the new user: </p>
+                <p class="margin-bottom-0">This is the register link for the new user:</p>
                 <FluentStack Orientation="Orientation.Horizontal">
-                    <FluentTextField ReadOnly="true" @bind-Value="link" style="width: 100%;"></FluentTextField>
-                    <FluentButton OnClick=@CopyToClipboard IconStart=@(new Icons.Regular.Size20.Copy()) />
+                    <FluentTextField ReadOnly="true" @bind-Value="link" class="fullwidth"></FluentTextField>
+                    <FluentButton OnClick="@(() => CopyLinkToClipboard(null))" IconStart=@(new Icons.Regular.Size20.Copy())/>
                 </FluentStack>
-                <p>Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" class="margin-top-10">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" Class="min-width-24"/>
+                    <p class="margin-bottom-0">Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+                </FluentStack>
             </FluentStack>
         </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentSpacer/>
+            <FluentButton OnClick=CloseCopyLink Appearance="Appearance.Accent">OK</FluentButton>
+        </FluentDialogFooter>
     </FluentDialog>
 </div>
 
+</AuthorizeView>
+
 
 @code {
-    private string? UserSearch;
+    private PaginationUI paginationPendingRegistrations { get; set; } = default!;
+    private PaginationUI paginationUsers { get; set; } = default!;
 
     private string? email = "";
 
     private string? link;
 
     private FluentDialog? copyLink;
-    private bool Hidden { get; set; } = true;
+    private bool inviteLinkHidden { get; set; } = true;
 
     private ClaimsPrincipal? user { get; set; }
 
-    @* private readonly IJSRuntime _jsRuntime; *@
+    private FluentDataGrid<PendingRegistration> gridPendingRegistrations = default!;
+    private FluentDataGrid<ApplicationUser> gridUsers = default!;
+
+    List<PendingRegistration> pendingRegistrations = new();
+    List<ApplicationUser> users = new();
+
+    private List<PendingRegistration> filteredRegistrations
+    {
+        get
+        {
+            if(registrationSearch != null)
+            {
+                field = pendingRegistrations.Where(r => r.Email.Contains(registrationSearch)).ToList();
+            }
+            else
+            {
+                field = pendingRegistrations;
+            }
+            return field;
+        }
+    } = new List<PendingRegistration>();
+
+    private List<ApplicationUser> filteredUsers
+    {
+        get
+        {
+            if(userSearch != null)
+            {
+                field = users.Where(r => r.Email!.Contains(userSearch)).ToList();
+            }
+            else
+            {
+                field = users;
+            }
+            return field;
+        }
+    } = new List<ApplicationUser>();
+
+
+    // variables catching the search fields
+    private string? _registrationSearch;
+    private string? registrationSearch
+    {
+        get => _registrationSearch;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                _registrationSearch = string.Empty;
+            }
+
+            else
+            {
+                _registrationSearch = value;
+            }
+            StateHasChanged();
+        }
+    }
+
+    private string? _userSearch;
+    private string? userSearch
+    {
+        get => _userSearch;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                _userSearch = string.Empty;
+            }
+
+            else
+            {
+                _userSearch = value;
+            }
+            StateHasChanged();
+        }
+    }
+
+
+    // necessary for rendering tables with pagination
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender) {
+            StateHasChanged();
+        }
+    }
 
     protected override async Task OnInitializedAsync() {
         user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
         if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
-    }
+        if(users.Count == 0 || pendingRegistrations.Count == 0)
+        {
+            users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
+            pendingRegistrations = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
+        }
+   }
 
-    private async Task OpenDialog()
+    private async Task OpenDialogInviteUser()
     {
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
         DialogResult? result = await dialog.Result;
@@ -69,9 +213,30 @@
         if(email == null)
             return;
         string? id = await PendingRegistrationService.Create(email);
-        link = NavigationManager.BaseUri + "Account/Register?id=" + id;
+
+        if (id== null){
+            ToastService.ShowError("Failed to create pending registration");
+            return;
+        }
+
+        link = GenerateRegistrationLink(id);
         await DialogService.CloseAsync(dialog);
         copyLink!.Show();
+    }
+
+    private async Task OpenDialogDeleteUser(ApplicationUser userToDelete)
+    {
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != true)
+        {
+            await DeleteUser(userToDelete.Id);
+        }
+    }
+
+    private string GenerateRegistrationLink(string id)
+    {
+        return NavigationManager.BaseUri + "Account/Register?id=" + id;
     }
 
     private void CloseCopyLink()
@@ -79,10 +244,45 @@
         copyLink!.Hide();
     }
 
-    private async Task CopyToClipboard()
+    private async Task CopyLinkToClipboard(string? id)
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", link);
-        ToastService.ShowSuccess("Link copied to clipboard");
+        if(id != null)
+        {
+            link = GenerateRegistrationLink(id);
+        }
+        if(link != null)
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", link);
+            ToastService.ShowSuccess("Link copied to clipboard");
+        }
+        else
+        {
+            ToastService.ShowError("Failed to copy link");
+        }
     }
 
+    private async Task DeletePendingRegistration(string id)
+    {
+        await PendingRegistrationService.Delete(id);
+        ToastService.ShowSuccess("Deleted pending registration");
+    }
+
+    private async Task DeleteUser(string id)
+    {
+        ApplicationUser? userToDelete = await UserManager.FindByIdAsync(id);
+        if(userToDelete != null)
+        {
+            await UserManager.DeleteAsync(userToDelete);
+            ToastService.ShowSuccess("Deleted user");
+        } else {
+            Console.WriteLine("Failed to delete user");
+        }
+    }
+
+    private void RefreshGrid()
+    {
+        // grid may be null during initial render
+        if (gridPendingRegistrations is not null)
+            InvokeAsync(() => gridPendingRegistrations.RefreshDataAsync());
+    }
 }
