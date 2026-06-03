@@ -6,6 +6,9 @@
 {
     <FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
                     OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
+        <TemplateColumn Sortable="true" SortBy="@itemNumberSort" Title="Nr." Width="70px">
+            @($"{context.ItemNumber}.")
+        </TemplateColumn>
         <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name" />
         <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function" />
         <PropertyColumn Property="@(p => p.OperationalEnvironmentText)" Sortable="true" Title="Operational Environment" />
@@ -24,6 +27,7 @@
     private GridItemsProvider<ItemDefinition> FilteredItemsProvider { get; set; } = default!;
     private PaginationUI paginationUI { get; set; } = default!;
     private FluentDataGrid<ItemDefinition> grid = default!;
+    private GridSort<ItemDefinition> itemNumberSort = GridSort<ItemDefinition>.ByAscending(item => item.ItemNumber);
 
     public void RefreshGrid()
     {

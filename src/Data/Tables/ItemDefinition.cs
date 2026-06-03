@@ -5,6 +5,7 @@ namespace tara_tool.Data.Tables;
 public class ItemDefinition
 {
   public long Id { get; set; }
+  public long ItemNumber { get; set; }
   public string ItemName { get; set; } = string.Empty;
   public string ItemDescription { get; set; } = string.Empty;
   public string ItemBoundaryText { get; set; } = string.Empty;
