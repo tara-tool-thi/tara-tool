@@ -103,7 +103,7 @@
                             <FluentSpacer/>
                             <FluentCheckbox @bind-Value="@attackPath.RiskTreatmentBool" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged"/> Done
                         </FluentStack>
-                        <FluentTextArea Class="fullwidth" Placeholder="Hide Info" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
+                        <FluentTextArea Class="fullwidth" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
                     </FluentStack>
             </FluentGridItem>
 
