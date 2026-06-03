@@ -12,7 +12,7 @@
 @inject ThreatScenarioService ThreatScenarioService
 
 
-<div @key=@(rerenderdKey.ToString() + addtion.ToString())>
+<div @key=@(rerenderdKey.ToString() + addtion.ToString()) style="width: 80%;">
 
         <FluentBreadcrumb @key=@(rerenderdKey.ToString() + addtion.ToString())>
                 @if (selectedProject is not null)
@@ -87,7 +87,7 @@
 
                         if (selectedDamageScenario is not null)
                         {
-                            <FluentBreadcrumbItem @key="@selectedThreatScenario">
+                            <FluentBreadcrumbItem @key="@selectedThreatScenario" >
                                 @if (showDeleteIconWithRespectToLayer("ThreatScenario"))
                                 {
                                     <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"

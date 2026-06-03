@@ -78,8 +78,7 @@ public class DamageScenarioService(
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
         DamageScenario? damageScenario =
-            await context.DamageScenarios.AsNoTracking()
-                .Include(e => e.Asset)
+            await context.DamageScenarios.Include(e => e.Asset)
                 .ThenInclude(e => e != null ? e.ItemDefinition : null)
                 .FirstOrDefaultAsync(a => a.Id == entityToSave.Id);
 
