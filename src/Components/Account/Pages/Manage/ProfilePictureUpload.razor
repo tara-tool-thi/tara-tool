@@ -106,16 +106,13 @@ else
         if (user?.ProfilePicture is { Length: > 0 })
             pictureDataUrl =
                 $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";
-
-        PicState.OnChange += OnPicStateChanged;
     }
-
-    public void Dispose() => PicState.OnChange -= OnPicStateChanged;
-
-    private void OnPicStateChanged() => InvokeAsync(StateHasChanged);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+            PicState.OnChange += OnPicStateChanged;
+
         if (_shouldInitCropper && _pendingCropDataUrl is not null)
         {
             _shouldInitCropper  = false;
@@ -124,6 +121,10 @@ else
             await JS.InvokeVoidAsync("profilePic_initCropper", url);
         }
     }
+
+    public void Dispose() => PicState.OnChange -= OnPicStateChanged;
+
+    private void OnPicStateChanged() => InvokeAsync(StateHasChanged);
 
     private async Task OpenPicker() =>
         await JS.InvokeVoidAsync("profilePic_openPicker");

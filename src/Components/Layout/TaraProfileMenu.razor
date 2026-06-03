@@ -1,5 +1,7 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject AuthenticationStateProvider AuthStateProvider
 @inject tara_tool.Data.Services.ProfilePictureStateService PicState
 @rendermode InteractiveServer
 @implements IDisposable
@@ -14,7 +16,7 @@
 
         <FluentProfileMenu @bind-Open="@openProfileMenu" FullName="@EMail.Split('@').FirstOrDefault(EMail)"
                            EMail="@EMail" HeaderLabel="Logged in as" TopCorner=true
-                           Image="@(PicState.PictureDataUrl ?? InitialPictureDataUrl)"
+                           Image="@pictureDataUrl"
                            OnFooterLinkClick=@RedirectToAccountPage>
             <HeaderTemplate>
                 <FluentLabel part="header-label">Logged in as</FluentLabel>
@@ -66,20 +68,45 @@
 </AuthorizeView>
 
 @code {
-    private bool openProfileMenu { get; set; } = false;
+    private bool    openProfileMenu { get; set; } = false;
     private string? currentUrl;
+    private string? pictureDataUrl;
 
-    [Parameter] public required string EMail              { get; set; }
-    [Parameter] public string?         InitialPictureDataUrl { get; set; }
+    [Parameter]
+    public required string EMail { get; set; }
 
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
-        PicState.OnChange += OnPicChanged;
     }
 
-    private void OnPicChanged() => InvokeAsync(StateHasChanged);
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Subscribe to picture changes
+        PicState.OnChange += OnPicChanged;
+
+        // Load initial picture from DB
+        var auth   = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = auth.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (userId is null) return;
+
+        using var ctx = await DbContextFactory.CreateDbContextAsync();
+        var user = await ctx.ApplicationUsers.FindAsync(userId);
+        if (user?.ProfilePicture is { Length: > 0 })
+        {
+            pictureDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";
+            StateHasChanged();
+        }
+    }
+
+    private void OnPicChanged()
+    {
+        pictureDataUrl = PicState.PictureDataUrl;
+        InvokeAsync(StateHasChanged);
+    }
 
     public void Dispose()
     {
