@@ -36,7 +36,7 @@
 
 <FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
     <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
-        <span class="ts-header-name-text">@TSName</span>
+        <span class="ts-header-name-text">@("TS" + TSId)</span>
     </FluentStack>
 
     <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
@@ -99,7 +99,7 @@
         <h3>Delete Threat Scenario</h3>
     </FluentDialogHeader>
     <FluentDialogBody>
-        Are you sure you want to delete <strong>Threat Scenario: @TSName</strong>? This cannot be undone.
+        Are you sure you want to delete <strong>Threat Scenario: @("TS" + TSId)</strong>? This cannot be undone.
     </FluentDialogBody>
     <FluentDialogFooter>
         <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalGap="8">
@@ -143,7 +143,6 @@
 
     ThreatScenario? thisTS;
 
-    private string TSName = string.Empty;
     private string TSDescription = string.Empty;
     private string TSRiskValue = string.Empty;
 
@@ -180,7 +179,6 @@
             return;
         }
 
-        TSName = thisTS.Name;
         TSDescription = thisTS.Description;
 
         (ImpactCategory, ImpactRating) = FindWorstImpactCategoryAndRating(thisTS.DamageScenarios!.ImpactRating);
