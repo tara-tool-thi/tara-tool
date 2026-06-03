@@ -23,15 +23,15 @@
     </FluentTooltip>
     <GenericAutosave TEntity="ThreatScenario" Entity="@thisTS" SaveService="@threatScenarioService"
                      @ref=@genericAutosave />
-</FluentStack>
-
-<FluentStack VerticalAlignment="VerticalAlignment.Center">
-    <p class="tiny-text">Identify attack paths, assess attack feasibility, and determine the risk for each threat scenario.</p>
     <FluentSpacer/>
     <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
         Delete
     </FluentButton>
+</FluentStack>
+
+<FluentStack VerticalAlignment="VerticalAlignment.Center">
+    <p class="tiny-text">Identify attack paths, assess attack feasibility, and determine the risk for each threat scenario.</p>
 </FluentStack>
 
 <FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
