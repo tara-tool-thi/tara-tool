@@ -76,11 +76,20 @@
         }
         else
         {
-            @* This shows if the list is empty OR if the search returned zero results *@
-            <FluentCard Style="text-align: center;">
-                <FluentIcon Value="@(new Icons.Regular.Size24.Search())"/>
-                <p>No attack paths found matching your search.</p>
-            </FluentCard>
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                <FluentCard Style="text-align: center;">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.Search())"/>
+                    <p>No attack paths found matching your search.</p>
+                </FluentCard>
+            }
+            else
+            {
+                <FluentCard Style="text-align: center;">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.Info())"/>
+                    <p>No attack paths have been added yet. Click New Attack Path to create one.</p>
+                </FluentCard>
+            }
         }
 
         <FluentButton Appearance="Appearance.Neutral"
