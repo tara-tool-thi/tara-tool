@@ -49,6 +49,6 @@
     protected override async Task OnInitializedAsync()
     {
         ApplicationUser? user = await UserManager.GetUserAsync(HttpContext.User);
-        email                 = user is not null ? await UserManager.GetEmailAsync(user) ?? "" : "";
+        email = user is not null ? await UserManager.GetEmailAsync(user) ?? "" : "";
     }
 }
