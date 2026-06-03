@@ -13,7 +13,7 @@
         <div class="theme-toggle-spacing">
             <ThemeToggle />
         </div>
-        <TaraProfileMenu EMail=@email />
+        <TaraProfileMenu EMail=@email InitialPictureDataUrl=@initialPictureDataUrl />
     </FluentHeader>
     <FluentStack Class="main" Orientation="Orientation.Horizontal" Width="100%">
         <FluentBodyContent Class="body-content">
@@ -45,13 +45,17 @@
     private HttpContext HttpContext { get; set; } = default!;
 
     private ApplicationUser? user { get; set; }
-    private string email { get; set; } = "";
+    private string  email                { get; set; } = "";
+    private string? initialPictureDataUrl { get; set; }
 
     private bool openProfileMenu { get; set; } = false;
 
     protected override async Task OnInitializedAsync()
     {
-        user = await UserManager.GetUserAsync(HttpContext.User);
+        user  = await UserManager.GetUserAsync(HttpContext.User);
         email = user is not null ? await UserManager.GetEmailAsync(user) ?? "" : "";
+        if (user?.ProfilePicture is { Length: > 0 })
+            initialPictureDataUrl =
+                $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";
     }
 }

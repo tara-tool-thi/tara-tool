@@ -1,0 +1,200 @@
+@rendermode InteractiveServer
+
+@using tara_tool.Data
+@using tara_tool.Data.Tables
+
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject tara_tool.Data.Services.ProfilePictureStateService PicState
+@inject IJSRuntime JS
+
+@implements IDisposable
+
+@if (!showCropUI)
+{
+    @* ── Normal: Avatar + Buttons ── *@
+    <FluentStack Orientation="Orientation.Horizontal"
+                 VerticalAlignment="VerticalAlignment.Center"
+                 Style="gap:16px">
+
+        @if (pictureDataUrl is not null)
+        {
+            <img src="@pictureDataUrl"
+                 alt="Profilbild"
+                 style="width:80px;height:80px;border-radius:50%;object-fit:cover;
+                        flex-shrink:0;border:2px solid var(--accent-fill-rest)" />
+        }
+        else
+        {
+            <div style="width:80px;height:80px;border-radius:50%;flex-shrink:0;
+                        background:var(--accent-fill-rest);color:white;
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:2rem;font-weight:600;user-select:none;">
+                @initial
+            </div>
+        }
+
+        <FluentStack Orientation="Orientation.Vertical" Style="gap:8px">
+            <InputFile id="pic-file-input"
+                       OnChange="OnFileSelected"
+                       accept="image/*"
+                       style="display:none" />
+            <FluentButton Appearance="Appearance.Neutral"
+                          OnClick="OpenPicker"
+                          IconStart="@(new Icons.Regular.Size20.ImageAdd())">
+                Change picture
+            </FluentButton>
+            @if (pictureDataUrl is not null)
+            {
+                <FluentButton Appearance="Appearance.Neutral"
+                              OnClick="DeletePicture"
+                              IconStart="@(new Icons.Regular.Size20.Delete())">
+                    Remove
+                </FluentButton>
+            }
+        </FluentStack>
+    </FluentStack>
+}
+else
+{
+    @* ── Crop UI ── *@
+    <div style="max-width:420px">
+        <p style="margin:0 0 8px;font-size:13px;color:var(--neutral-foreground-hint)">
+            Wähle deinen Ausschnitt (quadratisch):
+        </p>
+        <div style="max-height:350px;overflow:hidden;border-radius:4px;background:#111">
+            <img id="pic-crop-img" style="display:block;max-width:100%" alt="" />
+        </div>
+        <FluentStack Orientation="Orientation.Horizontal" Style="gap:8px;margin-top:12px">
+            <FluentButton Appearance="Appearance.Accent"
+                          OnClick="SaveCropped"
+                          IconStart="@(new Icons.Regular.Size20.Checkmark())">
+                Save
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Neutral"
+                          OnClick="CancelCrop"
+                          IconStart="@(new Icons.Regular.Size20.Dismiss())">
+                Cancel
+            </FluentButton>
+        </FluentStack>
+    </div>
+}
+
+@if (errorMsg is not null)
+{
+    <FluentMessageBar Intent="MessageIntent.Error" Style="margin-top:8px">
+        @errorMsg
+    </FluentMessageBar>
+}
+
+@code {
+    [Parameter] public required string UserId   { get; set; }
+    [Parameter] public required string Username { get; set; }
+
+    private string? pictureDataUrl;
+    private bool    showCropUI;
+    private bool    _shouldInitCropper;
+    private string? _pendingCropDataUrl;
+    private string? errorMsg;
+
+    private string initial => Username.Length > 0
+        ? Username[0].ToString().ToUpper() : "?";
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var ctx = await DbContextFactory.CreateDbContextAsync();
+        var user = await ctx.ApplicationUsers.FindAsync(UserId);
+        if (user?.ProfilePicture is { Length: > 0 })
+            pictureDataUrl =
+                $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";
+
+        PicState.OnChange += OnPicStateChanged;
+    }
+
+    public void Dispose() => PicState.OnChange -= OnPicStateChanged;
+
+    private void OnPicStateChanged() => InvokeAsync(StateHasChanged);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldInitCropper && _pendingCropDataUrl is not null)
+        {
+            _shouldInitCropper  = false;
+            var url             = _pendingCropDataUrl;
+            _pendingCropDataUrl = null;
+            await JS.InvokeVoidAsync("profilePic_initCropper", url);
+        }
+    }
+
+    private async Task OpenPicker() =>
+        await JS.InvokeVoidAsync("profilePic_openPicker");
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        errorMsg = null;
+        var file = e.File;
+        const long max = 5 * 1024 * 1024;
+
+        if (!file.ContentType.StartsWith("image/"))
+        {
+            errorMsg = "Bitte eine Bilddatei wählen.";
+            return;
+        }
+        if (file.Size > max)
+        {
+            errorMsg = "Bild muss kleiner als 5 MB sein.";
+            return;
+        }
+
+        using var ms = new MemoryStream();
+        await file.OpenReadStream(max).CopyToAsync(ms);
+        _pendingCropDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+        _shouldInitCropper  = true;
+        showCropUI          = true;
+    }
+
+    private async Task SaveCropped()
+    {
+        var dataUrl = await JS.InvokeAsync<string?>("profilePic_getCropped");
+        if (dataUrl is null)
+        {
+            errorMsg = "Crop fehlgeschlagen — bitte erneut versuchen.";
+            return;
+        }
+
+        var bytes = Convert.FromBase64String(dataUrl.Split(',').Last());
+
+        using var ctx = await DbContextFactory.CreateDbContextAsync();
+        var user = await ctx.ApplicationUsers.FindAsync(UserId);
+        if (user is not null)
+        {
+            user.ProfilePicture = bytes;
+            await ctx.SaveChangesAsync();
+        }
+
+        pictureDataUrl          = dataUrl;
+        PicState.PictureDataUrl = dataUrl;
+
+        await JS.InvokeVoidAsync("profilePic_destroyCropper");
+        showCropUI = false;
+    }
+
+    private async Task CancelCrop()
+    {
+        await JS.InvokeVoidAsync("profilePic_destroyCropper");
+        showCropUI          = false;
+        _pendingCropDataUrl = null;
+    }
+
+    private async Task DeletePicture()
+    {
+        using var ctx = await DbContextFactory.CreateDbContextAsync();
+        var user = await ctx.ApplicationUsers.FindAsync(UserId);
+        if (user is not null)
+        {
+            user.ProfilePicture = null;
+            await ctx.SaveChangesAsync();
+        }
+        pictureDataUrl          = null;
+        PicState.PictureDataUrl = null;
+    }
+}

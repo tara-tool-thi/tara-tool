@@ -1,6 +1,8 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject tara_tool.Data.Services.ProfilePictureStateService PicState
 @rendermode InteractiveServer
+@implements IDisposable
 
 <AuthorizeView>
     <Authorized>
@@ -11,7 +13,9 @@
         </script>
 
         <FluentProfileMenu @bind-Open="@openProfileMenu" FullName="@EMail.Split('@').FirstOrDefault(EMail)"
-                           EMail="@EMail" HeaderLabel="Logged in as" TopCorner=true OnFooterLinkClick=@RedirectToAccountPage>
+                           EMail="@EMail" HeaderLabel="Logged in as" TopCorner=true
+                           Image="@(PicState.PictureDataUrl ?? InitialPictureDataUrl)"
+                           OnFooterLinkClick=@RedirectToAccountPage>
             <HeaderTemplate>
                 <FluentLabel part="header-label">Logged in as</FluentLabel>
             </HeaderTemplate>
@@ -65,13 +69,22 @@
     private bool openProfileMenu { get; set; } = false;
     private string? currentUrl;
 
-    [Parameter]
-    public required string EMail { get; set; }
+    [Parameter] public required string EMail              { get; set; }
+    [Parameter] public string?         InitialPictureDataUrl { get; set; }
 
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
+        PicState.OnChange += OnPicChanged;
+    }
+
+    private void OnPicChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+        PicState.OnChange -= OnPicChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
