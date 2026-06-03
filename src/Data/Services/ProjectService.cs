@@ -90,8 +90,15 @@ public class ProjectService(
             // Collect all tags from the graph to ensure they all get reset and linked
             HashSet<Tag> allTags = new HashSet<Tag>(project.Tags);
 
-            foreach (var itemDef in project.ItemDefinitions)
+            long nextItemNumber = 1;
+            foreach (var itemDef in project.ItemDefinitions.OrderBy(item => item.ItemNumber > 0 ? item.ItemNumber : item.Id).ToList())
             {
+                if (itemDef.ItemNumber <= 0)
+                {
+                    itemDef.ItemNumber = nextItemNumber;
+                }
+                nextItemNumber = Math.Max(nextItemNumber, itemDef.ItemNumber + 1);
+
                 itemDef.Id = 0;
                 itemDef.IdProject = 0;
                 itemDef.Project = project;
@@ -313,9 +320,22 @@ public class ProjectService(
 
         List<ItemDefinition> incoming = entityToSave.ItemDefinitions.ToList();
         IQueryable<ItemDefinition> existing = project.ItemDefinitions.AsQueryable();
+        long nextItemNumber = await context.ItemDefinitions
+            .Where(i => i.IdProject == project.Id)
+            .Select(i => (long?)i.ItemNumber)
+            .MaxAsync() ?? 0;
 
         foreach (ItemDefinition item in incoming)
         {
+            if (item.ItemNumber <= 0)
+            {
+                item.ItemNumber = ++nextItemNumber;
+            }
+            else if (item.ItemNumber > nextItemNumber)
+            {
+                nextItemNumber = item.ItemNumber;
+            }
+
             if (item.Id == 0)
             {
                 await context.ItemDefinitions.AddAsync(item);

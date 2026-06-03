@@ -14,8 +14,14 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             return null;
         }
 
+        long nextItemNumber = await context.ItemDefinitions
+            .Where(item => item.IdProject == projectID)
+            .Select(item => (long?)item.ItemNumber)
+            .MaxAsync() ?? 0;
+
         ItemDefinition newItem = new ItemDefinition
         {
+            ItemNumber = nextItemNumber + 1,
             ItemName = name,
             Project = await context.Projects.FindAsync(projectID)
             ?? throw new Exception("Invalid Project ID for Item Creation")
@@ -68,7 +74,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
           p => p.IdProject == projectID
         );
 
-        return await itemQuery.ToListAsync();
+        return await itemQuery.OrderBy(item => item.ItemNumber).ToListAsync();
     }
 
     public async Task<ItemDefinition?> Save(ItemDefinition itemDefinition)
@@ -154,6 +160,8 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
                 itemDefinitions = filter(itemDefinitions);
             }
 
+            itemDefinitions = itemDefinitions.OrderBy(item => item.ItemNumber);
+
             int total = await itemDefinitions.CountAsync();
             List<ItemDefinition> items = await request.ApplySorting(itemDefinitions).Skip(request.StartIndex).Take(request.Count ?? 20).ToListAsync(request.CancellationToken);
             return GridItemsProviderResult.From(items, total);
@@ -183,7 +191,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             items = filter(items);
         }
 
-
+        items = items.OrderBy(item => item.ItemNumber);
 
         return (await items.ToListAsync(), await items.CountAsync());
     }
