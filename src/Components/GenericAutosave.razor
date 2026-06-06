@@ -1,7 +1,7 @@
 @typeparam TEntity where TEntity : class
 @implements IDisposable
 
-    <FluentIcon Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus />
+    <FluentIcon Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus id="SaveIcon"/>
     @switch(saveStatus)
     {
         case SaveStatus.Saved:
