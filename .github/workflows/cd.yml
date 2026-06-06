@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/tara-tool:latest
+  IMAGE: ghcr.io/${{ github.repository_owner }}/THIARA:latest
 
 jobs:
   build-and-push:
@@ -42,12 +42,12 @@ jobs:
 
       - name: Copy compose file to deployment directory
         run: |
-          mkdir -p /srv/tara-tool/data
-          cp docker-compose.yml /srv/tara-tool/docker-compose.yml
+          mkdir -p /srv/THIARA/data
+          cp docker-compose.yml /srv/THIARA/docker-compose.yml
 
       - name: Pull latest image and restart
         env:
           TARA_TOOL_IMAGE: ${{ env.IMAGE }}
         run: |
-          docker compose -f /srv/tara-tool/docker-compose.yml pull
-          docker compose -f /srv/tara-tool/docker-compose.yml up -d
+          docker compose -f /srv/THIARA/docker-compose.yml pull
+          docker compose -f /srv/THIARA/docker-compose.yml up -d

@@ -1,11 +1,11 @@
 services:
-  tara-tool:
-    image: ${TARA_TOOL_IMAGE}
+  THIARA:
+    image: ${THIARA_IMAGE}
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - /srv/tara-tool/data:/app/Data
+      - /srv/THIARA/data:/app/Data
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_HTTP_PORTS=8080
