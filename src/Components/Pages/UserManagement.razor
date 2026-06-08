@@ -53,7 +53,12 @@
         <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
         <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
-                <TemplateColumn Title="Role" Context="user">
+        <TemplateColumn Title="Projects" Context="userRow">
+            <FluentButton aria-label="Show projects of user" OnClick="@(() => OpenDialogShowProjects(userRow))" IconStart="@(new Icons.Regular.Size20.AppsList())">
+                Show projects
+            </FluentButton>
+        </TemplateColumn>
+        <TemplateColumn Title="Role" Context="user" Sortable="true">
             @GetRolesForUser(user).Result
         </TemplateColumn>
         <TemplateColumn Context="userRow">
@@ -113,6 +118,22 @@
     private string? email = "";
 
     private string? link;
+
+    @* private ColumnKeyGridSort<ApplicationUser> roleSort = new ColumnKeyGridSort<ApplicationUser>(
+        "role",
+        (queryable, sortAscending) =>
+        {
+            if(sortAscending)
+            {
+                return queryable.OrderBy(e => GetRolesForUser(e).Result);
+            }
+            else
+            {
+                return queryable.OrderByDescending(e => GetRolesForUser(e).Result);
+            }
+        }
+    ); *@
+
 
     private FluentDialog? copyLink;
     private bool inviteLinkHidden { get; set; } = true;
@@ -253,11 +274,14 @@
 
     private async Task OpenDialogDeleteUser(ApplicationUser userToDelete)
     {
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
-        DialogResult? result = await dialog.Result;
-        if(result.Cancelled != true)
+        if(IsCurrentUser(userToDelete.Id).Result != true)
         {
-            await DeleteUser(userToDelete.Id);
+            IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
+            DialogResult? result = await dialog.Result;
+            if(result.Cancelled != true)
+            {
+                await DeleteUser(userToDelete.Id);
+            }
         }
     }
 
@@ -309,6 +333,11 @@
         }
     }
 
+    private async Task OpenDialogShowProjects(ApplicationUser user)
+    {
+
+    }
+
     private async Task OpenDialogChangeRoleToAdmin(string id)
     {
         ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
@@ -355,11 +384,10 @@
 
     private async Task<bool> IsCurrentUser (string id)
     {
-        //user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
         ApplicationUser? currentUser = SessionService.GetApplicationUserAsync().Result;
-        if (currentUser == null) return false;
+        if (currentUser == null)
+            return false;
         return (currentUser.Id == id);
-
     }
 
 }
