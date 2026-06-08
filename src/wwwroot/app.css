@@ -91,8 +91,9 @@ footer a:hover {
 
 .path-dropdown-scroll-container {
     overflow-x: auto;
-    /* auto is better than scroll */
-    white-space: nowrap;
+    scroll-margin-right:
+        /* auto is better than scroll */
+        white-space: nowrap;
     display: flex;
     align-items: center;
     flex-shrink: 1;
@@ -105,13 +106,14 @@ footer a:hover {
     height: 3px;
 }
 
-.path-dropdown-scroll-container::-webkit-scrollbar-track {
-    background: transparent;
+.path-dropdown-scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--neutral-stroke-rest);
+    border-radius: 999px;
 }
 
-.path-dropdown-scroll-container::-webkit-scrollbar-thumb {
-    background-color: rgba(128, 128, 128, 0.4);
-    border-radius: 999px;
+.path-dropdown-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+    /* matches header background */
 }
 
 .path-dropdown-scroll-container-icon {

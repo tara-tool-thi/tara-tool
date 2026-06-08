@@ -17,12 +17,6 @@
         {
             <div class="path-dropdown-step" @key="@($"selected-project-{selectedProject.Id}")">
                 <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"/>
-                @if (showDeleteIconWithRespectToLayer("Project"))
-                {
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
-                                OnClick="@(() => HandleDeletion("Project"))" />
-                }
-
                 <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                               OnClick="@(() => HandleProjectChange(selectedProject, true))">
                     @(selectedProject.Id == -1 ? "*" : selectedProject.ProjectName)
@@ -45,11 +39,6 @@
                 <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
                 @if (selectedItem is not null)
                 {
-                    @if (showDeleteIconWithRespectToLayer("Item"))
-                    {
-                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
-                                    OnClick="@(() => HandleDeletion("Item"))" />
-                    }
                     <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                   OnClick="@(() => HandleItemChange(selectedItem, true))">
                         @(selectedItem.Id == -1 ? "*" : selectedItem.ItemName)
@@ -81,11 +70,6 @@
                     <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
                     @if (selectedAsset is not null)
                     {
-                        @if (showDeleteIconWithRespectToLayer("Asset"))
-                        {
-                            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
-                                        OnClick="@(() => HandleDeletion("Asset"))" />
-                        }
                         <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                       OnClick="@(() => HandleAssetChange(selectedAsset, true))">
                             @(selectedAsset.Id == -1 ? "*" : selectedAsset.AssetName)
@@ -117,11 +101,6 @@
                         <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
                         @if (selectedDamageScenario is not null)
                         {
-                            @if (showDeleteIconWithRespectToLayer("DamageScenario"))
-                            {
-                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
-                                            OnClick="@(() => HandleDeletion("DamageScenario"))" />
-                            }
                             <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                           OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario, true))">
                                 @(selectedDamageScenario.Id == -1 ? "*" : selectedDamageScenario.DamageScenarioNumber.ToString())
@@ -153,11 +132,6 @@
                             <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon" />
                             @if (selectedThreatScenario is not null)
                             {
-                                @if (showDeleteIconWithRespectToLayer("ThreatScenario"))
-                                {
-                                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"
-                                                OnClick="@(() => HandleDeletion("ThreatScenario"))" />
-                                }
                                 <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                               OnClick="@(() => HandleThreatScenarioChange(selectedThreatScenario, true))">
                                     @(selectedThreatScenario.Id == -1 ? "*" : selectedThreatScenario.Name)
@@ -201,77 +175,6 @@
     private bool _assetMenuOpen;
     private bool _damageMenuOpen;
     private bool _threatMenuOpen;
-
-    private bool showDeleteIconWithRespectToLayer(string layer)
-    {
-        if (layer == "ThreatScenario" && selectedThreatScenario is not null) return true;
-        else if (layer == "DamageScenario" && selectedDamageScenario is not null && selectedThreatScenario is null) return true;
-        else if (layer == "Asset" && selectedAsset is not null && selectedDamageScenario is null) return true;
-        else if (layer == "Item" && selectedItem is not null && selectedAsset is null) return true;
-        else if (layer == "Project" && selectedProject is not null && selectedItem is null) return true;
-
-        return false;
-    }
-
-    private async Task PerformActionBasedOnState()
-    {
-        if (selectedThreatScenario is not null)
-        {
-            await HandleThreatScenarioChange(selectedThreatScenario, true);
-            return;
-        }
-        else if (selectedDamageScenario is not null)
-        {
-            await HandleDamageScenarioChange(selectedDamageScenario, true);
-            return;
-        }
-        else if (selectedAsset is not null)
-        {
-            await HandleAssetChange(selectedAsset, true);
-            return;
-        }
-        else if (selectedItem is not null)
-        {
-            await HandleItemChange(selectedItem, true);
-            return;
-        }
-        else if (selectedProject is not null)
-        {
-            await HandleProjectChange(selectedProject, true);
-            return;
-        }
-        else
-        {
-            Navigator.NavigateTo("/");
-            return;
-        }
-    }
-
-    private async Task HandleDeletion(string layer)
-    {
-        switch (layer)
-        {
-            case "Project":
-                selectedProject = null;
-                goto case "Item";
-            case "Item":
-                selectedItem = null;
-                goto case "Asset";
-            case "Asset":
-                selectedAsset = null;
-                goto case "DamageScenario";
-            case "DamageScenario":
-                selectedDamageScenario = null;
-                goto case "ThreatScenario";
-            case "ThreatScenario":
-                selectedThreatScenario = null;
-                goto default;
-            default:
-                break;
-        }
-
-        await PerformActionBasedOnState();
-    }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
     {
