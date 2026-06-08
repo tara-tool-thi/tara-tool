@@ -372,7 +372,7 @@
 
     private async Task AddNewStep()
     {
-        attackPath.Steps.Add(new AttackStep { Text = string.Empty });
+        attackPath.Steps.Add(new AttackStep { Text = string.Empty, AttackPath = attackPath });
         await OnFieldChanged.InvokeAsync();
     }
 

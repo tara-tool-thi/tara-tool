@@ -79,8 +79,8 @@ public class ApplicationDbContext(
             .IsRequired();
         builder.Entity<AttackPath>()
             .HasMany(ap => ap.Steps)
-            .WithOne()
-            .HasForeignKey(step => step.AttackPathId)
+            .WithOne(step => step.AttackPath)
+            .HasForeignKey("AttackPathId")
             .OnDelete(DeleteBehavior.Cascade);
         builder.Entity<Tag>()
             .HasOne(e => e.Project)

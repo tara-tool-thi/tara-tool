@@ -131,7 +131,7 @@ public class ProjectService(
                                 foreach (var step in ap.Steps)
                                 {
                                     step.Id = 0;
-                                    step.AttackPathId = 0;
+                                    step.AttackPath = ap;
                                 }
                             }
                         }

@@ -34,7 +34,7 @@ public class AttackStep
     public string Text { get; set; } = string.Empty;
     public int Order { get; set; }
 
-    // Foreign Key back to the parent
+    // Navigation property back to the parent
     [JsonIgnore]
-    public long AttackPathId { get; set; }
+    public virtual required AttackPath AttackPath { get; set; }
 }
