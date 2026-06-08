@@ -1,19 +1,19 @@
 @typeparam TEntity where TEntity : class
 @implements IDisposable
 
-<div id="SaveIcon"><FluentIcon Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus /></div>
-@switch(saveStatus)
-{
-    case SaveStatus.Saved:
-        <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>All Changes Saved.</FluentTooltip>
-        break;
-    case SaveStatus.Saving:
-        <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>Saving Changes…</FluentTooltip>
-        break;
-    case SaveStatus.Unsaved:
-        <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>Unsaved changes…</FluentTooltip>
-        break;
-}
+    <FluentIcon Value="@GetIcon" Color="@Color.Accent" @key=@saveStatus id="SaveIcon"/>
+    @switch(saveStatus)
+    {
+        case SaveStatus.Saved:
+            <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>All Changes Saved.</FluentTooltip>
+            break;
+        case SaveStatus.Saving:
+            <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>Saving Changes…</FluentTooltip>
+            break;
+        case SaveStatus.Unsaved:
+            <FluentTooltip Anchor="SaveIcon" Position=TooltipPosition.Right>Unsaved changes…</FluentTooltip>
+            break;
+    }
 
 @code {
 
