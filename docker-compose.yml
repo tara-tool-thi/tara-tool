@@ -1,11 +1,11 @@
 services:
-  THIARA:
-    image: ${THIARA_IMAGE}
+  thiara:
+    image: ${thiara_IMAGE}
     restart: unless-stopped
     ports:
       - "8080:8080"
     volumes:
-      - /srv/THIARA/data:/app/Data
+      - /srv/thiara/data:/app/Data
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_HTTP_PORTS=8080

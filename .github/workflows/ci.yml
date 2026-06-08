@@ -20,7 +20,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore src/THIARA.csproj
+        run: dotnet restore src/thiara.csproj
 
       - name: Build
-        run: dotnet build src/THIARA.csproj --no-restore --configuration Release
+        run: dotnet build src/thiara.csproj --no-restore --configuration Release
