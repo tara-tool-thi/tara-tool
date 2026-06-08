@@ -91,10 +91,27 @@ footer a:hover {
 
 .path-dropdown-scroll-container {
     overflow-x: auto;
+    /* auto is better than scroll */
     white-space: nowrap;
     display: flex;
     align-items: center;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    /* allow it to shrink */
+    min-width: 0;
+    /* CRITICAL: lets flex children shrink below content size */
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar {
+    height: 3px;
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar-thumb {
+    background-color: rgba(128, 128, 128, 0.4);
+    border-radius: 999px;
 }
 
 .path-dropdown-scroll-container-icon {
@@ -343,16 +360,28 @@ h6 {
 .impact-severe {
     color: #dc2626;
 }
+
 .management-data-grid {
     width: 100%;
     margin: 0 auto;
     overflow-x: auto;
 }
 
-.impact-negligible { color: #6b7280; }
-.impact-moderate  { color: #f59e0b; }
-.impact-major     { color: #ea580c; }
-.impact-severe    { color: #dc2626; }
+.impact-negligible {
+    color: #6b7280;
+}
+
+.impact-moderate {
+    color: #f59e0b;
+}
+
+.impact-major {
+    color: #ea580c;
+}
+
+.impact-severe {
+    color: #dc2626;
+}
 
 .margin-box {
     margin: 1em;
@@ -627,11 +656,12 @@ h6 {
     -webkit-overflow-scrolling: touch;
     /* smooth scroll on iOS */
     scrollbar-width: thin;
-hr {
-    color: var(--accent-base-color);
-}
 
-.overview-accordion-spacing {
-    margin-top: 10px;
-    padding: 10px;
-}
+    hr {
+        color: var(--accent-base-color);
+    }
+
+    .overview-accordion-spacing {
+        margin-top: 10px;
+        padding: 10px;
+    }
