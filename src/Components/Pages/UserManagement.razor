@@ -83,15 +83,13 @@
 
 
 @code {
-    private PaginationUI paginationPendingRegistrations { get; set; } = default!;
-    private PaginationUI paginationUsers { get; set; } = default!;
-
-    private string? email = "";
-
     private ClaimsPrincipal? user { get; set; }
 
     private FluentDataGrid<PendingRegistration> gridPendingRegistrations = default!;
     private FluentDataGrid<ApplicationUser> gridUsers = default!;
+
+    private PaginationUI paginationPendingRegistrations { get; set; } = default!;
+    private PaginationUI paginationUsers { get; set; } = default!;
 
     List<PendingRegistration> pendingRegistrations = new();
     List<ApplicationUser> users = new();
@@ -169,6 +167,16 @@
     }
 
 
+    protected override async Task OnInitializedAsync() {
+        user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
+        if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
+        if(users.Count == 0 || pendingRegistrations.Count == 0)
+        {
+            await OnRefreshUsers();
+            await OnRefreshPendingRegistrations();
+        }
+    }
+
     // necessary for rendering tables with pagination
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -177,17 +185,9 @@
         }
     }
 
-    protected override async Task OnInitializedAsync() {
-        user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
-        if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
-        if(users.Count == 0 || pendingRegistrations.Count == 0)
-        {
-            @* users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen *@
-            await OnRefreshUsers();
-            await OnRefreshPendingRegistrations();
-        }
-   }
 
+
+    // Methods necessary for automatic refresh of grids
     public async Task OnRefreshPendingRegistrations() {
         pendingRegistrations = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
         if(gridPendingRegistrations != null) {
@@ -202,13 +202,14 @@
         }
     }
 
+
     // OpenDialog-Methods
     private async Task OpenDialogInviteUserLink()
     {
         IDialogReference dialogInviteUser = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
         DialogResult? result = await dialogInviteUser.Result;
         if (user is null || !user.IsInRole("Admin")) return;
-        email = (string?)result?.Data;
+        string? email = (string?)result?.Data;
         if(email == null)
             return;
         string? id = await PendingRegistrationService.Create(email);
@@ -228,7 +229,7 @@
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ShowProjectsOfUser>(user, new DialogParameters { });
     }
 
-    private async Task OpenDialogChangeRoleToAdmin(string id)
+    private async Task OpenDialogChangeRoleToAdmin(string id)    // Methods necessary for pending registration links
     {
         ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
         if (userToChangeRole == null) return;
@@ -272,6 +273,29 @@
     }
 
 
+    // Delete methods
+    private async Task DeletePendingRegistration(string id)
+    {
+        await PendingRegistrationService.Delete(id);
+        ToastService.ShowSuccess("Deleted pending registration");
+        await OnRefreshPendingRegistrations();
+    }
+
+    private async Task DeleteUser(string id)
+    {
+        ApplicationUser? userToDelete = await UserManager.FindByIdAsync(id);
+        if(userToDelete != null)
+        {
+            await UserManager.DeleteAsync(userToDelete);
+            ToastService.ShowSuccess("Deleted user");
+            await OnRefreshUsers();
+        } else {
+            Console.WriteLine("Failed to delete user");
+        }
+    }
+
+
+    // Methods necessary for pending registration links
     private string GenerateRegistrationLink(string id)
     {
         return NavigationManager.BaseUri + "Account/Register?id=" + id;
@@ -295,26 +319,7 @@
         }
     }
 
-    private async Task DeletePendingRegistration(string id)
-    {
-        await PendingRegistrationService.Delete(id);
-        ToastService.ShowSuccess("Deleted pending registration");
-        await OnRefreshPendingRegistrations();
-    }
-
-    private async Task DeleteUser(string id)
-    {
-        ApplicationUser? userToDelete = await UserManager.FindByIdAsync(id);
-        if(userToDelete != null)
-        {
-            await UserManager.DeleteAsync(userToDelete);
-            ToastService.ShowSuccess("Deleted user");
-            await OnRefreshUsers();
-        } else {
-            Console.WriteLine("Failed to delete user");
-        }
-    }
-
+    // Methods for managing users
     private async Task<string> GetRolesForUser (ApplicationUser user)
     {
         IList<string> roles = await UserManager.GetRolesAsync(user);
