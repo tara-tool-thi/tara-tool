@@ -45,9 +45,11 @@
                         <FluentCheckbox Name="Input.RememberMe" @bind-Value="Input.RememberMe" Label="Remember me" />
                     </FluentStack>
                     <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" style="width: 100%;">Login</FluentButton>
-                    <p>Don't have an account yet?
-                        <FluentAnchor Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" Appearance="Appearance.Hypertext">Register here</FluentAnchor>
-                    </p>
+                    <FluentStack HorizontalAlignment="HorizontalAlignment.Left">
+                    Don't have an account yet?
+                    <br>
+                    Ask your admin for an invitation.
+                    </FluentStack>
                 </FluentStack>
             </FluentStack>
         </EditForm>
