@@ -283,6 +283,10 @@
                 await DeleteUser(userToDelete.Id);
             }
         }
+        else
+        {
+            IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUserSelf>(new DialogParameters { });
+        }
     }
 
     private string GenerateRegistrationLink(string id)
