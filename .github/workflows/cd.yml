@@ -40,23 +40,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  deploy:
-    runs-on: self-hosted
-    needs: build-and-push
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Copy compose file to deployment directory
-        run: |
-          mkdir -p /srv/thiara/data
-          cp docker-compose.yml /srv/thiara/docker-compose.yml
-
-      - name: Pull latest image and restart
-        env:
-          TARA_TOOL_IMAGE: ${{ env.IMAGE }}
-        run: |
-          docker compose -f /srv/thiara/docker-compose.yml pull
-          docker compose -f /srv/thiara/docker-compose.yml up -d
