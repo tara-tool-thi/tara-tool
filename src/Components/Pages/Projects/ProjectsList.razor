@@ -41,10 +41,10 @@
         </Body>
     </FluentPopover>
 
-    <FluentButton Appearance="@(showArchived ? Appearance.Accent : Appearance.Outline)"
+    <FluentButton Appearance="@(showArchived ? Appearance.Accent : Appearance.Neutral)"
                   Title="@(showArchived ? "Hide archived projects" : "Show archived projects")"
                   OnClick="@(() => showArchived = !showArchived)">
-        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Slot="start" />
+        <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Slot="start" Color="@(showArchived ? Color.Fill : Color.Neutral)" />
         Archived
     </FluentButton>
 

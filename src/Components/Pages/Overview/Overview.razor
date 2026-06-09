@@ -2,10 +2,18 @@
 
 @rendermode InteractiveServer
 @inject NavigationManager Navigator
+@inject ProjectService ProjectService
+@inject ItemDefinitionService ItemDefinitionService
+@inject AssetService AssetService
+@inject DamageScenarioService DamageScenarioService
 
 
 @if (topLayer is not null && bottomLayer is not null)
 {
+    @if (_title is not null)
+    {
+            <h2>@_title</h2>
+    }
     <OverviewElement IdProject="@IdProject" IdAsset="@IdAsset" IdDamageScenario=@IdDamageScenario IdItem=@IdItem
                      IdThreatScenario="@IdThreatScenario" LastLayer=@((LayerType)bottomLayer)
                      CurrentLayer="@((LayerType)topLayer)" SearchText="@searchText" @key=@renderKey />
@@ -34,6 +42,7 @@
     private LayerType? topLayer = null;
     private LayerType? bottomLayer = null;
     private string searchText { get; set; } = string.Empty;
+    private string? _title = null;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -121,8 +130,53 @@
             return;
         }
 
+        _title = await GetTitleAsync();
+
         renderKey++;
         StateHasChanged();
 
+    }
+
+    private async Task<string?> GetTitleAsync()
+    {
+        if (topLayer is null)
+            return null;
+
+        return topLayer switch
+        {
+            LayerType.Item => await GetProjectTitleAsync(),
+            LayerType.Asset => await GetItemTitleAsync(),
+            LayerType.DamageScenario => await GetAssetTitleAsync(),
+            LayerType.ThreatScenario => await GetDamageScenarioTitleAsync(),
+            _ => null
+        };
+    }
+
+    private async Task<string?> GetProjectTitleAsync()
+    {
+        if (IdProject is null) return null;
+        Project? project = await ProjectService.GetItemByIdAsync((long)IdProject, null);
+        return project is not null ? $"Project: {project.ProjectName}" : null;
+    }
+
+    private async Task<string?> GetItemTitleAsync()
+    {
+        if (IdItem is null || IdItem == -1) return null;
+        ItemDefinition? item = await ItemDefinitionService.GetItemByIdAsync((long)IdItem);
+        return item is not null ? $"Item: {item.ItemName}" : null;
+    }
+
+    private async Task<string?> GetAssetTitleAsync()
+    {
+        if (IdAsset is null || IdAsset == -1) return null;
+        Asset? asset = await AssetService.GetItemByIdAsync((long)IdAsset);
+        return asset is not null ? $"Asset: {asset.AssetName}" : null;
+    }
+
+    private async Task<string?> GetDamageScenarioTitleAsync()
+    {
+        if (IdDamageScenario is null || IdDamageScenario == -1) return null;
+        DamageScenario? damageScenario = await DamageScenarioService.GetItemByIdAsync((long)IdDamageScenario);
+        return damageScenario is not null ? $"Damage Scenario: #{damageScenario.DamageScenarioNumber}" : null;
     }
 }

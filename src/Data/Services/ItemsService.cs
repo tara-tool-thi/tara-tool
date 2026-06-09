@@ -14,8 +14,14 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             return null;
         }
 
+        long nextItemNumber = await context.ItemDefinitions
+            .Where(item => item.IdProject == projectID)
+            .Select(item => (long?)item.ItemNumber)
+            .MaxAsync() ?? 0;
+
         ItemDefinition newItem = new ItemDefinition
         {
+            ItemNumber = nextItemNumber + 1,
             ItemName = name,
             Project = await context.Projects.FindAsync(projectID)
             ?? throw new Exception("Invalid Project ID for Item Creation")

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tara_tool.Data;
 
@@ -10,9 +11,11 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260603135258_AddItemNumberColumn")]
+    partial class AddItemNumberColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
@@ -246,9 +249,6 @@ namespace tara_tool.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("INTEGER");
 
-                    b.Property<byte[]>("ProfilePicture")
-                        .HasColumnType("BLOB");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
 
@@ -325,17 +325,6 @@ namespace tara_tool.Migrations
                     b.Property<int>("KnowledgeOfComponents")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("RiskTreatmentBool")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("RiskTreatmentText")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("SpecialistExpertise")
                         .HasColumnType("INTEGER");
 
@@ -353,29 +342,6 @@ namespace tara_tool.Migrations
                     b.HasIndex("ThreatScenariosId");
 
                     b.ToTable("AttackPaths");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.AttackStep", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("AttackPathId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AttackPathId");
-
-                    b.ToTable("AttackSteps");
                 });
 
             modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
@@ -429,6 +395,10 @@ namespace tara_tool.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("BLOB");
+
+                    b.Property<byte[]>("Hash")
                         .IsRequired()
                         .HasColumnType("BLOB");
 
@@ -544,16 +514,16 @@ namespace tara_tool.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<long>("IdProject")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<long>("ProjectId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ProjectId");
+                    b.HasIndex("IdProject");
 
                     b.ToTable("Tags");
                 });
@@ -568,10 +538,6 @@ namespace tara_tool.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -760,17 +726,6 @@ namespace tara_tool.Migrations
                     b.Navigation("ThreatScenarios");
                 });
 
-            modelBuilder.Entity("tara_tool.Data.Tables.AttackStep", b =>
-                {
-                    b.HasOne("tara_tool.Data.Tables.AttackPath", "AttackPath")
-                        .WithMany("Steps")
-                        .HasForeignKey("AttackPathId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("AttackPath");
-                });
-
             modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
                 {
                     b.HasOne("tara_tool.Data.Tables.Asset", "Asset")
@@ -821,7 +776,7 @@ namespace tara_tool.Migrations
                 {
                     b.HasOne("tara_tool.Data.Tables.Project", "Project")
                         .WithMany("Tags")
-                        .HasForeignKey("ProjectId")
+                        .HasForeignKey("IdProject")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -847,11 +802,6 @@ namespace tara_tool.Migrations
             modelBuilder.Entity("tara_tool.Data.Tables.Asset", b =>
                 {
                     b.Navigation("DamageScenarios");
-                });
-
-            modelBuilder.Entity("tara_tool.Data.Tables.AttackPath", b =>
-                {
-                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>

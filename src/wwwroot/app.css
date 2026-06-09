@@ -295,7 +295,7 @@ table th {
 }
 
 .tiny-text {
-    color: #333333;
+    color: var(--neutral-fill-strong-hover);
     font-size: 1em;
 }
 

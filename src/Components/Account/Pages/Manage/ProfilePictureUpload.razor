@@ -1,0 +1,181 @@
+@rendermode InteractiveServer
+
+@using tara_tool.Data.Tables
+
+@inject ApplicationUserService UserService
+@inject tara_tool.Data.Services.ProfilePictureStateService PicState
+@inject IJSRuntime JS
+
+@implements IDisposable
+
+@if (!showCropUI)
+{
+    @* ── Normal: Avatar + Buttons ── *@
+    <FluentStack Orientation="Orientation.Horizontal"
+                 VerticalAlignment="VerticalAlignment.Center"
+                 Class="pic-avatar-row">
+
+        @if (pictureDataUrl is not null)
+        {
+            <img src="@pictureDataUrl"
+                 alt="Profile picture"
+                 class="pic-avatar-img" />
+        }
+        else
+        {
+            <div class="pic-avatar-initials">
+                @initial
+            </div>
+        }
+
+        <FluentStack Orientation="Orientation.Vertical" Class="pic-button-col">
+            <div class="pic-file-input-hidden">
+                <InputFile id="pic-file-input"
+                           OnChange="OnFileSelected"
+                           accept="image/*" />
+            </div>
+            <FluentButton Appearance="Appearance.Neutral"
+                          OnClick="OpenPicker"
+                          IconStart="@(new Icons.Regular.Size20.ImageAdd())">
+                Change picture
+            </FluentButton>
+            @if (pictureDataUrl is not null)
+            {
+                <FluentButton Appearance="Appearance.Neutral"
+                              OnClick="DeletePicture"
+                              IconStart="@(new Icons.Regular.Size20.Delete())">
+                    Remove
+                </FluentButton>
+            }
+        </FluentStack>
+    </FluentStack>
+}
+else
+{
+    @* ── Crop UI ── *@
+    <div class="pic-crop-container">
+        <FluentLabel Class="pic-crop-hint">Select your square crop:</FluentLabel>
+        <div class="pic-crop-preview-wrapper">
+            <img id="pic-crop-img" class="pic-crop-preview-img" alt="" />
+        </div>
+        <FluentStack Orientation="Orientation.Horizontal" Class="pic-crop-actions">
+            <FluentButton Appearance="Appearance.Accent"
+                          OnClick="SaveCropped"
+                          IconStart="@(new Icons.Regular.Size20.Checkmark())">
+                Save
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Neutral"
+                          OnClick="CancelCrop"
+                          IconStart="@(new Icons.Regular.Size20.Dismiss())">
+                Cancel
+            </FluentButton>
+        </FluentStack>
+    </div>
+}
+
+@if (errorMsg is not null)
+{
+    <FluentMessageBar Intent="MessageIntent.Error" Class="pic-error-bar">
+        @errorMsg
+    </FluentMessageBar>
+}
+
+@code {
+    [Parameter] public required string UserId   { get; set; }
+    [Parameter] public required string Username { get; set; }
+
+    private string? pictureDataUrl;
+    private bool    showCropUI;
+    private bool    _shouldInitCropper;
+    private string? _pendingCropDataUrl;
+    private string? errorMsg;
+
+    private string initial => Username.Length > 0
+        ? Username[0].ToString().ToUpper() : "?";
+
+    protected override async Task OnInitializedAsync()
+    {
+        ApplicationUser? user = await UserService.GetUserByIdAsync(UserId);
+        if (user?.ProfilePicture is { Length: > 0 })
+            pictureDataUrl =
+                $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            PicState.OnChange += OnPicStateChanged;
+
+        if (_shouldInitCropper && _pendingCropDataUrl is not null)
+        {
+            _shouldInitCropper  = false;
+            string url          = _pendingCropDataUrl;
+            _pendingCropDataUrl = null;
+            await JS.InvokeVoidAsync("profilePic_initCropper", url);
+        }
+    }
+
+    public void Dispose() => PicState.OnChange -= OnPicStateChanged;
+
+    private void OnPicStateChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task OpenPicker() =>
+        await JS.InvokeVoidAsync("profilePic_openPicker");
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        errorMsg = null;
+        IBrowserFile file = e.File;
+        const long max    = 5 * 1024 * 1024;
+
+        if (!file.ContentType.StartsWith("image/"))
+        {
+            errorMsg = "Please select an image file.";
+            return;
+        }
+        if (file.Size > max)
+        {
+            errorMsg = "Image must be smaller than 5 MB.";
+            return;
+        }
+
+        using MemoryStream ms = new MemoryStream();
+        await file.OpenReadStream(max).CopyToAsync(ms);
+        _pendingCropDataUrl = $"data:{file.ContentType};base64,{Convert.ToBase64String(ms.ToArray())}";
+        _shouldInitCropper  = true;
+        showCropUI          = true;
+    }
+
+    private async Task SaveCropped()
+    {
+        string? dataUrl = await JS.InvokeAsync<string?>("profilePic_getCropped");
+        if (dataUrl is null)
+        {
+            errorMsg = "Crop failed — please try again.";
+            return;
+        }
+
+        byte[] bytes = Convert.FromBase64String(dataUrl.Split(',').Last());
+        await UserService.UpdateProfilePictureAsync(UserId, bytes);
+
+        pictureDataUrl          = dataUrl;
+        PicState.PictureDataUrl = dataUrl;
+
+        await JS.InvokeVoidAsync("profilePic_destroyCropper");
+        showCropUI = false;
+    }
+
+    private async Task CancelCrop()
+    {
+        await JS.InvokeVoidAsync("profilePic_destroyCropper");
+        showCropUI          = false;
+        _pendingCropDataUrl = null;
+    }
+
+    private async Task DeletePicture()
+    {
+        await UserService.UpdateProfilePictureAsync(UserId, null);
+        pictureDataUrl          = null;
+        PicState.PictureDataUrl = null;
+    }
+}
