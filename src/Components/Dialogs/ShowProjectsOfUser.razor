@@ -1,0 +1,57 @@
+@implements IDialogContentComponent<ApplicationUser>
+@rendermode InteractiveServer
+
+@inject ProjectService ProjectService
+@inject SessionService SessionService
+
+<FluentDialogHeader ShowDismiss="true">
+    <h3>Projects of user @Content.Email</h3>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <FluentDataGrid Items="Projects.AsQueryable()" TGridItem="Project" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridProjects">
+        <PropertyColumn Property="@(p => p.ProjectName)" Sortable="true" />
+        <PropertyColumn Property="@(p => p.DateLastChanged)" Sortable="true" />
+        <TemplateColumn Title="Transfer ownership" Context="projectRow">
+            <FluentStack Orientation="Orientation.Horizontal">
+                <FluentTextField Value="@email" TextFieldType="TextFieldType.Email" />
+                <FluentButton IconStart="@(new Icons.Regular.Size20.PersonSwap())" />
+            </FluentStack>
+        </TemplateColumn>
+    </FluentDataGrid>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Outline" OnClick="@CancelDialog">Cancel</FluentButton>
+    <FluentButton Appearance="Appearance.Accent">Save</FluentButton>
+</FluentDialogFooter>
+
+
+@code
+{
+    [Parameter]
+    public ApplicationUser Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private List<Project> Projects = new();
+    private FluentDataGrid<Project> gridProjects = default!;
+
+    private string? email;
+
+    protected override async Task OnInitializedAsync()
+    {
+        email = SessionService.GetApplicationUserAsync().Result!.Email;
+        Projects = await ProjectService.GetOwnedProjectsAsync(Content);
+    }
+
+    private async Task CloseDialog()
+    {
+        await Dialog!.CloseAsync();
+    }
+    private async Task CancelDialog()
+    {
+        await Dialog!.CancelAsync();
+    }
+}

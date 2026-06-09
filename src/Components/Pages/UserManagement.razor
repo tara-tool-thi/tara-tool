@@ -49,7 +49,7 @@
 {
     <h4 class="margin-bottom-16">Registered Users</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
-    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" ShowHover="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
         <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
         <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
@@ -226,7 +226,7 @@
 
     private async Task OpenDialogShowProjects(ApplicationUser user)
     {
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ShowProjectsOfUser>(user, new DialogParameters { });
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ShowProjectsOfUser>(user, new DialogParameters {Width="50%", });
     }
 
     private async Task OpenDialogChangeRoleToAdmin(string id)    // Methods necessary for pending registration links

@@ -30,7 +30,7 @@
                 </FluentStack>
                 <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" Width="80%">
                     <div style="width: 100%;">
-                        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=email Label="Email" Placeholder="example@thi.de" Required="true" style="width: 100%;"></FluentTextField>
+                        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=email Label="Email" Placeholder="example@thi.de" Required="true" Autofocus="true" style="width: 100%;"></FluentTextField>
                         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
                     </div>
                     <div style="width: 100%;">
