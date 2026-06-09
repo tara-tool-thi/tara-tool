@@ -21,7 +21,7 @@
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
             HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <FluentSpacer />
-        <FluentButton OnClick="OpenDialogInviteUser" IconStart=@(new Icons.Regular.Size20.Add())>
+        <FluentButton OnClick="OpenDialogInviteUserLink" IconStart=@(new Icons.Regular.Size20.Add())>
             New User
         </FluentButton>
     </FluentStack>
@@ -79,35 +79,6 @@
 <PaginationUI @ref=@paginationUsers />
 
 
-@* Dialog that contains the invite link *@
-<div>
-    <FluentDialog title="Invite link" @ref="copyLink" @bind-Hidden="@inviteLinkHidden" @ondialogdismiss=CloseCopyLink>
-        <FluentDialogHeader ShowDismiss="true">
-            <FluentStack VerticalAlignment="VerticalAlignment.Center">
-                <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
-                <h3>Invite link</h3>
-            </FluentStack>
-        </FluentDialogHeader>
-        <FluentDialogBody>
-            <FluentStack Orientation="Orientation.Vertical">
-                <p class="margin-bottom-0">This is the register link for the new user:</p>
-                <FluentStack Orientation="Orientation.Horizontal">
-                    <FluentTextField ReadOnly="true" @bind-Value="link" class="fullwidth"></FluentTextField>
-                    <FluentButton OnClick="@(() => CopyLinkToClipboard(null))" IconStart=@(new Icons.Regular.Size20.Copy())/>
-                </FluentStack>
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" class="margin-top-10">
-                    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" Class="min-width-24"/>
-                    <p class="margin-bottom-0">Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
-                </FluentStack>
-            </FluentStack>
-        </FluentDialogBody>
-        <FluentDialogFooter>
-            <FluentSpacer/>
-            <FluentButton OnClick=CloseCopyLink Appearance="Appearance.Accent">OK</FluentButton>
-        </FluentDialogFooter>
-    </FluentDialog>
-</div>
-
 </AuthorizeView>
 
 
@@ -116,27 +87,6 @@
     private PaginationUI paginationUsers { get; set; } = default!;
 
     private string? email = "";
-
-    private string? link;
-
-    @* private ColumnKeyGridSort<ApplicationUser> roleSort = new ColumnKeyGridSort<ApplicationUser>(
-        "role",
-        (queryable, sortAscending) =>
-        {
-            if(sortAscending)
-            {
-                return queryable.OrderBy(e => GetRolesForUser(e).Result);
-            }
-            else
-            {
-                return queryable.OrderByDescending(e => GetRolesForUser(e).Result);
-            }
-        }
-    ); *@
-
-
-    private FluentDialog? copyLink;
-    private bool inviteLinkHidden { get; set; } = true;
 
     private ClaimsPrincipal? user { get; set; }
 
@@ -252,10 +202,11 @@
         }
     }
 
-    private async Task OpenDialogInviteUser()
+    // OpenDialog-Methods
+    private async Task OpenDialogInviteUserLink()
     {
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
-        DialogResult? result = await dialog.Result;
+        IDialogReference dialogInviteUser = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
+        DialogResult? result = await dialogInviteUser.Result;
         if (user is null || !user.IsInRole("Admin")) return;
         email = (string?)result?.Data;
         if(email == null)
@@ -267,9 +218,40 @@
             return;
         }
 
-        link = GenerateRegistrationLink(id);
-        await DialogService.CloseAsync(dialog);
-        copyLink!.Show();
+        await DialogService.CloseAsync(dialogInviteUser);
+
+        IDialogReference dialogCopyLink = await this.DialogService.ShowDialogAsync<Dialogs.InviteLink>(GenerateRegistrationLink(id), new DialogParameters { });
+    }
+
+    private async Task OpenDialogShowProjects(ApplicationUser user)
+    {
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ShowProjectsOfUser>(user, new DialogParameters { });
+    }
+
+    private async Task OpenDialogChangeRoleToAdmin(string id)
+    {
+        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
+        if (userToChangeRole == null) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToAdmin>(userToChangeRole, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != true)
+        {
+            await ChangeRoleToAdmin(userToChangeRole);
+            return;
+        }
+    }
+
+    private async Task OpenDialogChangeRoleToUser(string id)
+    {
+        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
+        if (userToChangeRole == null) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToUser>(userToChangeRole, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != true)
+        {
+            await ChangeRoleToUser(userToChangeRole);
+            return;
+        }
     }
 
     private async Task OpenDialogDeleteUser(ApplicationUser userToDelete)
@@ -289,19 +271,15 @@
         }
     }
 
+
     private string GenerateRegistrationLink(string id)
     {
         return NavigationManager.BaseUri + "Account/Register?id=" + id;
     }
 
-    private async Task CloseCopyLink()
-    {
-        copyLink!.Hide();
-        await OnRefreshPendingRegistrations();
-    }
-
     private async Task CopyLinkToClipboard(string? id)
     {
+        string? link = null;
         if(id != null)
         {
             link = GenerateRegistrationLink(id);
@@ -334,37 +312,6 @@
             await OnRefreshUsers();
         } else {
             Console.WriteLine("Failed to delete user");
-        }
-    }
-
-    private async Task OpenDialogShowProjects(ApplicationUser user)
-    {
-
-    }
-
-    private async Task OpenDialogChangeRoleToAdmin(string id)
-    {
-        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
-        if (userToChangeRole == null) return;
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToAdmin>(userToChangeRole, new DialogParameters { });
-        DialogResult? result = await dialog.Result;
-        if(result.Cancelled != true)
-        {
-            await ChangeRoleToAdmin(userToChangeRole);
-            return;
-        }
-    }
-
-    private async Task OpenDialogChangeRoleToUser(string id)
-    {
-        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
-        if (userToChangeRole == null) return;
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToUser>(userToChangeRole, new DialogParameters { });
-        DialogResult? result = await dialog.Result;
-        if(result.Cancelled != true)
-        {
-            await ChangeRoleToUser(userToChangeRole);
-            return;
         }
     }
 
