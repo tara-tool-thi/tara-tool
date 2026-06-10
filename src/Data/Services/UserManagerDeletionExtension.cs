@@ -8,9 +8,13 @@ public static class UserManagerDeletionExtension
 {
     extension(UserManager<ApplicationUser> self)
     {
+        /// <summary>
+        /// Deletes a user’s projects, accesses and then the user itself.
+        /// </summary>
         public async Task<IdentityResult> DeleteUserAndProjectsAsync(ApplicationUser user)
         {
             ProjectService projectService = self.ServiceProvider.GetRequiredService<ProjectService>();
+            AccessControlService accessControlService = self.ServiceProvider.GetRequiredService<AccessControlService>();
 
             List<Project> projects = await projectService.GetOwnedProjectsAsync(user);
 
@@ -23,9 +27,26 @@ public static class UserManagerDeletionExtension
                 return IdentityResult.Failed([new IdentityError() { Description = ex.Message }]);
             }
 
-            return await self.DeleteAsync(user);
+            if (!await accessControlService.DeleteUserAccessesAsync(user))
+            {
+                return IdentityResult.Failed([new IdentityError() { Description = "Failed to delete all accesses of user." }]);
+            }
+
+            // Prevents “Optimistic concurrency failure: Object has been modified”
+            IdentityResult result = await self.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return result;
+            }
+
+            // await accessControlService.DeleteOrphansAsync();
+
+            return result;
         }
 
+        /// <summary>
+        /// Transfers all projects owned by <paramref name="sourceUser"/> to <paramref name="targetUser"/>.
+        /// </summary>
         public async Task<IdentityResult> TransferAllProjects(ApplicationUser sourceUser, ApplicationUser targetUser)
         {
             ProjectService projectService = self.ServiceProvider.GetRequiredService<ProjectService>();

@@ -93,28 +93,32 @@
             return;
         }
 
-        ApplicationUser? transferRecipient = await UserManager.FindByEmailAsync(Input.TransferEmail);
-
-        if (transferRecipient is ApplicationUser)
+        if (!string.IsNullOrWhiteSpace(Input.TransferEmail))
         {
-            IdentityResult transferResult = await UserManager.TransferAllProjects(user, transferRecipient);
+            ApplicationUser? transferRecipient = await UserManager.FindByEmailAsync(Input.TransferEmail);
 
-            if (!transferResult.Succeeded)
+            if (transferRecipient is ApplicationUser)
             {
-                message = "Error: Failed to transfer your projects.";
+                IdentityResult transferResult = await UserManager.TransferAllProjects(user, transferRecipient);
+
+                if (!transferResult.Succeeded)
+                {
+                    message = "Error: Failed to transfer your projects.";
+                    return;
+                }
+            }
+            else
+            {
+                message = "Error: The user you tried to transfer your projects to does not exist.";
                 return;
             }
         }
-        else
-        {
-            message = "Error: The user you tried to transfer your projects to does not exist.";
-            return;
-        }
 
-        var result = await UserManager.DeleteUserAndProjectsAsync(user);
+        IdentityResult result = await UserManager.DeleteUserAndProjectsAsync(user);
         if (!result.Succeeded)
         {
-            throw new InvalidOperationException("Unexpected error occurred deleting user.");
+            message = "Unexpected error occurred deleting user.";
+            return;
         }
 
         await SignInManager.SignOutAsync();

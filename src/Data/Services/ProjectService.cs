@@ -350,22 +350,23 @@ public class ProjectService(
         ApplicationUser? currentUser = await sessionService.GetApplicationUserAsync();
         if (currentUser is null) return false;
 
-        Project? project = context.Projects.Include(p => p.Access).First(p => p.Id == projectId);
+        Project? project = context.Projects.Include(p => p.Access).ThenInclude(a => a.ApplicationUser).First(p => p.Id == projectId);
         if (project is null) return false;
 
         if (!project.Access.Any(a => a.ApplicationUser.Id == currentUser.Id && a.Owner)) return false;
 
-        AccessControl? currentOwnerAc = await context.AccessControls
+        AccessControl? currentOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
             .FirstOrDefaultAsync(a => a.Project.Id == projectId && a.ApplicationUser.Id == currentUser.Id && a.Owner);
         if (currentOwnerAc is null) return false;
 
-        AccessControl? newOwnerAc = await context.AccessControls
+        AccessControl? newOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
             .FirstOrDefaultAsync(a => a.ApplicationUser.Id == newOwner.Id && a.Project.Id == projectId && !a.Owner);
 
         currentOwnerAc.Owner = false;
 
         if (newOwnerAc is null)
         {
+            context.Users.Attach(newOwner);
             newOwnerAc = new AccessControl
             {
                 Project = project,
