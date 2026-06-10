@@ -331,3 +331,7 @@ h6 {
 .theme-toggle-spacing {
     margin-right: 12px;
 }
+
+.project-name-input {
+    width: 280px;
+}

@@ -34,8 +34,35 @@
 <br />
 <FluentStack>
     <h2>
-        <FluentStack @key="@retrievedProjectLastModifiedDate">
-            @projectName
+        <FluentStack Orientation="Orientation.Horizontal"
+                     VerticalAlignment="VerticalAlignment.Center"
+                     @key="@retrievedProjectLastModifiedDate"> <!-- damit alles zentriert und auf der gleichen höhe ist-->
+            @if (isRenamingProjectName)
+            {
+                <FluentTextField @bind-Value="newProjectName"
+                                 Placeholder="Project name"
+                                 Class="project-name-input" /> // Eingabefeld für neuen Projektnamen
+
+                <FluentButton Appearance="Appearance.Accent" OnClick="SaveProjectNameAsync">
+                    Save
+                </FluentButton>
+
+                <FluentButton Appearance="Appearance.Outline" OnClick="CancelRenameProjectName">
+                    Cancel
+                </FluentButton>
+            }
+            else
+            {
+                @projectName
+                @if (canManage && !isArchived) //Benuzter mit Rechten und nicht archivert
+                {
+                    <FluentButton Appearance="Appearance.Stealth"
+                        Title="Rename project"
+                        IconStart="@(new Icons.Regular.Size20.Edit())"
+                        OnClick="StartRenameProjectName" />
+                }
+            }
+
             @if (isArchived)
             {
                 <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
@@ -94,6 +121,8 @@
     private string projectName = "";
     private bool canManage = false;
     private bool isArchived = false;
+    private bool isRenamingProjectName = false; //Merkt ob, Änderungsmodus aktiv ist
+    private string newProjectName = ""; //neuer eingebener Name
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
@@ -169,6 +198,40 @@
         Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);
 
         return retrievedProject;
+    }
+
+    private void StartRenameProjectName()
+    {
+        newProjectName = projectName; //aktueller Name in das Eingabefeld übernehmen
+        isRenamingProjectName = true;
+    }
+
+    private void CancelRenameProjectName()
+    {
+        newProjectName = string.Empty; //Eingabefeld leeren, nix wird überschrieben und der name bleibt
+        isRenamingProjectName = false;
+    }
+
+    private async Task SaveProjectNameAsync()
+    {
+        string trimmedProjectName = newProjectName.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedProjectName)) //leere Projektnamen
+        {
+            return;
+        }
+
+        await ProjectService.UpdateProjectNameAsync(urlId, trimmedProjectName);
+
+        Project? requestedProject = await retrieveProjectInfo();
+
+            if (requestedProject != null)
+            {
+                projectName = requestedProject.ProjectName;
+                retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+            }
+
+        isRenamingProjectName = false;
     }
 
 
