@@ -137,6 +137,8 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             //await assetService.Delete(lonelyAsset);
         }
 
+        await context.Projects.Where(p => p.Id == item.IdProject).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+
         context.ItemDefinitions.Remove(item);
         await context.SaveChangesAsync();
     }

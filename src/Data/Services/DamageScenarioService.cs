@@ -70,6 +70,7 @@ public class DamageScenarioService(
             await accessControlService.CheckUserAccessRightsWrite(projId) is true)
         {
             context.Remove(entityToDelete);
+            await context.Projects.Where(p => p.Id == entityToDelete.Asset.ItemDefinition.IdProject).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
             await context.SaveChangesAsync();
         }
         return;

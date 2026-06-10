@@ -27,6 +27,8 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
             await tagService.Delete(tag);
         }
 
+        await context.Projects.Where(p => p.Id == asset.ItemDefinition.IdProject).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+
         await context.SaveChangesAsync();
     }
 
