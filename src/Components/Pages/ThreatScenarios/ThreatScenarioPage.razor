@@ -59,13 +59,10 @@
 
 <div style="height: 1rem;"></div>
 
-<FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center" Width="100%">
-    <FluentSearch Placeholder="Free text search" Style="width: 25%;" @bind-Value=@searchText Immediate=true
-                  ImmediateDelay="500" />
-</FluentStack>
-
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center" Class="threat-scenario-attackpaths-shell">
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Class="threat-scenario-attackpaths" HorizontalAlignment="HorizontalAlignment.Center">
+        <FluentSearch Placeholder="Free text search" @bind-Value=@searchText Immediate=true Class="fullwidth"
+                  ImmediateDelay="500" />
         @if (FilteredAttackPaths.Any())
         {
             <FluentAccordion Class="fullwidth">
