@@ -81,7 +81,7 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         //This is done, to establish tracking of objects, so we do not add multiple data points at once
-        ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets).FirstOrDefault(i => i.Id == itemDefinition.Id);
+        ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets).Include(i => i.Project).FirstOrDefault(i => i.Id == itemDefinition.Id);
         if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return null;
 
         context.Entry(item).CurrentValues.SetValues(itemDefinition);
@@ -116,6 +116,8 @@ public class ItemDefinitionService(IDbContextFactory<ApplicationDbContext> conte
             Asset tracked = context.Attach(obj).Entity;
             item.Assets.Add(tracked);
         }
+
+        item.Project.DateLastChanged = DateTime.UtcNow;
 
         await context.SaveChangesAsync();
 

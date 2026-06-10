@@ -56,6 +56,8 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
             IdItemDefinition = IdItemDefinition //Adding ForeignKey
         };
 
+        project.DateLastChanged = DateTime.UtcNow;
+
         await context.AddAsync(newAsset);
         await context.SaveChangesAsync();
 
@@ -105,7 +107,7 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
     public async Task<Asset?> Save(Asset entityToSave)
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        Asset? asset = await context.Assets.Include(e => e.ItemDefinition).FirstOrDefaultAsync(a => a.Id == entityToSave.Id);
+        Asset? asset = await context.Assets.Include(e => e.ItemDefinition).ThenInclude(e => e != null ? e.Project : null).FirstOrDefaultAsync(a => a.Id == entityToSave.Id);
         if (asset is null || await accessControlService.CheckUserAccessRightsWrite(asset.ItemDefinition!.IdProject) is false)
         {
             return null;
@@ -122,6 +124,8 @@ public class AssetService(IDbContextFactory<ApplicationDbContext> contextFactory
             asset.Tag = null;
             asset.IdTag = null;
         }
+
+        asset.ItemDefinition.Project.DateLastChanged = DateTime.UtcNow;
 
         await context.SaveChangesAsync();
         return asset;

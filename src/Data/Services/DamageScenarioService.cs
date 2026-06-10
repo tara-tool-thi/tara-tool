@@ -51,6 +51,8 @@ public class DamageScenarioService(
                 Asset = asset
             };
 
+        damageScenario.Asset.ItemDefinition.Project.DateLastChanged = DateTime.UtcNow;
+
         await context.AddAsync(damageScenario);
         await context.SaveChangesAsync();
 
@@ -80,6 +82,7 @@ public class DamageScenarioService(
         DamageScenario? damageScenario =
             await context.DamageScenarios.Include(e => e.Asset)
                 .ThenInclude(e => e != null ? e.ItemDefinition : null)
+                .ThenInclude(e => e != null ? e.Project : null)
                 .FirstOrDefaultAsync(a => a.Id == entityToSave.Id);
 
         if (damageScenario is not null
@@ -87,6 +90,7 @@ public class DamageScenarioService(
             await accessControlService.CheckUserAccessRightsWrite(projId) is true)
         {
             context.Entry(damageScenario).CurrentValues.SetValues(entityToSave);
+            damageScenario.Asset.ItemDefinition.Project.DateLastChanged = DateTime.UtcNow;
             await context.SaveChangesAsync();
             return entityToSave;
         }
