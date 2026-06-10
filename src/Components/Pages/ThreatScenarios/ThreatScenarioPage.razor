@@ -88,8 +88,10 @@
             else
             {
                 <FluentCard Style="text-align: center;">
-                    <FluentIcon Value="@(new Icons.Regular.Size24.Info())"/>
-                    <p>No attack paths have been added yet. Click New Attack Path to create one.</p>
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Info())"/>
+                        No attack paths have been added yet.
+                    </FluentStack>
                 </FluentCard>
             }
         }
