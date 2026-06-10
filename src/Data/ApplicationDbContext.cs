@@ -80,8 +80,8 @@ public class ApplicationDbContext(
         builder.Entity<AttackPath>()
             .HasMany(ap => ap.Steps)
             .WithOne(step => step.AttackPath)
-            .HasForeignKey("AttackPathId")
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(true);
         builder.Entity<Tag>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Tags)

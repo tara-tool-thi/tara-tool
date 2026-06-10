@@ -36,5 +36,5 @@ public class AttackStep
 
     // Navigation property back to the parent
     [JsonIgnore]
-    public virtual required AttackPath AttackPath { get; set; }
+    public virtual AttackPath? AttackPath { get; set; }
 }

@@ -47,13 +47,12 @@ public class ProjectService(
                                .ThenInclude(ts => ts.AttackPaths)
                                .ThenInclude(ap => ap.Steps)
                                .Include(p => p.Tags)
-                               .AsNoTracking()
                                .FirstOrDefaultAsync(p => p.Id == projectId);
 
         if (project == null)
             return null;
 
-        var options = new JsonSerializerOptions
+        JsonSerializerOptions options = new JsonSerializerOptions
         {
             ReferenceHandler =
                                                       ReferenceHandler.Preserve,
@@ -87,10 +86,16 @@ public class ProjectService(
             project.DateLastChanged = DateTime.UtcNow;
             project.IsArchived = false;
 
-            // Collect all tags from the graph to ensure they all get reset and linked
-            HashSet<Tag> allTags = new HashSet<Tag>(project.Tags);
 
-            foreach (var itemDef in project.ItemDefinitions)
+
+            // Build canonical set from project.Tags (same instances as asset.Tag after deserialization)
+            HashSet<Tag> canonicalTags = new(ReferenceEqualityComparer.Instance);
+            foreach (Tag tag in project.Tags)
+                canonicalTags.Add(tag);
+
+
+
+            foreach (ItemDefinition itemDef in project.ItemDefinitions)
             {
                 itemDef.Id = 0;
                 itemDef.IdProject = 0;
@@ -105,7 +110,7 @@ public class ProjectService(
                 if (itemDef.OperationalEnvironmentImage != null)
                     itemDef.OperationalEnvironmentImage.Id = 0;
 
-                foreach (var asset in itemDef.Assets)
+                foreach (Asset asset in itemDef.Assets)
                 {
                     asset.Id = 0;
                     asset.IdItemDefinition = 0;
@@ -113,22 +118,23 @@ public class ProjectService(
 
                     if (asset.Tag != null)
                     {
-                        allTags.Add(asset.Tag);
+                        if (asset.Tag != null)
+                            asset.IdTag = 0;
                     }
 
-                    foreach (var ds in asset.DamageScenarios)
+                    foreach (DamageScenario ds in asset.DamageScenarios)
                     {
                         ds.Id = 0;
                         ds.Asset = asset;
-                        foreach (var ts in ds.ThreatScenarios)
+                        foreach (ThreatScenario ts in ds.ThreatScenarios)
                         {
                             ts.Id = 0;
                             ts.DamageScenarios = ds;
-                            foreach (var ap in ts.AttackPaths)
+                            foreach (AttackPath ap in ts.AttackPaths)
                             {
                                 ap.Id = 0;
                                 ap.ThreatScenarios = ts;
-                                foreach (var step in ap.Steps)
+                                foreach (AttackStep step in ap.Steps)
                                 {
                                     step.Id = 0;
                                     step.AttackPath = ap;
@@ -139,14 +145,10 @@ public class ProjectService(
                 }
             }
 
-            foreach (var tag in allTags)
+            foreach (Tag tag in project.Tags)
             {
                 tag.Id = 0;
                 tag.Project = project;
-                if (!project.Tags.Contains(tag))
-                {
-                    project.Tags.Add(tag);
-                }
             }
 
             // Attach user to context so it's not treated as a new entity
