@@ -103,7 +103,7 @@
                         {
                             <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                           OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario, true))">
-                                @(selectedDamageScenario.Id == -1 ? "*" : selectedDamageScenario.DamageScenarioNumber.ToString())
+                                @(selectedDamageScenario.Id == -1 ? "*" : ($"Damage Scenario {selectedDamageScenario.DamageScenarioNumber.ToString()}"))
                             </FluentButton>
                         }
                         else
@@ -120,7 +120,7 @@
                             {
                                 <FluentMenuItem OnClick="@(() => OnDamageScenarioChange(d))"
                                                 Selected="@(d.Id == selectedDamageScenario?.Id)">
-                                    @(d.Id == -1 ? "*" : d.DamageScenarioNumber.ToString())
+                                    @(d.Id == -1 ? "*" : ($"Damage Scenario {d.DamageScenarioNumber.ToString()}"))
                                 </FluentMenuItem>
                             }
                         </FluentMenu>

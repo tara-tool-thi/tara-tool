@@ -85,15 +85,15 @@ footer a:hover {
 }
 
 .path-dropdown-select-placeholder::part(control) {
-    color: var(--neutral-foreground-hint);
+    color: var(--foreground-on-accent-focus);
     font-style: italic;
 }
 
 .path-dropdown-scroll-container {
     overflow-x: auto;
-    scroll-margin-right:
-        /* auto is better than scroll */
-        white-space: nowrap;
+    scroll-margin-right: auto;
+    /* auto is better than scroll */
+    white-space: nowrap;
     display: flex;
     align-items: center;
     flex-shrink: 1;
@@ -658,12 +658,13 @@ h6 {
     -webkit-overflow-scrolling: touch;
     /* smooth scroll on iOS */
     scrollbar-width: thin;
+}
 
-    hr {
-        color: var(--accent-base-color);
-    }
+hr {
+    color: var(--accent-base-color);
+}
 
-    .overview-accordion-spacing {
-        margin-top: 10px;
-        padding: 10px;
-    }
+.overview-accordion-spacing {
+    margin-top: 10px;
+    padding: 10px;
+}
