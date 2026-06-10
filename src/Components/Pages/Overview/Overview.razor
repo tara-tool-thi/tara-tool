@@ -1,0 +1,178 @@
+@page "/Overview"
+
+@rendermode InteractiveServer
+@inject NavigationManager Navigator
+@inject ProjectService ProjectService
+@inject ItemDefinitionService ItemDefinitionService
+@inject AssetService AssetService
+@inject DamageScenarioService DamageScenarioService
+
+
+@if (topLayer is not null && bottomLayer is not null)
+{
+    @if (_title is not null)
+    {
+            <h2>@_title</h2>
+    }
+    <OverviewElement IdProject="@IdProject" IdAsset="@IdAsset" IdDamageScenario=@IdDamageScenario IdItem=@IdItem
+                     LastLayer=@((LayerType)bottomLayer) CurrentLayer="@((LayerType)topLayer)" SearchText="@searchText"
+                     @key=@renderKey />
+}
+
+
+@code {
+
+    private long renderKey = 0;
+
+    [SupplyParameterFromQuery]
+    public long? IdProject { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdItem { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdAsset { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdDamageScenario { get; set; } = null;
+
+    [SupplyParameterFromQuery]
+    public long? IdThreatScenario { get; set; } = null;
+
+    private LayerType? topLayer = null;
+    private LayerType? bottomLayer = null;
+    private string searchText { get; set; } = string.Empty;
+    private string? _title = null;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IdProject is null || IdProject == -1)
+        {
+            // Note: ParameterSet is also invoked when navigating away from the current URL, causing the query
+            // and its parameters to change. This can trigger a race condition (or a predetermined execution order)
+            // that activates the following condition. Since we only care about the IdIs value when on the overview,
+            // we safely ignore it otherwise.
+            // Overriding with a separate function was considered, but would break the existing behavior.
+            if (Navigator.Uri.Contains("Overview"))
+            {
+                //Id Project must no be null
+                Navigator.NavigateTo("/");
+            }
+
+            return;
+        }
+
+        if (IdItem == -1)
+        {
+            topLayer = LayerType.Item;
+        }
+        else if (IdAsset == -1)
+        {
+            topLayer = LayerType.Asset;
+        }
+        else if (IdDamageScenario == -1)
+        {
+            topLayer = LayerType.DamageScenario;
+        }
+        else if (IdThreatScenario == -1)
+        {
+            topLayer = LayerType.ThreatScenario;
+        }
+
+        if (IdDamageScenario == -1)
+        {
+            bottomLayer = LayerType.DamageScenario;
+        }
+        else if (IdAsset == -1)
+        {
+            bottomLayer = LayerType.Asset;
+        }
+        else if (IdItem == -1)
+        {
+            bottomLayer = LayerType.Item;
+        }
+        else if (IdProject == -1)
+        {
+            bottomLayer = LayerType.Project;
+        }
+
+
+        //Fallback: no wildcards found — redirect to the deepest entity page instead of Overview
+        if (topLayer is null && bottomLayer is null)
+        {
+            if (IdThreatScenario is not null)
+                Navigator.NavigateTo($"/ThreatScenario/{IdThreatScenario}");
+            else if (IdDamageScenario is not null)
+                Navigator.NavigateTo($"/DamageScenario/{IdDamageScenario}");
+            else if (IdAsset is not null)
+                Navigator.NavigateTo($"/Asset/{IdAsset}");
+            else if (IdItem is not null)
+                Navigator.NavigateTo($"/Item/{IdItem}");
+            else
+                Navigator.NavigateTo("/");
+            return;
+        }
+
+        //Catch invalid States
+        if (topLayer is null || bottomLayer is null)
+        {
+            Navigator.NavigateTo("/");
+            return;
+        }
+
+        if ((int)topLayer! > (int)bottomLayer!)
+        {
+            Navigator.NavigateTo("/");
+            return;
+        }
+
+        _title = await GetTitleAsync();
+
+        renderKey++;
+        StateHasChanged();
+
+    }
+
+    private async Task<string?> GetTitleAsync()
+    {
+        if (topLayer is null)
+            return null;
+
+        return topLayer switch
+        {
+            LayerType.Item => await GetProjectTitleAsync(),
+            LayerType.Asset => await GetItemTitleAsync(),
+            LayerType.DamageScenario => await GetAssetTitleAsync(),
+            LayerType.ThreatScenario => await GetDamageScenarioTitleAsync(),
+            _ => null
+        };
+    }
+
+    private async Task<string?> GetProjectTitleAsync()
+    {
+        if (IdProject is null) return null;
+        Project? project = await ProjectService.GetItemByIdAsync((long)IdProject, null);
+        return project is not null ? $"Project: {project.ProjectName}" : null;
+    }
+
+    private async Task<string?> GetItemTitleAsync()
+    {
+        if (IdItem is null || IdItem == -1) return null;
+        ItemDefinition? item = await ItemDefinitionService.GetItemByIdAsync((long)IdItem);
+        return item is not null ? $"Item: {item.ItemName}" : null;
+    }
+
+    private async Task<string?> GetAssetTitleAsync()
+    {
+        if (IdAsset is null || IdAsset == -1) return null;
+        Asset? asset = await AssetService.GetItemByIdAsync((long)IdAsset);
+        return asset is not null ? $"Asset: {asset.AssetName}" : null;
+    }
+
+    private async Task<string?> GetDamageScenarioTitleAsync()
+    {
+        if (IdDamageScenario is null || IdDamageScenario == -1) return null;
+        DamageScenario? damageScenario = await DamageScenarioService.GetItemByIdAsync((long)IdDamageScenario);
+        return damageScenario is not null ? $"Damage Scenario: #{damageScenario.DamageScenarioNumber}" : null;
+    }
+}

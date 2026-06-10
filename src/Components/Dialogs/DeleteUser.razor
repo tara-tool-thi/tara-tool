@@ -1,0 +1,42 @@
+@using System.ComponentModel.DataAnnotations
+@implements IDialogContentComponent<ApplicationUser>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <h3>Delete user</h3>
+</FluentDialogHeader>
+
+
+<FluentDialogBody>
+        Are you sure you want to delete <strong>@Content.Email</strong>? This cannot be undone.
+</FluentDialogBody>
+
+
+<FluentDialogFooter>
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+            <FluentSpacer />
+            <FluentButton Appearance="Appearance.Outline" OnClick="@CancelDialog">Cancel
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Accent" OnClick=@CloseDialog BackgroundColor="var(--error)" >Delete
+            </FluentButton>
+        </FluentStack>
+ </FluentDialogFooter>
+
+
+@code
+{
+    [Parameter]
+    public ApplicationUser Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private async Task CloseDialog()
+    {
+        await Dialog!.CloseAsync();
+    }
+    private async Task CancelDialog()
+    {
+        await Dialog!.CancelAsync();
+    }
+}

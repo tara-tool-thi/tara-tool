@@ -1,0 +1,59 @@
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@inject ProjectService ProjectService
+
+@if (paginationUI is not null)
+{
+    <FluentDataGrid TGridItem="Project" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
+                    OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
+        <PropertyColumn Property="@(p => p.ProjectName)" Sortable="true" Title="Name" />
+        <PropertyColumn Property="@(p => p.DateCreated)" Sortable="true" Title="Created" />
+        <PropertyColumn Property="@(p => p.DateLastChanged)" Sortable="true" Title="Last Changed" />
+        <TemplateColumn Sortable="true" SortBy="@archivedSort" Title="Archived">
+            <ChildContent>
+                <FluentCheckbox Value="@context.IsArchived" Disabled="true" />
+            </ChildContent>
+        </TemplateColumn>
+    </FluentDataGrid>
+}
+
+<PaginationUI @ref=@paginationUI />
+
+@code {
+    [Parameter]
+    public Func<IQueryable<Project>, IQueryable<Project>>? Filters { get; set; }
+
+    private GridItemsProvider<Project> FilteredItemsProvider { get; set; } = default!;
+    private PaginationUI paginationUI { get; set; } = default!;
+    private FluentDataGrid<Project> grid = default!;
+
+    private GridSort<Project> archivedSort = GridSort<Project>.ByAscending(p => p.IsArchived);
+
+    public void RefreshGrid()
+    {
+        if (grid is not null)
+            InvokeAsync(() => grid.RefreshDataAsync());
+    }
+
+    private void onRowClick(FluentDataGridRow<Project> row)
+    {
+        if (row.Item is null)
+        {
+            return;
+        }
+        NavigationManager.NavigateTo($"/Project/{row.Item.Id}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FilteredItemsProvider = ProjectService.GetItemsProvider(null, Filters);
+    }
+}

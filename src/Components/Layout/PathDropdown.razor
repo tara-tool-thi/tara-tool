@@ -1,156 +1,501 @@
 @using tara_tool.Data.Tables
 @using tara_tool.Data.Services
-@implements IDisposable
 
 @rendermode InteractiveServer
 
+@implements IDisposable
 @inject NavigationManager Navigator
 @inject ProjectService ProjectService
 @inject ItemDefinitionService ItemService
+@inject DamageScenarioService DamageScenarioService
+@inject AssetService AssetService
 
-@if (currentProject != null)
-{
-    <FluentBreadcrumb>
-        <FluentBreadcrumbItem>
-            <FluentSelect TOption="Project"
-                          Height="250px"
-                          Class="path-dropdown-select"
-                          Style="min-width: max(220px, 24ch);"
-                          Items="@allProjects"
-                          OptionText="@(project => project.ProjectName)"
-                          OptionValue="@(project => project.Id.ToString())"
-                          OptionSelected="@(project => project.Id == currentProjectId)"
-                          Value="@currentProjectId.ToString()"
-                          ValueChanged="@OnProjectChanged" />
-            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
-        </FluentBreadcrumbItem>
 
-        @if (currentItem != null)
-        {
-            <FluentBreadcrumbItem>
-                <FluentSelect TOption="ItemDefinition"
-                              Height="250px"
-                              Class="path-dropdown-select"
-                              Style="min-width: max(220px, 24ch);"
-                              Items="@allItems"
-                              OptionText="@(item => item.ItemName)"
-                              OptionValue="@(item => item.Id.ToString())"
-                              OptionSelected="@(item => item.Id == currentItemId)"
-                              Value="@currentItemId.ToString()"
-                              ValueChanged="@OnItemChanged" />
-                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator" />
+<div @key=@(rerenderdKey.ToString() + addtion.ToString())>
+
+        <FluentBreadcrumb @key=@(rerenderdKey.ToString() + addtion.ToString())>
+                @if (selectedProject is not null)
+    {
+            <FluentBreadcrumbItem @key="@(selectedProject.GetHashCode() + addtion.ToString())">
+                @if (showDeleteIconWithRespectToLayer("Project"))
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                                OnClick="@(() => HandleDeletion("Project"))" />
+                }
+                <FluentSelect TOption="Project" Height="250px" Class="path-dropdown-select"
+                              Style="min-width: max(220px, 24ch);" Items="@AllProjects"
+                              OptionText="@(p => p.Id == -1 ? "*" :  p.ProjectName)" SelectedOptionChanged="@OnProjectChange"
+                              Placeholder="Select" OptionSelected="@(p => p.Id == selectedProject?.Id)"
+                              OptionValue="@(p => p.Id.ToString())" @key="@selectedProject" />
+                <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                            OnClick="@(() => HandleProjectChange(selectedProject))" />
+
             </FluentBreadcrumbItem>
-        }
-    </FluentBreadcrumb>
-}
+
+            @if (selectedProject is not null)
+            {
+                <FluentBreadcrumbItem @key="@selectedItem">
+                    @if (showDeleteIconWithRespectToLayer("Item"))
+                    {
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                                    OnClick="@(() => HandleDeletion("Item"))" />
+                    }
+                    <FluentSelect TOption="ItemDefinition" Height="250px" Class="path-dropdown-select"
+                                  Style="min-width: max(220px, 24ch);" Items="@AllItems"
+                                  OptionText="@(i => i.Id == -1 ? "*" :  i.ItemName)" OptionSelected="@(i => i.Id == selectedItem?.Id)"
+                                  SelectedOptionChanged="@OnItemChanged" Placeholder="Select" OptionValue="@(p => p.Id.ToString())"
+                                  @key="@selectedItem" />
+                    <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                                OnClick="@(() => HandleItemChange(selectedItem))" />
+                </FluentBreadcrumbItem>
+
+                if (selectedItem is not null)
+                {
+                    <FluentBreadcrumbItem @key="@selectedAsset">
+                        @if (showDeleteIconWithRespectToLayer("Asset"))
+                        {
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                                        OnClick="@(() => HandleDeletion("Asset"))" />
+                        }
+                        <FluentSelect TOption="Asset" Height="250px" Class="path-dropdown-select"
+                                      Style="min-width: max(220px, 24ch);" Items="@AllAssets"
+                                      OptionText="@(a => a.Id == -1 ? "*" : a.AssetName)" SelectedOptionChanged="OnAssetChange"
+                                      OptionSelected="@(p => p.Id == selectedAsset?.Id)" Placeholder="Select"
+                                      OptionValue="@(p => p.Id.ToString())" @key="@selectedAsset" />
+                        <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                                    OnClick="@(() => HandleAssetChange(selectedAsset))" />
+                    </FluentBreadcrumbItem>
+
+                    if (selectedAsset is not null)
+                    {
+                        <FluentBreadcrumbItem @key="@selectedDamageScenario">
+                            @if (showDeleteIconWithRespectToLayer("DamageScenario"))
+                            {
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="@Color.Fill" Slot="start"
+                                            OnClick="@(() => HandleDeletion("DamageScenario"))" />
+                            }
+                            <FluentSelect TOption="DamageScenario" Height="250px" Class="path-dropdown-select"
+                                          Style="min-width: max(220px, 24ch);" Items="@AllDamadgeScenarios"
+                                          OptionText="@(p => p.Id == -1 ? "*" : p.DamageScenarioNumber.ToString())"
+                                          OptionSelected="@(p => p.Id == selectedDamageScenario?.Id)"
+                                          SelectedOptionChanged="@OnDamageScenarioChange" Placeholder="Select"
+                                          OptionValue="@(p => p.Id.ToString())" @key="@selectedDamageScenario" />
+                            <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Slot="separator"
+                                        OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario))" />
+                        </FluentBreadcrumbItem>
+                    }
+                }
+            }
+    }
+        </FluentBreadcrumb>
+
+</div>
 
 
 @code {
-    private List<Project> allProjects = new List<Project>();
-    private List<ItemDefinition> allItems = new List<ItemDefinition>();
+    private List<Project> AllProjects = [];
+    private List<ItemDefinition> AllItems = [];
+    private List<Asset> AllAssets = [];
+    private List<DamageScenario> AllDamadgeScenarios = [];
+    private List<ThreatScenario> AllThreatScenarios = [];
 
-    private Project? currentProject;
-    private ItemDefinition? currentItem;
-
-
-    private long currentProjectId;
-    private long currentItemId;
-
-
-    protected override async Task OnInitializedAsync()
+    private bool showDeleteIconWithRespectToLayer(string layer)
     {
-        Navigator.LocationChanged += HandleLocationChanged;
-        await LoadDataFromUrl();
+        if (layer == "ThreatScenario" && selectedThreatScenario is not null) return true;
+        else if (layer == "DamageScenario" && selectedDamageScenario is not null && selectedThreatScenario is null) return true;
+        else if (layer == "Asset" && selectedAsset is not null && selectedDamageScenario is null) return true;
+        else if (layer == "Item" && selectedItem is not null && selectedAsset is null) return true;
+        else if (layer == "Project" && selectedProject is not null && selectedItem is null) return true;
+
+        return false;
     }
 
-    private async void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    private long addtion = 0;
+    private long rerenderdKey
     {
-        // InvokeAsync to ensure we are on the UI thread when StateHasChanged is called
-        await InvokeAsync(async () =>
+        get
         {
-            await LoadDataFromUrl();
+            return (selectedProject?.GetHashCode() ?? 0) ^
+                (selectedItem?.GetHashCode() ?? 0) ^
+                (selectedAsset?.GetHashCode() ?? 0) ^
+                (selectedThreatScenario?.GetHashCode() ?? 0) ^
+                (selectedDamageScenario?.GetHashCode() ?? 0);
+        }
+    }
+
+    private async Task PerformActionBasedOnState()
+    {
+        if (selectedThreatScenario is not null)
+        {
+            await HandleThreatScenarioChange(selectedThreatScenario, true);
+            return;
+        }
+        else if (selectedDamageScenario is not null)
+        {
+            await HandleDamageScenarioChange(selectedDamageScenario, true);
+            return;
+        }
+        else if (selectedAsset is not null)
+        {
+            await HandleAssetChange(selectedAsset, true);
+            return;
+        }
+        else if (selectedItem is not null)
+        {
+            await HandleItemChange(selectedItem, true);
+            return;
+        }
+        else if (selectedProject is not null)
+        {
+            await HandleProjectChange(selectedProject, true);
+            return;
+        }
+        else
+        {
+            Navigator.NavigateTo("/");
+            return;
+        }
+    }
+
+    private async Task HandleDeletion(string layer)
+    {
+        switch (layer)
+        {
+            case "Project":
+                selectedProject = null;
+                goto case "Item";
+            case "Item":
+                selectedItem = null;
+                goto case "Asset";
+            case "Asset":
+                selectedAsset = null;
+                goto case "DamageScenario";
+            case "DamageScenario":
+                selectedDamageScenario = null;
+                goto case "ThreatScenario";
+            case "ThreatScenario":
+                selectedThreatScenario = null;
+                goto default;
+            default:
+                break;
+        }
+
+        await PerformActionBasedOnState();
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs args)
+    {
+        // Marshal back to Blazor's sync context, then trigger async work + re-render
+        _ = InvokeAsync(async () =>
+        {
+            await HandleCurrentUrl();
             StateHasChanged();
         });
     }
 
-    private async Task LoadDataFromUrl()
+
+    protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            string relativePath = Navigator.ToBaseRelativePath(Navigator.Uri);
-            string[] segments = relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            // Reset local state to prevent "ghost" data from previous routes
-            currentProject = null;
-            currentItem = null;
-            allItems.Clear();
-            allProjects.Clear();
-
-            if (segments.Length == 0) return;
-
-            allProjects = await ProjectService.GetProjectsAsync();
-
-            string primaryType = segments[0].ToLower();
-
-            // CASE 1: URL is /Project/{id}
-            if (primaryType == "project" && segments.Length >= 2)
-            {
-                if (long.TryParse(segments[1], out long pId))
-                {
-                    currentProjectId = pId;
-                    currentProject = await ProjectService.GetItemByIdAsync(pId, null);
-                    currentProject ??= allProjects.FirstOrDefault(project => project.Id == pId);
-                }
-            }
-            // CASE 2: URL is /Item/{id}
-            else if (primaryType == "item" && segments.Length >= 2)
-            {
-                if (long.TryParse(segments[1], out long iId))
-                {
-                    currentItemId = iId;
-                    currentItem = await ItemService.GetItemByIdAsync(iId);
-
-                    if (currentItem != null)
-                    {
-                        // Derive the project from the item itself
-                        long parentProjectId = currentItem.IdProject;
-                        currentProjectId = parentProjectId;
-                        currentProject = await ProjectService.GetItemByIdAsync(parentProjectId, null);
-                        currentProject ??= allProjects.FirstOrDefault(project => project.Id == parentProjectId);
-
-                        // Fetch items for this project so the second dropdown is populated
-                        allItems = await ItemService.GetItemsAsync(parentProjectId, null);
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error loading breadcrumb data: {ex.Message}");
-            // Gracefully handle error - breadcrumb will show empty state
-            currentProject = null;
-            currentItem = null;
-        }
+        Navigator.LocationChanged += OnLocationChanged;
+        await HandleCurrentUrl();
     }
 
-    private async Task OnProjectChanged(string newProjectId)
+    protected async Task HandleCurrentUrl()
     {
-        if (long.TryParse(newProjectId, out long ProjectId))
+        string url = Navigator.ToBaseRelativePath(Navigator.Uri);
+        string[] urlSplitted = url.Split("/");
+
+        //Prevent Resetting when in overview
+        if (url.StartsWith("Overview"))
         {
-            Navigator.NavigateTo($"/Project/{ProjectId}");
+            return;
         }
+
+        //Reset State if we are not in a relevant path
+        if (urlSplitted.Length != 2)
+        {
+            AllAssets.Clear();
+            AllDamadgeScenarios.Clear();
+            AllThreatScenarios.Clear();
+            AllItems.Clear();
+            selectedItem = null;
+            selectedAsset = null;
+            selectedDamageScenario = null;
+            selectedThreatScenario = null;
+            selectedProject = null;
+            StateHasChanged();
+            return;
+        }
+        ;
+
+        string urlPrefix = urlSplitted[0];
+        string id = urlSplitted[1];
+
+        if (!long.TryParse(id, out long idLong)) return;
+
+
+        // 👇 Guard: don't re-run if we're already showing this entity
+        if (urlPrefix == "Project" && selectedProject?.Id == idLong) return;
+        if (urlPrefix == "Item" && selectedItem?.Id == idLong) return;
+        if (urlPrefix == "Asset" && selectedAsset?.Id == idLong) return;
+        if (urlPrefix == "DamageScenario" && selectedDamageScenario?.Id == idLong) return;
+        if (urlPrefix == "ThreatScenario" && selectedThreatScenario?.Id == idLong) return;
+
+        //Listen to States -> Set Data -> reset otherwise
+        if (urlPrefix == "Project")
+        {
+            if (long.TryParse(id, out long ProjectId))
+            {
+                Project? project = await ProjectService.GetItemByIdAsync(ProjectId, null);
+                if (project is null) return;
+
+                await HandleProjectChange(project, false);
+            }
+        }
+
+        else if (urlPrefix == "Item")
+        {
+            if (long.TryParse(id, out long ItemId))
+            {
+                ItemDefinition? item = await ItemService.GetItemByIdAsync(ItemId, q => q.Include(p => p.Project));
+                if (item is null) return;
+
+                await HandleProjectChange(item.Project, false);
+                await HandleItemChange(item, false);
+            }
+        }
+
+        else if (urlPrefix == "Asset")
+        {
+            if (long.TryParse(id, out long AssetId))
+            {
+                Asset? asset = await AssetService.GetItemByIdAsync(AssetId, q => q.Include(a => a.ItemDefinition).ThenInclude(a =>
+a!.Project));
+                if (asset is null) return;
+
+                await HandleProjectChange(asset.ItemDefinition!.Project, false);
+                await HandleItemChange(asset.ItemDefinition!, false);
+                await HandleAssetChange(asset, false);
+            }
+        }
+
+        else if (urlPrefix == "DamageScenario")
+        {
+            if (long.TryParse(id, out long DamageScenarioId))
+            {
+                DamageScenario? damageScenario = await DamageScenarioService.GetItemByIdAsync(DamageScenarioId, q => q.Include(d =>
+d.Asset).ThenInclude(a => a!.ItemDefinition).ThenInclude(i => i!.Project));
+                if (damageScenario is null) return;
+
+
+                await HandleProjectChange(damageScenario.Asset!.ItemDefinition!.Project, false);
+                await HandleItemChange(damageScenario.Asset!.ItemDefinition, false);
+                await HandleAssetChange(damageScenario.Asset!, false);
+                await HandleDamageScenarioChange(damageScenario, false);
+            }
+        }
+
+        addtion++;
+        await InvokeAsync(StateHasChanged);
     }
 
-    private async Task OnItemChanged(string newItemId)
+    private string currentUrl = string.Empty;
+
+    private Project? selectedProject = null;
+    private ItemDefinition? selectedItem = null;
+    private Asset? selectedAsset = null;
+    private DamageScenario? selectedDamageScenario = null;
+    private ThreatScenario? selectedThreatScenario = null;
+
+    private string SerializeCurrentState()
     {
-        if (long.TryParse(newItemId, out long ItemId))
+        Dictionary<string, string?> query = new();
+
+        if (selectedProject is not null)
+            query["IdProject"] = selectedProject.Id.ToString();
+
+        if (selectedItem is not null)
+            query["IdItem"] = selectedItem.Id.ToString();
+
+        if (selectedAsset is not null)
+            query["IdAsset"] = selectedAsset.Id.ToString();
+
+        if (selectedDamageScenario is not null)
+            query["IdDamageScenario"] = selectedDamageScenario.Id.ToString();
+
+        if (selectedThreatScenario is not null)
+            query["IdThreatScenario"] = selectedThreatScenario.Id.ToString();
+
+        return Navigator.GetUriWithQueryParameters("/Overview", query.ToDictionary(k => k.Key, v => (object?)v.Value));
+    }
+
+
+    private async Task HandleProjectChange(Project? project, bool navigate = true)
+    {
+        if (project == null) return;
+        AllAssets.Clear();
+        AllDamadgeScenarios.Clear();
+        AllThreatScenarios.Clear();
+        AllItems.Clear();
+        AllProjects.Clear();
+        AllProjects = await ProjectService.GetProjectsAsync();
+        selectedItem = null;
+        selectedAsset = null;
+        selectedDamageScenario = null;
+        selectedThreatScenario = null;
+        selectedProject = project;
+        if (project.Id != -1)
         {
-            Navigator.NavigateTo($"/Item/{ItemId}");
+            AllItems.Add(new ItemDefinition
+            {
+                Id = -1,
+                //Bypass limitations
+                Project = default!,
+            });
+            AllItems.AddRange((await ItemService.GetItemsAsync(project.Id)));
+
+            if (navigate)
+                Navigator.NavigateTo($"/Project/{project.Id}");
         }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnProjectChange(Project project)
+    {
+        if (selectedProject?.Id == project.Id) return;
+        await HandleProjectChange(project);
+    }
+
+    private async Task HandleItemChange(ItemDefinition? itemDefinition, bool navigate = true)
+    {
+        if (itemDefinition == null) return;
+        AllAssets.Clear();
+        AllDamadgeScenarios.Clear();
+        AllThreatScenarios.Clear();
+        selectedAsset = null;
+        selectedDamageScenario = null;
+        selectedThreatScenario = null;
+        selectedItem = itemDefinition;
+
+        if (itemDefinition.Id != -1)
+        {
+            AllAssets.Add(new Asset
+            {
+                Id = -1,
+            });
+            AllAssets.AddRange((await AssetService.GetItems(selectedProject?.Id ?? 0, filter: q => q.Where(a => a.IdItemDefinition
+==
+itemDefinition.Id))).Item1);
+            if (navigate) Navigator.NavigateTo($"/Item/{itemDefinition.Id}");
+        }
+
+        if (itemDefinition.Id == -1)
+        {
+            AllAssets.Add(new Asset
+            {
+                Id = -1,
+            });
+            Navigator.NavigateTo(SerializeCurrentState());
+        }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnItemChanged(ItemDefinition itemDefinition)
+    {
+        if (selectedItem?.Id == itemDefinition.Id) return;
+        await HandleItemChange(itemDefinition);
+    }
+
+    private async Task HandleAssetChange(Asset? asset, bool navigate = true)
+    {
+        if (asset == null) return;
+        AllDamadgeScenarios.Clear();
+        AllThreatScenarios.Clear();
+        selectedAsset = asset;
+        selectedDamageScenario = null;
+        selectedThreatScenario = null;
+
+        if (asset.Id != -1)
+        {
+
+            AllDamadgeScenarios.Add(new DamageScenario
+            {
+                Id = -1,
+            });
+            AllDamadgeScenarios.AddRange((await DamageScenarioService.GetItems(selectedProject?.Id ?? 0, filter: q => q.Where(a =>
+a.Asset!.Id == asset.Id))).Item1);
+            if (navigate) Navigator.NavigateTo($"/Asset/{asset.Id}");
+        }
+        if (asset.Id == -1)
+        {
+            AllDamadgeScenarios.Add(new DamageScenario
+            {
+                Id = -1,
+            });
+            Navigator.NavigateTo(SerializeCurrentState());
+        }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnAssetChange(Asset asset)
+    {
+        if (selectedAsset?.Id == asset.Id) return;
+        await HandleAssetChange(asset);
+    }
+
+    //ToDo: Add when ThreaScenarioService is finished
+
+    private async Task HandleDamageScenarioChange(DamageScenario? damageScenario, bool navigate = true)
+    {
+        if (damageScenario == null) return;
+        AllThreatScenarios.Clear();
+        selectedDamageScenario = damageScenario;
+        selectedThreatScenario = null;
+
+        if (damageScenario.Id != -1)
+        {
+
+            AllThreatScenarios.Add(new ThreatScenario
+            {
+                Id = -1,
+            });
+            //ToDo: Add ThreatScenarios here
+            if (navigate) Navigator.NavigateTo($"/DamageScenario/{damageScenario.Id}");
+        }
+
+        if (damageScenario.Id == -1)
+        {
+            AllThreatScenarios.Add(new ThreatScenario
+            {
+                Id = -1,
+            });
+            Navigator.NavigateTo(SerializeCurrentState());
+        }
+        addtion++;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task OnDamageScenarioChange(DamageScenario damageScenario)
+    {
+        if (selectedDamageScenario?.Id == damageScenario.Id) return;
+        await HandleDamageScenarioChange(damageScenario);
+    }
+
+    private async Task HandleThreatScenarioChange(ThreatScenario? threatScenario, bool navigate = true)
+    {
+
+    }
+
+    private async Task OnThreatScenarioChange(ThreatScenario threatScenario)
+    {
+
     }
 
     public void Dispose()
     {
-        Navigator.LocationChanged -= HandleLocationChanged;
+        Navigator.LocationChanged -= OnLocationChanged;
     }
 }

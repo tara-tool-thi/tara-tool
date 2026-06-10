@@ -250,7 +250,7 @@ table th {
 }
 
 .tiny-text {
-    color: #333333;
+    color: var(--neutral-fill-strong-hover);
     font-size: 1em;
 }
 
@@ -260,6 +260,22 @@ table th {
 
 .fullwidth {
     width: 100%;
+}
+
+.margin-bottom-16 {
+    margin: 16px 0;
+}
+
+.margin-bottom-0 {
+    margin-bottom: 0;
+}
+
+.margin-top-10 {
+    margin-top: 10px;
+}
+
+.min-width-24 {
+    min-width: 24px;
 }
 
 h1,
@@ -284,6 +300,32 @@ h6 {
 /* Use on icons that need a small gap to the right */
 .icon-spacing {
     margin-right: 4px;
+}
+
+.management-data-grid {
+    width: 100%;
+    margin: 0 auto;
+    overflow-x: auto;
+}
+
+.impact-negligible {
+    color: #6b7280;
+}
+
+.impact-moderate {
+    color: #f59e0b;
+}
+
+.impact-major {
+    color: #ea580c;
+}
+
+.impact-severe {
+    color: #dc2626;
+}
+
+.margin-box {
+    margin: 1em;
 }
 
 .theme-toggle-spacing {
