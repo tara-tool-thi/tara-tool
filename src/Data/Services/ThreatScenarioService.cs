@@ -44,6 +44,8 @@ public class ThreatScenarioService(
             DamageScenarios = DS,
         };
 
+        await context.Projects.Where(p => p.Id == projectID).ExecuteUpdateAsync(set => set.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+
         await context.ThreatScenarios.AddAsync(newScenario);
         await context.SaveChangesAsync();
 
@@ -88,6 +90,8 @@ public class ThreatScenarioService(
         // We add the path to the scenario's collection.
         // EF Core will handle the foreign key relationship automatically.
         scenario.AttackPaths.Add(newPath);
+
+        await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(set => set.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
 
         await context.SaveChangesAsync();
         return newPath;
@@ -217,6 +221,8 @@ public class ThreatScenarioService(
             }
         }
 
+        await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(set => set.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+
         await context.SaveChangesAsync();
         return existingScenario;
     }
@@ -273,6 +279,8 @@ public class ThreatScenarioService(
             context.AttackPaths.Remove(attackPathToRemove);
         }
 
+        await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(set => set.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+
         await context.SaveChangesAsync();
     }
 
@@ -293,6 +301,8 @@ public class ThreatScenarioService(
         if (projectId is null ||
             !await accessControlService.CheckUserAccessRightsWrite(projectId.Value))
             return;
+
+        await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(set => set.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
 
         context.ThreatScenarios.Remove(existingScenario);
         await context.SaveChangesAsync();
