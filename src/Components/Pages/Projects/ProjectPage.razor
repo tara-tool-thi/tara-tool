@@ -36,12 +36,12 @@
     <h2>
         <FluentStack Orientation="Orientation.Horizontal"
                      VerticalAlignment="VerticalAlignment.Center"
-                     @key="@retrievedProjectLastModifiedDate"> <!-- damit alles zentriert und auf der gleichen höhe ist-->
+                     @key="@retrievedProjectLastModifiedDate">
             @if (isRenamingProjectName)
             {
                 <FluentTextField @bind-Value="newProjectName"
                                  Placeholder="Project name"
-                                 Class="project-name-input" /> // Eingabefeld für neuen Projektnamen
+                                 Class="project-name-input" />
 
                 <FluentButton Appearance="Appearance.Accent" OnClick="SaveProjectNameAsync">
                     Save
@@ -54,7 +54,7 @@
             else
             {
                 @projectName
-                @if (canManage && !isArchived) //Benuzter mit Rechten und nicht archivert
+                @if (canManage && !isArchived)
                 {
                     <FluentButton Appearance="Appearance.Stealth"
                         Title="Rename project"
@@ -121,8 +121,8 @@
     private string projectName = "";
     private bool canManage = false;
     private bool isArchived = false;
-    private bool isRenamingProjectName = false; //Merkt ob, Änderungsmodus aktiv ist
-    private string newProjectName = ""; //neuer eingebener Name
+    private bool isRenamingProjectName = false;
+    private string newProjectName = "";
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
@@ -202,13 +202,13 @@
 
     private void StartRenameProjectName()
     {
-        newProjectName = projectName; //aktueller Name in das Eingabefeld übernehmen
+        newProjectName = projectName;
         isRenamingProjectName = true;
     }
 
     private void CancelRenameProjectName()
     {
-        newProjectName = string.Empty; //Eingabefeld leeren, nix wird überschrieben und der name bleibt
+        newProjectName = string.Empty;
         isRenamingProjectName = false;
     }
 
@@ -216,7 +216,7 @@
     {
         string trimmedProjectName = newProjectName.Trim();
 
-        if (string.IsNullOrWhiteSpace(trimmedProjectName)) //leere Projektnamen
+        if (string.IsNullOrWhiteSpace(trimmedProjectName)) 
         {
             return;
         }
