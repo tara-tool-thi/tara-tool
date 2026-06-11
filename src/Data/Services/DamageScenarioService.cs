@@ -103,7 +103,7 @@ public class DamageScenarioService(
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
         IQueryable<DamageScenario> damageScenarios =
-            context.DamageScenarios.AsQueryable();
+            context.DamageScenarios.AsNoTracking().AsQueryable();
 
         if (include is not null)
             damageScenarios = include(damageScenarios);
@@ -169,7 +169,8 @@ public class DamageScenarioService(
             return ([], 0);
         }
 
-        IQueryable<DamageScenario> damageScenarios = context.DamageScenarios;
+        IQueryable<DamageScenario> damageScenarios =
+            context.DamageScenarios.AsNoTracking();
 
         if (include is not null)
         {

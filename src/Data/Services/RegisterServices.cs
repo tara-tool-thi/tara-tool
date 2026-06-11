@@ -14,6 +14,7 @@ public static class DatabaseServicesExtension
             services.AddTransient<AssetService>();
             services.AddTransient<TagService>();
             services.AddTransient<DamageScenarioService>();
+            services.AddTransient<ThreatScenarioService>();
         }
     }
 }

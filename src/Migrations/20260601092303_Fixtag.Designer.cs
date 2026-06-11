@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using tara_tool.Data;
 
@@ -10,9 +11,11 @@ using tara_tool.Data;
 namespace tara_tool.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601092303_Fixtag")]
+    partial class Fixtag
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.6");
@@ -246,9 +249,6 @@ namespace tara_tool.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("INTEGER");
 
-                    b.Property<byte[]>("ProfilePicture")
-                        .HasColumnType("BLOB");
-
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("TEXT");
 
@@ -464,9 +464,6 @@ namespace tara_tool.Migrations
                     b.Property<string>("ItemName")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<long>("ItemNumber")
-                        .HasColumnType("INTEGER");
 
                     b.Property<long?>("OperationalEnvironmentImageId")
                         .HasColumnType("INTEGER");
@@ -762,13 +759,11 @@ namespace tara_tool.Migrations
 
             modelBuilder.Entity("tara_tool.Data.Tables.AttackStep", b =>
                 {
-                    b.HasOne("tara_tool.Data.Tables.AttackPath", "AttackPath")
+                    b.HasOne("tara_tool.Data.Tables.AttackPath", null)
                         .WithMany("Steps")
                         .HasForeignKey("AttackPathId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("AttackPath");
                 });
 
             modelBuilder.Entity("tara_tool.Data.Tables.DamageScenario", b =>
