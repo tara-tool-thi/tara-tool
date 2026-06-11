@@ -76,7 +76,7 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
 
         if (foundTag is null) return;
 
-        if (await accessControlService.CheckUserAccessRightsRead(foundTag.IdProject) is false) return;
+        if (await accessControlService.CheckUserAccessRightsWrite(foundTag.IdProject) is false) return;
         context.Tags.Remove(foundTag);
         await context.SaveChangesAsync();
     }
