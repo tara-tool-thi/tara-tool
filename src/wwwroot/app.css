@@ -84,6 +84,51 @@ footer a:hover {
     border-color: rgba(255, 255, 255, 0.28);
 }
 
+.path-dropdown-select-placeholder::part(control) {
+    color: var(--foreground-on-accent-focus);
+    font-style: italic;
+}
+
+.path-dropdown-scroll-container {
+    overflow-x: auto;
+    scroll-margin-right: auto;
+    /* auto is better than scroll */
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+    /* allow it to shrink */
+    min-width: 0;
+    /* CRITICAL: lets flex children shrink below content size */
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar {
+    height: 3px;
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--neutral-stroke-rest);
+    border-radius: 999px;
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+    /* matches header background */
+}
+
+.path-dropdown-scroll-container-icon {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: -0.125em;
+    cursor: pointer;
+}
+
+.path-dropdown-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
 .alert {
     border: 1px dashed var(--accent-fill-rest);
     padding: 5px;
@@ -300,6 +345,22 @@ h6 {
 /* Use on icons that need a small gap to the right */
 .icon-spacing {
     margin-right: 4px;
+}
+
+.impact-negligible {
+    color: #6b7280;
+}
+
+.impact-moderate {
+    color: #f59e0b;
+}
+
+.impact-major {
+    color: #ea580c;
+}
+
+.impact-severe {
+    color: #dc2626;
 }
 
 .management-data-grid {
