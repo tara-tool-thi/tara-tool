@@ -47,7 +47,10 @@ public static class UserManagerDeletionExtension
         /// <summary>
         /// Transfers all projects owned by <paramref name="sourceUser"/> to <paramref name="targetUser"/>.
         /// </summary>
-        public async Task<IdentityResult> TransferAllProjects(ApplicationUser sourceUser, ApplicationUser targetUser)
+        public async Task<IdentityResult> TransferAllProjects
+        (
+            ApplicationUser sourceUser, ApplicationUser targetUser, bool doNotVerifyOwnership = false
+        )
         {
             ProjectService projectService = self.ServiceProvider.GetRequiredService<ProjectService>();
 
@@ -55,11 +58,23 @@ public static class UserManagerDeletionExtension
 
             try
             {
+                List<Exception> oex = [];
                 projects.ForEach(async p =>
                 {
-                    if (!await projectService.TransferOwnershipAsync(p.Id, targetUser))
-                        throw new Exception($"Failed to transfer project {p.ProjectName}");
+                    try
+                    {
+                        if (!await projectService.TransferOwnershipAsync(p.Id, targetUser, doNotVerifyOwnership))
+                            throw new Exception($"Failed to transfer project {p.ProjectName}");
+                    }
+                    catch (Exception ex)
+                    {
+                        oex.Add(ex);
+                    }
                 });
+                if (oex is not [])
+                {
+                    throw new Exception(string.Join('\n', oex.Select(e => e.Message)));
+                }
             }
             catch (Exception ex)
             {

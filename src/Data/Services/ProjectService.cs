@@ -341,7 +341,10 @@ public class ProjectService(
     /// This overload does not require the new owner to already be a member of the project.
     /// It exists in order to allow a user to transfer their projects to someone else when deleting their account.
     /// </summary>
-    public async Task<bool> TransferOwnershipAsync(long projectId, ApplicationUser newOwner)
+    public async Task<bool> TransferOwnershipAsync
+    (
+        long projectId, ApplicationUser newOwner, bool doNotVerifyOwnership = false
+    )
     {
         if (newOwner is null) return false;
 
@@ -353,10 +356,10 @@ public class ProjectService(
         Project? project = context.Projects.Include(p => p.Access).ThenInclude(a => a.ApplicationUser).First(p => p.Id == projectId);
         if (project is null) return false;
 
-        if (!project.Access.Any(a => a.ApplicationUser.Id == currentUser.Id && a.Owner)) return false;
+        if (!project.Access.Any(a => a.ApplicationUser.Id == currentUser.Id && a.Owner) && !doNotVerifyOwnership) return false;
 
         AccessControl? currentOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
-            .FirstOrDefaultAsync(a => a.Project.Id == projectId && a.ApplicationUser.Id == currentUser.Id && a.Owner);
+            .FirstOrDefaultAsync(a => a.Project.Id == projectId && a.Owner);
         if (currentOwnerAc is null) return false;
 
         AccessControl? newOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
