@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.FluentUI.AspNetCore.Components;
 using tara_tool.Data;
@@ -108,8 +107,10 @@ public class AssetService(
                     is false)
                 return GridItemsProviderResult.From(new List<Asset>(), 0);
 
-            IQueryable<Asset> Asset = context.Assets.AsNoTracking().Where(
-                a => a.ItemDefinition!.IdProject == ProjectId);
+            IQueryable<Asset> Asset =
+                context.Assets.Include(a => a.DamageScenarios)
+                    .AsNoTracking()
+                    .Where(a => a.ItemDefinition!.IdProject == ProjectId);
 
             if (include != null)
             {

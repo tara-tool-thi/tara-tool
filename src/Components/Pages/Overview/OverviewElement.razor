@@ -52,7 +52,7 @@
                     <FluentAccordion @key=@($"{_renderVersion}_{data}") Class="overview-accordion-spacing">
                         <FluentAccordionItem>
                             <HeadingTemplate>
-                                <span>@data.Item1</span>
+                                <span>@($"{GetStringForOverview()} {data.Item1}")</span>
                             </HeadingTemplate>
                             <ChildContent>
                                 @*Depending on the layer, we manipulate the ids so the filters work*@
@@ -158,6 +158,21 @@
     protected override void OnParametersSet()
     {
         isLastLayer = CurrentLayer == LastLayer;
+    }
+
+    private string GetStringForOverview() {
+        switch (CurrentLayer) {
+            case LayerType.Item:
+                return "Item: ";
+            case LayerType.Asset:
+                return "Asset: ";
+            case LayerType.DamageScenario:
+                return "Damage Scenario: ";
+            case LayerType.ThreatScenario:
+                return "Threat Scenario: ";
+            default:
+                return "";
+        }
     }
 
     //All Provicers
