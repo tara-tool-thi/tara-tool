@@ -1,0 +1,352 @@
+@page "/ThreatScenario/{TSId:long}"
+
+@rendermode InteractiveServer
+
+@using tara_tool.Data.Services
+@using tara_tool.Data.Enums;
+
+@inject ThreatScenarioService threatScenarioService
+@inject NavigationManager NavigationManager
+
+
+<PageTitle>Threat Scenario</PageTitle>
+
+<FluentStack VerticalAlignment="VerticalAlignment.Center">
+    <h2>Threat Scenario</h2>
+    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
+    <FluentTooltip Anchor="iso-help-button">
+        <p><strong>ISO/SAE 21434 - Threat Scenario</strong></p>
+        <p>The following aspects must be defined:</p>
+        <ul>
+            <li><strong>Placeholder:</strong> Placeholder</li>
+        </ul>
+    </FluentTooltip>
+    <GenericAutosave TEntity="ThreatScenario" Entity="@thisTS" SaveService="@threatScenarioService"
+                     @ref=@genericAutosave />
+    <FluentSpacer/>
+    <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)">
+        <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
+        Delete
+    </FluentButton>
+</FluentStack>
+
+<FluentStack VerticalAlignment="VerticalAlignment.Center">
+    <p class="tiny-text">Identify attack paths, assess attack feasibility, and determine the risk for each threat scenario.</p>
+</FluentStack>
+
+<FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
+    <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
+        <span class="ts-header-name-text">@("TS" + TSId)</span>
+    </FluentStack>
+
+    <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
+        <span class="ts-header-description-field">
+            <FluentTextArea @bind-Value="@TSDescription"
+                        Immediate="true"
+                        ImmediateDelay="500"
+                        Class="ts-header-description-input"
+                        Style="width: 100%;"
+                        placeholder="Add description here..."
+                        @bind-Value:after="@NotifyTSAutosave" />
+        </span>
+    </FluentStack>
+
+    <FluentStack Class="ts-header-risk" Orientation="Orientation.Vertical" VerticalGap="0" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
+        <span class="ts-header-risk-label">Risk:</span>
+        <span style="color: @RiskColor; font-weight: bold;">@(ImpactCategory + TSRiskValue)</span>
+    </FluentStack>
+</FluentStack>
+
+<div style="height: 1rem;"></div>
+
+<FluentStack HorizontalAlignment="HorizontalAlignment.Center" Class="threat-scenario-attackpaths-shell">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Class="threat-scenario-attackpaths" HorizontalAlignment="HorizontalAlignment.Center">
+        <FluentSearch Placeholder="Free text search" @bind-Value=@searchText Immediate=true Class="fullwidth"
+                  ImmediateDelay="500" />
+        @if (FilteredAttackPaths.Any())
+        {
+            <FluentAccordion Class="fullwidth">
+            @foreach (AttackPath path in FilteredAttackPaths)
+            {
+                @* Each box is now its own component *@
+                <AttackPathCard @key="path.Id" attackPath="path" OnFieldChanged="NotifyAutosave" OnDelete="DeleteAttackPathAsync" ImpactRating="@ImpactRating" ImpactCategory="@ImpactCategory"/>
+            }
+            </FluentAccordion>
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                <FluentCard Style="text-align: center;">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.Search())"/>
+                    <p>No attack paths found matching your search.</p>
+                </FluentCard>
+            }
+            else
+            {
+                <FluentCard Style="text-align: center;">
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalAlignment="HorizontalAlignment.Center" VerticalAlignment="VerticalAlignment.Center">
+                        <FluentIcon Value="@(new Icons.Regular.Size24.Info())"/>
+                        No attack paths have been added yet.
+                    </FluentStack>
+                </FluentCard>
+            }
+        }
+
+        <FluentButton Appearance="Appearance.Neutral"
+                    OnClick="AddAP"
+                    Class="fullwidth">
+            <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
+            New Attack Path
+        </FluentButton>
+
+    </FluentStack>
+</FluentStack>
+
+
+<FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete confirmation">
+    <FluentDialogHeader>
+        <h3>Delete Threat Scenario</h3>
+    </FluentDialogHeader>
+    <FluentDialogBody>
+        Are you sure you want to delete <strong>Threat Scenario: @("TS" + TSId)</strong>? This cannot be undone.
+    </FluentDialogBody>
+    <FluentDialogFooter>
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%" HorizontalGap="8">
+            <FluentSpacer />
+            <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = false)">Cancel
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" OnClick="DeleteAsync">Delete
+            </FluentButton>
+        </FluentStack>
+    </FluentDialogFooter>
+</FluentDialog>
+
+<div style="height: 1rem;"></div>
+
+@code {
+    [Parameter]
+    public long TSId { get; set; }
+
+    GenericAutosave<ThreatScenario> genericAutosave = default!;
+
+    bool showDeleteDialog = false;
+
+    private string searchText
+    {
+        get => field;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                field = string.Empty;
+                UpdateAccordionExpansion();
+            }
+
+            else
+            {
+                field = value;
+                UpdateAccordionExpansion();
+            }
+        }
+    } = string.Empty;
+
+    ThreatScenario? thisTS;
+
+    private string TSDescription = string.Empty;
+    private string TSRiskValue = string.Empty;
+
+    private float ImpactRating = 1;
+
+    private string ImpactCategory = "T";
+
+    public string BgColor { get; set; } = "#dff6ff"; // Default light blue
+    private string RiskColor => GetRiskColor();
+
+    List<AttackPath> AttackPaths = new();
+
+    private IEnumerable<AttackPath> FilteredAttackPaths =>
+        string.IsNullOrWhiteSpace(searchText)
+            ? AttackPaths
+            : AttackPaths.Where(ap =>
+                // Check if any step contains the search text
+                ap.Steps.Any(s => s.Text.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                // Check if Name contains search text
+                ap.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase) ||
+                // Check if RiskTreatment contains the search text
+                (ap.RiskTreatmentText?.Contains(searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            );
+
+    protected override async Task OnInitializedAsync()
+    {
+        thisTS = await threatScenarioService.GetItemByIdAsync(TSId, include: q => q
+                                                                        .Include(ts => ts.DamageScenarios)
+                                                                        .Include(ts => ts.AttackPaths)
+                                                                        .ThenInclude(ap => ap.Steps.OrderBy(step => step.Order)));
+        if (thisTS == null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        TSDescription = thisTS.Description;
+
+        (ImpactCategory, ImpactRating) = FindWorstImpactCategoryAndRating(thisTS.DamageScenarios!.ImpactRating);
+
+        await CalculateRiskValue();
+        TSRiskValue = thisTS.RiskValue.ToString();
+
+        AttackPaths.Clear();
+
+        foreach (AttackPath ap in thisTS.AttackPaths)
+        {
+            AttackPaths.Add(ap);
+        }
+    }
+
+    async Task DeleteAsync()
+    {
+        if (thisTS == null)
+        {
+            showDeleteDialog = false;
+            return;
+        }
+
+        await threatScenarioService.Delete(thisTS);
+
+        long? damageScenarioId = thisTS.DamageScenarios?.Id;
+
+        showDeleteDialog = false;
+        NavigationManager.NavigateTo(damageScenarioId is not null ? $"/DamageScenario/{damageScenarioId}" : "/");
+    }
+
+    async Task DeleteAttackPathAsync(long attackPathId)
+    {
+        // Remove the attack path from the local list
+        var pathToRemove = AttackPaths.FirstOrDefault(ap => ap.Id == attackPathId);
+        if (pathToRemove != null)
+        {
+            AttackPaths.Remove(pathToRemove);
+            thisTS?.AttackPaths.Remove(pathToRemove);
+        }
+
+        // Call the service to delete it from the database
+        await threatScenarioService.DeleteAttackPathAsync(TSId, attackPathId);
+
+        // Refresh the UI
+        StateHasChanged();
+
+        // Trigger autosave to persist changes
+        NotifyAutosave();
+    }
+
+    async Task AddAP()
+    {
+        AttackPath attackPath = new()
+        {
+            Name = "New unnamed attack path", Id = 1, AccordionExpanded = true,
+        };
+
+        await threatScenarioService.CreateAttackPathAsync(TSId, attackPath);
+
+        AttackPaths.Add(attackPath);
+
+        thisTS!.AttackPaths.Add(attackPath);
+
+        StateHasChanged();
+    }
+
+    async void NotifyAutosave()
+    {
+        await CalculateRiskValue();
+        genericAutosave.ScheduleAutoSave();
+    }
+
+    async void NotifyTSAutosave()
+    {
+        thisTS!.Description = TSDescription;
+
+        genericAutosave.ScheduleAutoSave();
+    }
+
+    private void UpdateAccordionExpansion()
+    {
+        bool hasSearch = !string.IsNullOrWhiteSpace(searchText);
+
+        foreach (AttackPath ap in FilteredAttackPaths)
+        {
+            ap.AccordionExpanded = hasSearch;
+        }
+    }
+
+    private async Task CalculateRiskValue()
+    {
+        TSRiskValue = await threatScenarioService.CalculateRiskValue(thisTS!, ImpactRating);
+
+        StateHasChanged();
+    }
+
+    private string GetRiskColor()
+    {
+        if (thisTS?.AttackPaths == null || !thisTS.AttackPaths.Any())
+        {
+            return "#605e5c";
+        }
+
+        AttackFeasibilityRating mostCriticalRating =
+            thisTS.AttackPaths.Min(ap => ap.AttackFeasibilityRating);
+
+        return mostCriticalRating switch
+        {
+            AttackFeasibilityRating.VeryLow => "#0b6a0b",
+            AttackFeasibilityRating.Low => "#13a10e",
+            AttackFeasibilityRating.Medium => "#f7630c",
+            AttackFeasibilityRating.High => "#d13438",
+            AttackFeasibilityRating.Critical => "#a4262c",
+            _ => "#605e5c"
+        };
+    }
+
+    private (string, float) FindWorstImpactCategoryAndRating((ImpactRatingValue Safety, ImpactRatingValue Financial, ImpactRatingValue Operational, ImpactRatingValue Privacy) impactRatings)
+    {
+        // Find the category with the worst value (check enums)
+        // IF two have the same value decide based on this priority list (von Prio high bis Prio low): 1. Safety, 2. Privacy, 3. Operational, 4. Financial
+        // Mehr Infos in Ticket #112 unter "Szenario 1" und "Szenario 2"
+        // Returned soll nur der Erste Buchstabe der Kategorie werden, also "S", "P", "O" oder "F"
+        // Am Ende soll auf der Seite dann im Attackpath sowas wie "Risk: S5" oder "Risk: O3" stehen
+
+        //Hier soll geschaut werden ob Szenario 1 oder Szenario 2 zutrifft
+        //Falls 1:
+        //Hole den Wert für die am kritischen bewertete Kategorie und packe ihn in worstImpactRating. Packe den Namen der Kategorie in worstImpactCategory
+        //Falls 2:
+        //Bsp. Safety und Operational sind beide "Major" bewertet. Safety hat eine höhere priorität also kommt Safety in worstImpactCategory
+
+
+        (string Category, ImpactRatingValue Value)[] prioritizedImpactRatings =
+        [
+            ("S", impactRatings.Safety),
+            ("P", impactRatings.Privacy),
+            ("O", impactRatings.Operational),
+            ("F", impactRatings.Financial)
+        ];
+
+        int worstImpactValue = prioritizedImpactRatings.Max(impactRating => (int)impactRating.Value);
+        (string Category, ImpactRatingValue Value) worstImpactRating = prioritizedImpactRatings
+            .First(impactRating => (int)impactRating.Value == worstImpactValue);
+
+        return (worstImpactRating.Category, MapImpactRatingToRiskFactor(worstImpactRating.Value));
+    }
+
+    private static float MapImpactRatingToRiskFactor(ImpactRatingValue impactRating)
+    {
+        return impactRating switch
+        {
+            ImpactRatingValue.Severe => 2,
+            ImpactRatingValue.Major => 1.5f,
+            ImpactRatingValue.Moderate => 1,
+            ImpactRatingValue.Negligible => 0,
+            _ => 0
+        };
+    }
+
+}
