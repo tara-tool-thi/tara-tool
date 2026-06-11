@@ -1,6 +1,12 @@
 @using System.ComponentModel.DataAnnotations
+
 @implements IDialogContentComponent<ApplicationUser>
+
 @rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SessionService SessionService
+@inject IToastService ToastService
 
 <FluentDialogHeader ShowDismiss="true">
     <h3>Delete user</h3>
@@ -9,6 +15,22 @@
 
 <FluentDialogBody>
     Are you sure you want to delete <strong>@Content.Email</strong>? This cannot be undone.
+    All projects owned by this user will also be deleted.
+    <FluentStack Orientation="Orientation.Horizontal" Class="margin-top-10">
+        <FluentTextField @bind-Value="transferEmail" TextFieldType="TextFieldType.Email" />
+        @if (transfer == true)
+        {
+            <FluentButton Appearance="Appearance.Accent" OnClick="@unsetTransfer" IconStart="@(new Icons.Regular.Size20.PersonSwap())">
+                Click to revert
+            </FluentButton>
+        }
+        else
+        {
+            <FluentButton IconStart="@(new Icons.Regular.Size20.PersonSwap())" OnClick="@setTransfer">
+                Transfer
+            </FluentButton>
+        }
+    </FluentStack>
 </FluentDialogBody>
 
 
@@ -29,9 +51,51 @@
     [CascadingParameter]
     public FluentDialog? Dialog { get; set; }
 
+    private string? transferEmail;
+
+    private bool transfer = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        transferEmail = SessionService.GetApplicationUserAsync().Result!.Email;
+    }
+
+    private async Task unsetTransfer()
+    {
+        transfer = false;
+    }
+
+    private async Task setTransfer()
+    {
+        transfer = true;
+    }
     private async Task CloseDialog()
     {
-        await Dialog!.CloseAsync();
+        if(transfer && transferEmail != null)
+        {
+            ApplicationUser? transferRecipient = await UserManager.FindByEmailAsync(transferEmail);
+            if (transferRecipient is ApplicationUser)
+            {
+                IdentityResult transferResult = await UserManager.TransferAllProjects(Content, transferRecipient);
+                if(transferResult.Succeeded)
+                {
+                    ToastService.ShowSuccess("Transfered projects successfully");
+                    await Dialog!.CloseAsync();
+                }
+                else
+                {
+                    ToastService.ShowError("Failed to transfer projects.");
+                }
+            }
+            else
+            {
+                ToastService.ShowError("Failed to transfer projects.");
+            }
+        }
+        else
+        {
+            await Dialog!.CloseAsync();
+        }
     }
     private async Task CancelDialog()
     {
