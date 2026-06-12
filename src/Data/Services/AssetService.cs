@@ -59,7 +59,7 @@ public class AssetService(
 
         IEnumerable<Asset> assets =
             project.ItemDefinitions.SelectMany(a => a.Assets);
-        long number = 0;
+        long number = 1;
         if (assets.Count() > 0)
         {
             number = assets.Max(a => a.AssetNumber) + 1;
@@ -146,7 +146,8 @@ public class AssetService(
 
         if (entityToSave.Tag is not null)
         {
-            asset.Tag = entityToSave.Tag;
+            asset.IdTag = entityToSave.Tag.Id;
+            asset.Tag = null;
         }
         else
         {
@@ -166,7 +167,7 @@ public class AssetService(
     {
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
-        IQueryable<Asset> assets = context.Assets.AsQueryable();
+        IQueryable<Asset> assets = context.Assets.AsNoTracking().AsQueryable();
         if (include is not null)
         {
             assets = include(assets);
@@ -195,7 +196,7 @@ public class AssetService(
             return ([], 0);
         }
 
-        IQueryable<Asset> assets = context.Assets;
+        IQueryable<Asset> assets = context.Assets.AsNoTracking();
 
         if (include is not null)
         {
@@ -224,7 +225,7 @@ public class AssetService(
             return 0;
         }
 
-        IQueryable<Asset> assets = context.Assets;
+        IQueryable<Asset> assets = context.Assets.AsNoTracking();
 
         assets = assets.Where(a => a.ItemDefinition!.IdProject == ProjectId);
 

@@ -3,7 +3,6 @@
 @rendermode InteractiveServer
 
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.EntityFrameworkCore
 @using tara_tool.Data.Services
 @using tara_tool.Data.Tables
 
@@ -11,6 +10,7 @@
 @inject AccessControlService AccessControlService
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@inject IJSRuntime JSRuntime
 
 @attribute [Authorize]
 
@@ -47,7 +47,7 @@ else
                          Disabled="@project.IsArchived" />
         <FluentButton Appearance="Appearance.Outline" Title="Export"
                       OnClick="@(() => showExportDialog = true)">
-            <FluentIcon Value="@(new Icons.Regular.Size20.ArrowExportLtr())" />
+            <FluentIcon Value="@(new Icons.Regular.Size20.ArrowExport())" />
         </FluentButton>
         @if (project.IsArchived)
         {
@@ -546,7 +546,23 @@ else
     private async Task ExportAsync()
     {
         showExportDialog = false;
-        // TODO: Implement export for format: selectedExportFormat
+        if (selectedExportFormat == "JSON")
+        {
+            string? json = await ProjectService.ExportProjectAsync(urlId);
+            if (json != null)
+            {
+                await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", json);
+                ToastService.ShowSuccess("Project exported to clipboard.");
+            }
+            else
+            {
+                ToastService.ShowError("Failed to export project.");
+            }
+        }
+        else
+        {
+            ToastService.ShowWarning("Only JSON export is currently implemented.");
+        }
     }
 
     private async Task DeleteAsync()

@@ -1,24 +1,29 @@
-namespace tara_tool.Data.Tables;
-
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using tara_tool.Data.Enums;
+
+namespace tara_tool.Data.Tables;
 
 public class DamageScenario
 {
+    [JsonIgnore]
     public long Id { get; set; }
+    [JsonIgnore]
     public virtual Asset? Asset { get; set; }
     public string Description { get; set; } = string.Empty;
-    [NotMapped] public string DescriptionTruncated => Description switch
-    {
-        { Length: >= 25 } => $"{Description[..25]}…",
-        _ => Description
-    };
+    
+    [NotMapped, JsonIgnore]
+    public string DescriptionTruncated =>
+        Description switch
+        { { Length: >= 25 } => $"{Description[..25]}…",
+            _ => Description
+        };
 
     public long DamageScenarioNumber { get; set; } = 0;
 
-    [NotMapped]
-    public (bool Confidentiality, bool Integrity, bool Availability) AffectedSecurityGoals
+    [NotMapped, JsonIgnore]
+    public (bool Confidentiality, bool Integrity,
+            bool Availability) AffectedSecurityGoals
     {
         get => (ConfidentialityAffected, IntegrityAffected, AvailabilityAffected);
         set
@@ -33,9 +38,10 @@ public class DamageScenario
     public bool IntegrityAffected { get; set; } = false;
     public bool AvailabilityAffected { get; set; } = false;
 
-    [NotMapped]
+    [NotMapped, JsonIgnore]
     public (ImpactRatingValue Safety, ImpactRatingValue Financial,
-        ImpactRatingValue Operational, ImpactRatingValue Privacy) ImpactRating
+            ImpactRatingValue Operational,
+            ImpactRatingValue Privacy) ImpactRating
     {
         get => (Safety, Financial, Operational, Privacy);
         set
@@ -48,8 +54,10 @@ public class DamageScenario
     }
 
     public ImpactRatingValue Safety { get; set; } = ImpactRatingValue.Negligible;
-    public ImpactRatingValue Financial { get; set; } = ImpactRatingValue.Negligible;
-    public ImpactRatingValue Operational { get; set; } = ImpactRatingValue.Negligible;
+    public ImpactRatingValue Financial { get; set; } =
+        ImpactRatingValue.Negligible;
+    public ImpactRatingValue Operational { get; set; } =
+        ImpactRatingValue.Negligible;
     public ImpactRatingValue Privacy { get; set; } = ImpactRatingValue.Negligible;
 
     public virtual ICollection<ThreatScenario> ThreatScenarios { get; set; } = [];
