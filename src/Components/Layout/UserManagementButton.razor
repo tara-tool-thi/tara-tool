@@ -1,0 +1,19 @@
+@rendermode InteractiveServer
+
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@inject NavigationManager NavigationManager
+
+<AuthorizeView Roles="Admin">
+    <FluentButton @onclick="RedirectUserManagement">
+        <FluentIcon Value="@(new Icons.Regular.Size24.ShieldSettings())"/>
+    </FluentButton>
+</AuthorizeView>
+
+
+@code{
+
+    private void RedirectUserManagement(){
+        NavigationManager.NavigateTo("/UserManagement");
+    }
+}
