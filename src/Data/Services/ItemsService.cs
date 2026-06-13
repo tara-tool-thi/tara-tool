@@ -96,15 +96,10 @@ public class ItemDefinitionService(
 
     public async Task<ItemDefinition?> Save(ItemDefinition itemDefinition)
     {
-        using ApplicationDbContext context =
-            await contextFactory.CreateDbContextAsync();
-        // This is done, to establish tracking of objects, so we do not add multiple
-        // data points at once
-        ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets)
-                                   .FirstOrDefault(i => i.Id == itemDefinition.Id);
-        if (item == null || !await accessControlService.CheckUserAccessRightsWrite(
-                                itemDefinition.IdProject))
-            return null;
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+        //This is done, to establish tracking of objects, so we do not add multiple data points at once
+        ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets).Include(i => i.Project).FirstOrDefault(i => i.Id == itemDefinition.Id);
+        if (item == null || !await accessControlService.CheckUserAccessRightsWrite(itemDefinition.IdProject)) return null;
 
         context.Entry(item).CurrentValues.SetValues(itemDefinition);
 
@@ -140,6 +135,8 @@ public class ItemDefinitionService(
             item.Assets.Add(tracked);
         }
 
+        item.Project.DateLastChanged = DateTime.UtcNow;
+
         await context.SaveChangesAsync();
 
         return item;
@@ -163,6 +160,8 @@ public class ItemDefinitionService(
             // Needs to be reactivated, when Assets are there
             // await assetService.Delete(lonelyAsset);
         }
+
+        await context.Projects.Where(p => p.Id == item.IdProject).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
 
         context.ItemDefinitions.Remove(item);
         await context.SaveChangesAsync();
