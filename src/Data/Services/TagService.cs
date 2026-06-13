@@ -3,23 +3,31 @@ using tara_tool.Data;
 using tara_tool.Data.Services;
 using tara_tool.Data.Tables;
 
-public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory, AccessControlService accessControlService)
+public class TagService(
+    IDbContextFactory<ApplicationDbContext> dbContextFactory,
+    AccessControlService accessControlService)
 {
     public async Task<Tag?> CreateTag(long IdCurrentProject, string Name)
     {
-        if (await accessControlService.CheckUserAccessRightsWrite(IdCurrentProject) is false)
+        if (await accessControlService.CheckUserAccessRightsWrite(IdCurrentProject)
+                is false)
         {
             return null;
         }
 
-        using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
-        Tag tag = new Tag
-        {
-            IdProject = IdCurrentProject,
-            Name = Name
-        };
+        using ApplicationDbContext context =
+            await dbContextFactory.CreateDbContextAsync();
+        Project? project = await context.Projects.FirstOrDefaultAsync(
+            p => p.Id == IdCurrentProject);
 
-        Tag? existing = await context.Tags.FirstOrDefaultAsync(t => t.IdProject == IdCurrentProject && t.Name.ToLower().Equals(Name));
+        if (project == null)
+            return null;
+
+        Tag tag = new Tag { Project = project, Name = Name };
+
+        Tag? existing = await context.Tags.FirstOrDefaultAsync(
+            t =>
+                t.Project!.Id == IdCurrentProject && t.Name.ToLower().Equals(Name));
 
         if (existing is null)
         {
@@ -32,14 +40,18 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
 
     public async Task<Tag?> GetItemByIdAsync(long id)
     {
-        using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
-        Tag? tag = await context.Tags.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
+        using ApplicationDbContext context =
+            await dbContextFactory.CreateDbContextAsync();
+        Tag? tag = await context.Tags.Include(a => a.Project)
+                       .AsNoTracking()
+                       .FirstOrDefaultAsync(t => t.Id == id);
         if (tag is null)
         {
             return null;
         }
 
-        if (await accessControlService.CheckUserAccessRightsRead(tag.IdProject) is false)
+        if (await accessControlService.CheckUserAccessRightsRead(tag.Project!.Id)
+                is false)
         {
             return null;
         }
@@ -49,15 +61,18 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
 
     public async Task<List<Tag>> GetAllTagsInProject(long idProject)
     {
-        if (await accessControlService.CheckUserAccessRightsRead(idProject) is false)
+        if (await accessControlService.CheckUserAccessRightsRead(idProject)
+                is false)
         {
             return [];
         }
 
+        using ApplicationDbContext context =
+            await dbContextFactory.CreateDbContextAsync();
 
-        using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
-
-        Project? project = await context.Projects.AsNoTracking().Include(p => p.Tags).FirstOrDefaultAsync(p => p.Id == idProject);
+        Project? project = await context.Projects.AsNoTracking()
+                               .Include(p => p.Tags)
+                               .FirstOrDefaultAsync(p => p.Id == idProject);
 
         if (project is null)
         {
@@ -69,11 +84,13 @@ public class TagService(IDbContextFactory<ApplicationDbContext> dbContextFactory
 
     public async Task Delete(Tag tag)
     {
-        using ApplicationDbContext context = await dbContextFactory.CreateDbContextAsync();
+        using ApplicationDbContext context =
+            await dbContextFactory.CreateDbContextAsync();
 
         Tag? foundTag = await context.Tags.FirstOrDefaultAsync(t => t.Id == tag.Id);
 
-        if (foundTag is null) return;
+        if (foundTag is null)
+            return;
 
         context.Tags.Remove(foundTag);
         await context.SaveChangesAsync();

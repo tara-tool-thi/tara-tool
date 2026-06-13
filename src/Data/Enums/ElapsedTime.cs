@@ -4,7 +4,7 @@ public enum ElapsedTime
 {
     lt1Day = 0,
     lt1Week = 1,
-    lt1Month = 2,
-    lt6Month = 3,
-    gt6Month = 4,
+    lt1Month = 4,
+    lt6Month = 17,
+    gt6Month = 19,
 }
