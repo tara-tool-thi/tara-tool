@@ -118,12 +118,12 @@ public class ItemDefinitionService(
         {
             Image trackedImage =
                 context.Attach(itemDefinition.PreliminaryArchitecture).Entity;
-            item.TechnicalSketch = trackedImage;
+            item.PreliminaryArchitecture = trackedImage;
         }
         if (itemDefinition.ItemBoundary is not null)
         {
             Image trackedImage = context.Attach(itemDefinition.ItemBoundary).Entity;
-            item.TechnicalSketch = trackedImage;
+            item.ItemBoundary = trackedImage;
         }
         if (itemDefinition.OperationalEnvironmentImage is not null)
         {
