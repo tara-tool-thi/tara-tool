@@ -4,6 +4,11 @@
 @inject NavigationManager Navigator
 @inject UserManager<ApplicationUser> UserManager
 @inject ProjectService ProjectService
+@inject IDialogService DialogService
+@inject SessionService SessionService
+@inject ApplicationUserService ApplicationUserService
+
+
 
 
 @attribute [Authorize]
@@ -23,6 +28,21 @@
 <ProjectsList />
 
 @code {
+
+    private string id;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender) {
+            if(CheckResetPassword().Result == true){
+                await OpenDialogChangePassword();
+                ApplicationUser? currentUser = await GetCurrentUser();
+                if (currentUser != null){
+                    await ApplicationUserService.ToggleResetPassword(currentUser.Id);
+                }
+            }
+        }
+    }
     private async Task CreateNewProject()
     {
         Project? newProject = await ProjectService.CreateNewProjectAsync("New unnamed Project");
@@ -31,6 +51,22 @@
         {
             Navigator.NavigateTo($"/Project/{newProject.Id}");
         }
+    }
+
+    private async Task OpenDialogChangePassword(){
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangePassword>(new DialogParameters { });
+    }
+
+    private async Task<bool> CheckResetPassword(){
+        ApplicationUser? currentUser = await GetCurrentUser();
+        if (currentUser != null){
+            id = currentUser.Id;
+        }
+        return await ApplicationUserService.CheckResetPassword(id);
+    }
+
+    private async Task<ApplicationUser?> GetCurrentUser(){
+        return SessionService.GetApplicationUserAsync().Result;
     }
 }
 
