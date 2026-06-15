@@ -54,7 +54,15 @@
     <h4 class="margin-bottom-16">Registered Users</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
     <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" ShowHover="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
-        <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
+        <TemplateColumn Title="Email4" SortBy="@emailSort" Context="userRow">
+            <FluentStack Style="align-items: center">
+                <ChildContent>
+                    @userRow.Email @if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" Class="icon-spacing" Style="height: 1hl; width: 1hl; scale: 1.2;"/>
+                    }
+                </ChildContent>
+            </FluentStack>
+        </TemplateColumn>
         <PropertyColumn Property="@(p => p.NameOfUser)" Title="Username" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
         <TemplateColumn Title="Projects" Context="userRow">
@@ -62,25 +70,18 @@
                 Show projects
             </FluentButton>
         </TemplateColumn>
-        <TemplateColumn Title="Role" Context="user" Sortable="true">
-            @GetRolesForUser(user).Result
-        </TemplateColumn>
-        <TemplateColumn Context="userRow">
+        <TemplateColumn Context="userRow" Align="@Align.End">
             @if (IsCurrentUser(userRow.Id).Result){
             } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
-                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract())>Remove from Admin group</FluentButton>
+                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract())/>
             } else {
-            <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown())>Add to Admin group</FluentButton>
+                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown())/>
             }
-        </TemplateColumn>
-        <TemplateColumn Context="userRow">
-            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
-            </FluentButton>
-        </TemplateColumn>
-        <TemplateColumn Context="userRow">
             <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))">
                 <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
+            </FluentButton>
+            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
+                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
         </TemplateColumn>
      </FluentDataGrid>
@@ -174,6 +175,10 @@
             StateHasChanged();
         }
     }
+
+    GridSort<ApplicationUser> emailSort = GridSort<ApplicationUser>
+        .ByDescending(filteredUsers => filteredUsers.Email)
+        .ThenDescending(filteredUsers => filteredUsers.Email);
 
 
     protected override async Task OnInitializedAsync() {
