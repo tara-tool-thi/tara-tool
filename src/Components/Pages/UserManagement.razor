@@ -40,7 +40,7 @@
             @GenerateRegistrationLink(pendingRow.Id)
         </TemplateColumn>
         <TemplateColumn Context="pendingRow">
-            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) />
+            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) Title="Copy Link"/>
             <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
@@ -54,7 +54,7 @@
     <h4 class="margin-bottom-16">Registered Users</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
     <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" ShowHover="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
-        <TemplateColumn Title="Email4" SortBy="@emailSort" Context="userRow">
+        <TemplateColumn Title="Email" SortBy="@emailSort" Context="userRow">
             <FluentStack Style="align-items: center">
                 <ChildContent>
                     @userRow.Email @if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
@@ -73,14 +73,14 @@
         <TemplateColumn Context="userRow" Align="@Align.End">
             @if (IsCurrentUser(userRow.Id).Result){
             } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
-                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract())/>
+                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract()) Title="Remove from Admin Group" />
             } else {
-                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown())/>
+                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown()) Title="Add to Admin Group"/>
             }
-            <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))">
+            <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" title="Reset Password of User" >
                 <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
             </FluentButton>
-            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
+            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
         </TemplateColumn>
