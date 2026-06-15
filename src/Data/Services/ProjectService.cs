@@ -381,7 +381,7 @@ public class ProjectService(
             }
 
             int total = await projects.CountAsync();
-            List<Project> items = await request.ApplySorting(projects)
+            List<Project> items = await request.ApplySorting(projects.OrderBy(p => p.Id))
                                       .Skip(request.StartIndex)
                                       .Take(request.Count ?? 20)
                                       .ToListAsync(request.CancellationToken);
