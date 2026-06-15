@@ -8,6 +8,7 @@ public class PendingRegistrationService(
 {
     public async Task<string?> Create(string email)
     {
+        email = email.ToLower();
         string id = RandomNumberGenerator.GetHexString(64, true);
 
         PendingRegistration pendingRegistration = new(){Email=email, Id=id};
@@ -20,6 +21,7 @@ public class PendingRegistrationService(
 
     private async Task<bool> Save(PendingRegistration entityToSave)
     {
+        entityToSave.Email = entityToSave.Email.ToLower();
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
         try
@@ -37,6 +39,7 @@ public class PendingRegistrationService(
 
     public async Task<bool> Check(string email, string id, bool firstUser)
     {
+        email = email.ToLower();
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
         if (firstUser)
