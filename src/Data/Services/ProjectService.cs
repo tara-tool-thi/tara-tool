@@ -420,7 +420,7 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
         AccessControl? ac = await context.AccessControls.FirstOrDefaultAsync(
-            a => a.Id == accessControlId);
+            a => a.Id == accessControlId && a.Project.Id == projectId);
 
         if (ac == null || ac.Owner)
         {

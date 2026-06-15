@@ -103,7 +103,7 @@ public class ItemDefinitionService(
         ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets)
                                    .FirstOrDefault(i => i.Id == itemDefinition.Id);
         if (item == null || !await accessControlService.CheckUserAccessRightsWrite(
-                                itemDefinition.IdProject))
+                                item.IdProject))
             return null;
 
         context.Entry(item).CurrentValues.SetValues(itemDefinition);
@@ -152,7 +152,7 @@ public class ItemDefinitionService(
         ItemDefinition? item =
             context.ItemDefinitions.FirstOrDefault(i => i.Id == itemDefinition.Id);
         if (item == null || !await accessControlService.CheckUserAccessRightsWrite(
-                                itemDefinition.IdProject))
+                                item.IdProject))
             return;
 
         // Gets all the Assets which are only connected to this
