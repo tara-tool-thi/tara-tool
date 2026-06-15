@@ -615,9 +615,10 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
 
+        string normalizedEmail = email.ToUpper();
         ApplicationUser? targetUser =
-            await context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email ==
-                                                                    email);
+            await context.ApplicationUsers.FirstOrDefaultAsync(u => u.NormalizedEmail ==
+                                                                    normalizedEmail);
         if (targetUser == null)
             return "User not found.";
 
