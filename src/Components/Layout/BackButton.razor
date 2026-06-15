@@ -1,0 +1,15 @@
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+
+<div class="back-button-fixed">
+    <FluentButton Appearance="Appearance.Neutral"
+                  IconStart="@(new Icons.Regular.Size20.ArrowLeft())"
+                  OnClick="@(() => NavigationManager.NavigateTo(Href))">
+        Back
+    </FluentButton>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Href { get; set; }
+}

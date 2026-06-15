@@ -87,6 +87,8 @@
                                                                                    EF.Functions.Like(i.ItemFunction ?? string.Empty, $"%{searchText}%") ||
                                                                                    EF.Functions.Like(i.OperationalEnvironmentText ?? string.Empty, $"%{searchText}%")))" />
 
+<BackButton Href="/" />
+
 @code {
     [Parameter]
     public long urlId { get; set; }

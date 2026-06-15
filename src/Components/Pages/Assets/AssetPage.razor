@@ -11,6 +11,7 @@
 
 @if (asset is not null)
 {
+    <BackButton Href="@($"/Item/{asset.IdItemDefinition}")" />
 
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
         <h1>Asset Nr: @asset.AssetNumber</h1>
