@@ -174,7 +174,7 @@
         {
             long idItem = asset.IdItemDefinition;
             await AssetService.Delete(asset);
-            NavigationManager.NavigateTo($"ItemDefinition/{idItem}");
+            NavigationManager.NavigateTo($"Item/{idItem}");
         }
     }
 

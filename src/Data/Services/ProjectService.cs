@@ -87,14 +87,6 @@ public class ProjectService(
             project.IsArchived = false;
 
 
-
-            // Build canonical set from project.Tags (same instances as asset.Tag after deserialization)
-            HashSet<Tag> canonicalTags = new(ReferenceEqualityComparer.Instance);
-            foreach (Tag tag in project.Tags)
-                canonicalTags.Add(tag);
-
-
-
             foreach (ItemDefinition itemDef in project.ItemDefinitions)
             {
                 itemDef.Id = 0;
@@ -118,8 +110,7 @@ public class ProjectService(
 
                     if (asset.Tag != null)
                     {
-                        if (asset.Tag != null)
-                            asset.IdTag = 0;
+                        asset.IdTag = 0;
                     }
 
                     foreach (DamageScenario ds in asset.DamageScenarios)
