@@ -392,3 +392,17 @@ h6 {
 .button-toggle-spacing {
     margin-right: 12px;
 }
+
+.password-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    color: var(--neutral-foreground-rest);
+}
+
+.password-toggle-btn .eye-hide {
+    display: none;
+}
