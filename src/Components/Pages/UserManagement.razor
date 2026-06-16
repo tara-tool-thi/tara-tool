@@ -228,6 +228,7 @@
         if(email == null)
             return;
         string? id = await PendingRegistrationService.Create(email);
+        await OnRefreshPendingRegistrations();
 
         if (id== null){
             ToastService.ShowError("Failed to create pending registration");
