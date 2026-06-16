@@ -400,7 +400,18 @@ h6 {
     padding: 0;
     display: flex;
     align-items: center;
+    justify-content: center;
     color: var(--neutral-foreground-rest);
+    width: 20px;
+    height: 20px;
+    position: relative;
+}
+
+.password-toggle-btn span {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .password-toggle-btn .eye-hide {
