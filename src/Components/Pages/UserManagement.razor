@@ -58,7 +58,8 @@
             <FluentStack Style="align-items: center">
                 <ChildContent>
                     @userRow.Email @if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
-                        <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" Class="icon-spacing" Style="height: 1hl; width: 1hl; scale: 1.2;"/>
+                        <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" Class="icon-spacing" Style="height: 1hl; width: 1hl; scale: 1.2;" Id="IsAdminIcon" />
+                        <FluentTooltip Anchor="IsAdminIcon" Position="TooltipPosition.End">Admin</FluentTooltip>
                     }
                 </ChildContent>
             </FluentStack>
