@@ -6,6 +6,7 @@
 @using tara_tool.Data.Tables
 
 @inject UserManager<ApplicationUser> UserManager
+@inject SessionService SessionService
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<DeletePersonalData> Logger
@@ -93,31 +94,23 @@
             return;
         }
 
+        ApplicationUser? transferRecipient = null;
+
         if (!string.IsNullOrWhiteSpace(Input.TransferEmail))
         {
-            ApplicationUser? transferRecipient = await UserManager.FindByEmailAsync(Input.TransferEmail);
+            transferRecipient = await UserManager.FindByEmailAsync(Input.TransferEmail);
 
-            if (transferRecipient is ApplicationUser)
-            {
-                IdentityResult transferResult = await UserManager.TransferAllProjects(user, transferRecipient);
-
-                if (!transferResult.Succeeded)
-                {
-                    message = "Error: Failed to transfer your projects.";
-                    return;
-                }
-            }
-            else
+            if (transferRecipient is not ApplicationUser)
             {
                 message = "Error: The user you tried to transfer your projects to does not exist.";
                 return;
             }
         }
 
-        IdentityResult result = await UserManager.DeleteUserAndProjectsAsync(user);
+        IdentityResult result = await UserManager.DeleteUserAndProjectsAsync(user, transferRecipient);
         if (!result.Succeeded)
         {
-            message = "Unexpected error occurred deleting user.";
+            message = "Error: Unexpected error occurred deleting user.";
             return;
         }
 

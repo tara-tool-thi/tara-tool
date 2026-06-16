@@ -392,6 +392,45 @@ public class ProjectService(
         return true;
     }
 
+    public async Task<bool> TransferOrphanedProjectAsync(long projectId, ApplicationUser newOwner)
+    {
+        if (newOwner is null) return false;
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        Project? project = context.Projects.Include(p => p.Access).ThenInclude(a => a.ApplicationUser).First(p => p.Id == projectId);
+
+        if (project.Access.Any(a => a.Owner))
+            return false;
+
+        AccessControl? newOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
+            .FirstOrDefaultAsync(a => a.ApplicationUser.Id == newOwner.Id && a.Project.Id == projectId && !a.Owner);
+
+        if (newOwnerAc is null)
+        {
+            context.Users.Attach(newOwner);
+            newOwnerAc = new AccessControl
+            {
+                Project = project,
+                ApplicationUser = newOwner,
+                Owner = true,
+                Manage = true,
+                WriteAccess = true,
+                ReadAccess = true
+            };
+            context.AccessControls.Add(newOwnerAc);
+        }
+        else
+        {
+            newOwnerAc.Owner = true;
+            newOwnerAc.Manage = true;
+            newOwnerAc.WriteAccess = true;
+            newOwnerAc.ReadAccess = true;
+        }
+        await context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task UpdateProjectNameAsync(long projectId, string newName)
     {
         bool hasManage = await accessControlService.CheckUserAccessRightsManage(projectId);

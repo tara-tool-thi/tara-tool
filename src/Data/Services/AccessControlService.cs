@@ -67,8 +67,9 @@ public class AccessControlService(IDbContextFactory<ApplicationDbContext> contex
         {
             await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
-            context.AccessControls.AttachRange(user.Projects);
-            context.AccessControls.RemoveRange(user.Projects);
+            context.AccessControls.RemoveRange(context.AccessControls
+                                                  .Include(a => a.ApplicationUser)
+                                                  .Where(a => a.ApplicationUser.Id == user.Id));
             await context.SaveChangesAsync();
             return true;
         }
@@ -83,8 +84,9 @@ public class AccessControlService(IDbContextFactory<ApplicationDbContext> contex
         try
         {
             await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+            List<string> userIds = [..userManager.Users.Select(u => u.Id)];
             context.AccessControls.RemoveRange(
-                context.AccessControls.Include(a => a.ApplicationUser).Where(a => userManager.FindByIdAsync(a.ApplicationUser.Id).Result == null)
+                context.AccessControls.Include(a => a.ApplicationUser).Where(a => !userIds.Contains(a.ApplicationUser.Id))
             );
             await context.SaveChangesAsync();
             return true;
