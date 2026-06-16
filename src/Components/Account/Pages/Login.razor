@@ -33,7 +33,7 @@
                         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
                     </div>
                     <div style="width: 100%;">
-                        <FluentTextField Name="Input.Password" TextFieldType="TextFieldType.Password" @bind-Value=password Label="Password" Placeholder="*******" Required="true" style="width: 100%;">
+                        <FluentTextField Name="Input.Password" TextFieldType="TextFieldType.Password" @bind-Value=password Label="Password" Placeholder="*******" Required="true" Class="fullwidth">
                             <button slot="end" type="button" class="password-toggle-btn" onclick="togglePasswordVisibility(this)">
                                 <span class="eye-show"><FluentIcon Value="new Icons.Regular.Size20.Eye()" /></span>
                                 <span class="eye-hide"><FluentIcon Value="new Icons.Regular.Size20.EyeOff()" /></span>
