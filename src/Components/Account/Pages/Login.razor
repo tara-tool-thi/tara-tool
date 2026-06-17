@@ -28,11 +28,11 @@
                     <h5>ISO/SAE 21434</h5>
                 </FluentStack>
                 <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Center" Width="80%">
-                    <div style="width: 100%;">
-                        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=email Label="Email" Placeholder="example@thi.de" Required="true" style="width: 100%;"></FluentTextField>
+                    <div class="fullwidth">
+                        <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=email Label="Email" Placeholder="example@thi.de" Required="true" class="fullwidth"></FluentTextField>
                         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
                     </div>
-                    <div style="width: 100%;">
+                    <div class="fullwidth">
                         <FluentTextField Name="Input.Password" TextFieldType="TextFieldType.Password" @bind-Value=password Label="Password" Placeholder="*******" Required="true" Class="fullwidth">
                             <button slot="end" type="button" class="password-toggle-btn" onclick="togglePasswordVisibility(this)">
                                 <span class="eye-show"><FluentIcon Value="new Icons.Regular.Size20.Eye()" /></span>
@@ -48,7 +48,7 @@
                     <FluentStack>
                         <FluentCheckbox Name="Input.RememberMe" @bind-Value="Input.RememberMe" Label="Remember me" />
                     </FluentStack>
-                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" style="width: 100%;">Login</FluentButton>
+                    <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" class="fullwidth">Login</FluentButton>
                     <p>Don't have an account yet?
                         <FluentAnchor Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" Appearance="Appearance.Hypertext">Register here</FluentAnchor>
                     </p>
