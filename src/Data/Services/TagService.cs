@@ -23,7 +23,7 @@ public class TagService(
         if (project == null)
             return null;
 
-        Tag tag = new Tag { Project = project, Name = Name };
+        Tag tag = new() { Project = project, Name = Name };
 
         Tag? existing = await context.Tags.FirstOrDefaultAsync(
             t =>
@@ -79,7 +79,7 @@ public class TagService(
             return [];
         }
 
-        return project.Tags.ToList();
+        return [.. project.Tags];
     }
 
     public async Task Delete(Tag tag)
@@ -87,11 +87,13 @@ public class TagService(
         using ApplicationDbContext context =
             await dbContextFactory.CreateDbContextAsync();
 
-        Tag? foundTag = await context.Tags.FirstOrDefaultAsync(t => t.Id == tag.Id);
+
+        Tag? foundTag = await context.Tags.Include(t => t.Project).FirstOrDefaultAsync(t => t.Id == tag.Id);
 
         if (foundTag is null)
             return;
 
+        if (await accessControlService.CheckUserAccessRightsWrite(foundTag.Project!.Id) is false) return;
         context.Tags.Remove(foundTag);
         await context.SaveChangesAsync();
     }

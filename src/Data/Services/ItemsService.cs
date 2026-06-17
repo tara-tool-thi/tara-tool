@@ -103,7 +103,7 @@ public class ItemDefinitionService(
         ItemDefinition? item = context.ItemDefinitions.Include(i => i.Assets)
                                    .FirstOrDefault(i => i.Id == itemDefinition.Id);
         if (item == null || !await accessControlService.CheckUserAccessRightsWrite(
-                                itemDefinition.IdProject))
+                                item.IdProject))
             return null;
 
         context.Entry(item).CurrentValues.SetValues(itemDefinition);
@@ -118,12 +118,12 @@ public class ItemDefinitionService(
         {
             Image trackedImage =
                 context.Attach(itemDefinition.PreliminaryArchitecture).Entity;
-            item.TechnicalSketch = trackedImage;
+            item.PreliminaryArchitecture = trackedImage;
         }
         if (itemDefinition.ItemBoundary is not null)
         {
             Image trackedImage = context.Attach(itemDefinition.ItemBoundary).Entity;
-            item.TechnicalSketch = trackedImage;
+            item.ItemBoundary = trackedImage;
         }
         if (itemDefinition.OperationalEnvironmentImage is not null)
         {
@@ -152,7 +152,7 @@ public class ItemDefinitionService(
         ItemDefinition? item =
             context.ItemDefinitions.FirstOrDefault(i => i.Id == itemDefinition.Id);
         if (item == null || !await accessControlService.CheckUserAccessRightsWrite(
-                                itemDefinition.IdProject))
+                                item.IdProject))
             return;
 
         // Gets all the Assets which are only connected to this
@@ -198,7 +198,7 @@ public class ItemDefinitionService(
             }
 
             int total = await itemDefinitions.CountAsync();
-            List<ItemDefinition> items = await request.ApplySorting(itemDefinitions)
+            List<ItemDefinition> items = await request.ApplySorting(itemDefinitions.OrderBy(i => i.ItemNumber))
                                              .Skip(request.StartIndex)
                                              .Take(request.Count ?? 20)
                                              .ToListAsync(request.CancellationToken);
