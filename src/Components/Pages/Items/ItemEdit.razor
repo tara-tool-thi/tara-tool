@@ -63,7 +63,7 @@ else
     <FluentStack Orientation="Orientation.Vertical" Width="100%">
         <div class="fullwidth">
             <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave()) Label="Item Name" Placeholder="Enter item name..." Class="fullwidth"
-                             Immediate="true" ImmediateDelay="500" />
+                             Immediate="true" ImmediateDelay="500" Autofocus="true" />
         </div>
 
         <div class="fullwidth">

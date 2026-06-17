@@ -37,7 +37,7 @@
         <div class="fullwidth">
             <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
                              @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Immediate=true
-                             ImmediateDelay="500" />
+                             ImmediateDelay="500" Autofocus="true" />
         </div>
         <div>
             <FluentStack VerticalAlignment="VerticalAlignment.Bottom">

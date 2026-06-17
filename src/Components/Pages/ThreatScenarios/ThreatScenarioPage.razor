@@ -46,7 +46,8 @@
                         ImmediateDelay="500"
                         Class="ts-header-description-input"
                         Style="width: 100%;"
-                        placeholder="Add description here..."
+                        Placeholder="Add description here..."
+                        @ref=textarea
                         @bind-Value:after="@NotifyTSAutosave" />
         </span>
     </FluentStack>
@@ -163,6 +164,7 @@
 
     public string BgColor { get; set; } = "#dff6ff"; // Default light blue
     private string RiskColor => GetRiskColor();
+    private FluentTextArea? textarea = null;
 
     List<AttackPath> AttackPaths = new();
 
@@ -202,6 +204,14 @@
         foreach (AttackPath ap in thisTS.AttackPaths)
         {
             AttackPaths.Add(ap);
+        }
+    }
+
+    //Workaround for Textarea Autofocus not working correctly
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender) {
+            if (textarea is not null) textarea.FocusAsync();
         }
     }
 

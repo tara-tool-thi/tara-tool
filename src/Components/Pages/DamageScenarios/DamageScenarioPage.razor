@@ -4,6 +4,7 @@
 @using tara_tool.Data.Services
 @using tara_tool.Components
 @using tara_tool.Components.Pages.ThreatScenarios
+@using Microsoft.EntityFrameworkCore
 @inject DamageScenarioService DamageScenarioService;
 @inject ThreatScenarioService ThreatScenarioService
 @inject NavigationManager NavigationManager
@@ -38,7 +39,7 @@
         <FluentStack VerticalAlignment="VerticalAlignment.Center">
             <h4 class="margin-box">DS&nbsp;@damageScenario?.DamageScenarioNumber</h4>
             <FluentTextArea Class="fullwidth" @bind-Value=@damageScenario!.Description
-                            @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />@*This warns of null deref, but null
+                            @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true ImmediateDelay="500" @ref=textarea />@*This warns of null deref, but null
         check happens above…*@
         </FluentStack>
 
@@ -96,8 +97,18 @@
                     </FluentStack>
                 </HeadingTemplate>
                 <ChildContent>
-                    <ThreatScenarioTable ProjectId="@damageScenario!.Asset!.ItemDefinition!.IdProject"
-                                         Filters="@(t => t.Where(x => x.DamageScenarios!.Id == IdDamageScenario))" />
+                    <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
+                        <FluentSearch Placeholder="Search by name or description"
+                                      Class="search-width" @bind-Value="tsSearchText" Immediate="true"
+                                      ImmediateDelay="500" />
+                    </FluentStack>
+                    <ThreatScenarioTable @ref="threatScenarioTable"
+                                         ProjectId="@damageScenario!.Asset!.ItemDefinition!.IdProject"
+                                         Filters="@(t => t.Where(x => x.DamageScenarios!.Id == IdDamageScenario)
+                                                           .Where(ts => string.IsNullOrWhiteSpace(tsSearchText) ||
+                                                                        EF.Functions.Like(ts.Name, $"%{tsSearchText}%") ||
+                                                                        EF.Functions.Like(ts.Description, $"%{tsSearchText}%") ||
+                                                                        ts.Id == _parsedTsSearchId))" />
                 </ChildContent>
             </FluentAccordionItem>
         </FluentAccordion>
@@ -115,6 +126,23 @@
 
     private GenericAutosave<DamageScenario> genericAutosave { get; set; } = default!;
     private DeletionDialog deletionDialog { get; set; } = default!;
+    private ThreatScenarioTable? threatScenarioTable;
+
+    private string _tsSearchText = string.Empty;
+    private long? _parsedTsSearchId;
+
+    private FluentTextArea? textarea = null;
+
+    private string tsSearchText
+    {
+        get => _tsSearchText;
+        set
+        {
+            _tsSearchText = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+            _parsedTsSearchId = long.TryParse(_tsSearchText, out long n) ? n : null;
+            threatScenarioTable?.RefreshGrid();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,6 +151,14 @@
         .ThenInclude(g => g != null ? g.ItemDefinition : null)
         .ThenInclude(h => h != null ? h.Project : null)));
 
+    }
+
+    //Workaround, because Autofocus does not work correctly on fluent textareas.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) {
+            if(textarea is not null) textarea.FocusAsync();
+        }
     }
 
     private async Task OnDelete()
