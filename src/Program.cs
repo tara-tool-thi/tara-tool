@@ -126,7 +126,10 @@ if(newId)
 else
 {
     id = await PendingRegistrationService.GetIdCountOne();
-    newId = true;
+    if (!UserManager.Users.Any() && id != null)
+    {
+        newId = true;
+    }
 }
 
 Console.WriteLine(asciiArt);

@@ -94,18 +94,16 @@
         bool initialUser = !UserManager.Users.Any();
 
         List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
-        int NumberOfPendingRegistrations = pendingRegistrations.Count();
 
-
-         if (!await PendingRegistration.Check(Input.Email, @id, initialUser))
-         {
-             errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
-             return;
-         }
-
-        if (initialUser && (NumberOfPendingRegistrations == 1))
+        if (!await PendingRegistration.Check(Input.Email, @id, initialUser))
         {
-             await UserManager.AddToRoleAsync(user, "Admin");
+            errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
+            return;
+        }
+
+        if (initialUser && (PendingRegistration.GetIdCountOne() != null))
+        {
+            await UserManager.AddToRoleAsync(user, "Admin");
         }
 
         if (await ApplicationUserService.CheckEmailDuplicate(Input.Email))
