@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace tara_tool.Migrations
 {
     /// <inheritdoc />
-    public partial class LatestDBSchemaAsPerDesign : Migration
+    public partial class InitialReleaseDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -57,8 +57,7 @@ namespace tara_tool.Migrations
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Data = table.Column<byte[]>(type: "BLOB", nullable: false),
-                    Hash = table.Column<byte[]>(type: "BLOB", nullable: false)
+                    Data = table.Column<byte[]>(type: "BLOB", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -396,6 +395,7 @@ namespace tara_tool.Migrations
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     DamageScenariosId = table.Column<long>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
                     StrideCategorie = table.Column<int>(type: "INTEGER", nullable: false),
                     RiskValue = table.Column<long>(type: "INTEGER", nullable: false)
@@ -417,6 +417,7 @@ namespace tara_tool.Migrations
                 {
                     Id = table.Column<long>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
                     ElapsedTime = table.Column<int>(type: "INTEGER", nullable: false),
                     SpecialistExpertise = table.Column<int>(type: "INTEGER", nullable: false),
@@ -425,7 +426,9 @@ namespace tara_tool.Migrations
                     Equipment = table.Column<int>(type: "INTEGER", nullable: false),
                     Value = table.Column<long>(type: "INTEGER", nullable: false),
                     AttackFeasibilityRating = table.Column<int>(type: "INTEGER", nullable: false),
-                    ThreatScenariosId = table.Column<long>(type: "INTEGER", nullable: false)
+                    ThreatScenariosId = table.Column<long>(type: "INTEGER", nullable: false),
+                    RiskTreatmentBool = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RiskTreatmentText = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -434,6 +437,27 @@ namespace tara_tool.Migrations
                         name: "FK_AttackPaths_ThreatScenarios_ThreatScenariosId",
                         column: x => x.ThreatScenariosId,
                         principalTable: "ThreatScenarios",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AttackSteps",
+                columns: table => new
+                {
+                    Id = table.Column<long>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Text = table.Column<string>(type: "TEXT", nullable: false),
+                    Order = table.Column<int>(type: "INTEGER", nullable: false),
+                    AttackPathId = table.Column<long>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AttackSteps", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AttackSteps_AttackPaths_AttackPathId",
+                        column: x => x.AttackPathId,
+                        principalTable: "AttackPaths",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -506,6 +530,11 @@ namespace tara_tool.Migrations
                 column: "ThreatScenariosId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AttackSteps_AttackPathId",
+                table: "AttackSteps",
+                column: "AttackPathId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DamageScenarios_AssetId",
                 table: "DamageScenarios",
                 column: "AssetId");
@@ -571,7 +600,7 @@ namespace tara_tool.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "AttackPaths");
+                name: "AttackSteps");
 
             migrationBuilder.DropTable(
                 name: "PendingRegistrations");
@@ -584,6 +613,9 @@ namespace tara_tool.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "AttackPaths");
 
             migrationBuilder.DropTable(
                 name: "ThreatScenarios");

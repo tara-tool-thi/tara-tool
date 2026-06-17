@@ -1,0 +1,76 @@
+@rendermode InteractiveServer
+@using tara_tool.Data.Enums
+@using tara_tool.Data.Tables
+@inject NavigationManager NavigationManager
+@inject ThreatScenarioService ThreatScenarioService
+
+@if (paginationUI is not null)
+{
+    <FluentDataGrid TGridItem="ThreatScenario" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination"
+                    OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
+        <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID" />
+        <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
+        <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
+        <TemplateColumn Sortable="true" SortBy="@strideSort" Title="STRIDE">
+            <ChildContent>
+                <span>@context.StrideCategorie.ToString()</span>
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@riskValueSort" Title="Risk Value">
+            <ChildContent>
+                <span>@context.RiskValue</span>
+            </ChildContent>
+        </TemplateColumn>
+        <TemplateColumn Sortable="true" SortBy="@attackPathsCountSort" Title="Attack Paths">
+            <ChildContent>
+                <span>@context.AttackPaths.Count</span>
+            </ChildContent>
+        </TemplateColumn>
+    </FluentDataGrid>
+}
+
+<PaginationUI @ref=@paginationUI />
+
+@code {
+    [Parameter]
+    public required long ProjectId { get; set; }
+
+    [Parameter]
+    public Func<IQueryable<ThreatScenario>, IQueryable<ThreatScenario>>? Filters { get; set; }
+
+    private GridItemsProvider<ThreatScenario> FilteredItemsProvider { get; set; } = default!;
+    private PaginationUI paginationUI { get; set; } = default!;
+    private FluentDataGrid<ThreatScenario> grid = default!;
+
+    private GridSort<ThreatScenario> strideSort = GridSort<ThreatScenario>.ByAscending(e => e.StrideCategorie);
+    private GridSort<ThreatScenario> riskValueSort = GridSort<ThreatScenario>.ByAscending(e => e.RiskValue);
+    private GridSort<ThreatScenario> attackPathsCountSort = GridSort<ThreatScenario>.ByAscending(e => e.AttackPaths.Count());
+
+    public void RefreshGrid()
+    {
+        if (grid is not null)
+            InvokeAsync(() => grid.RefreshDataAsync());
+    }
+
+    private void onRowClick(FluentDataGridRow<ThreatScenario> row)
+    {
+        if (row.Item is null)
+        {
+            return;
+        }
+        NavigationManager.NavigateTo($"/ThreatScenario/{row.Item.Id}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        FilteredItemsProvider = ThreatScenarioService.GetItemsProvider(ProjectId, null, Filters);
+    }
+}

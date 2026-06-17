@@ -1,9 +1,8 @@
-﻿@page "/Account/Login"
+@page "/Account/Login"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
-@using tara_tool.Data
 @using tara_tool.Data.Tables
 
 @inject UserManager<ApplicationUser> UserManager
@@ -97,7 +96,8 @@
 
         // This doesn't count login failures towards account lockout
         // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-        result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+        // Calling ToUpper, eventhough the name should be normalized later on
+        result = await SignInManager.PasswordSignInAsync(Input.Email.ToUpper(), Input.Password, Input.RememberMe, lockoutOnFailure: true);
 
         if (result.Succeeded)
         {

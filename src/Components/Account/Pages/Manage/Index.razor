@@ -16,6 +16,18 @@
 
 <FluentGrid>
     <FluentGridItem xs="12" sm="6">
+
+        @* Profile picture (interactive island) *@
+        @if (user is not null)
+        {
+            <div class="profile-picture-section">
+                <FluentLabel Typo="Typography.Subject" Class="profile-picture-label">
+                    Profile Picture
+                </FluentLabel>
+                <ProfilePictureUpload UserId="@user.Id" Username="@(username ?? string.Empty)" />
+            </div>
+        }
+
         <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <FluentValidationSummary class="text-danger" role="alert" />

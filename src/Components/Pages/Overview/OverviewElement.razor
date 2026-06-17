@@ -4,6 +4,7 @@
 @inject ItemDefinitionService ItemService
 @inject AssetService AssetService
 @inject DamageScenarioService DamageScenarioService
+@inject ThreatScenarioService ThreatScenarioService
 @inject NavigationManager Navigator
 
 @if (isLastLayer is not null)
@@ -31,14 +32,12 @@
                     <DamageScenarioTable ProjectId="@((long)IdProject!)" Filters="DamageScenarioFilter" @ref=DamageScenarioGrid />
                 }
                 break;
-                @* case LayerType.ThreatScenario:
-                @if (threatScenariorovider is not null)
+            case LayerType.ThreatScenario:
+                @if (threatScenarioProvider is not null)
                 {
-                    <FluentDataGrid TGridItem="ThreatScenario" ItemsProvider=@threatScenariorovider Pagination="@pagination.pagination"
-                                    OnRowClick="onRowClickThreatScenario" RowStyle="@(item => "cursor: pointer;")"
-                                    Style="max-height:50%; overflow:auto;" @ref="@ThreatScenarioGrid" />
+                    <ThreatScenarioTable ProjectId="@((long)IdProject!)" Filters="ThreatScenarioFilter" @ref=ThreatScenarioGrid />
                 }
-                break; *@
+                break;
         }
 
     }
@@ -50,10 +49,10 @@
                 @foreach ((string, long) data in displayData)
                 {
                     _renderVersion++;
-                    <FluentAccordion @key=@($"{_renderVersion}_{data}")>
+                    <FluentAccordion @key=@($"{_renderVersion}_{data}") Class="overview-accordion-spacing">
                         <FluentAccordionItem>
                             <HeadingTemplate>
-                                <span>@data.Item1</span>
+                                <span>@($"{GetStringForOverview()} {data.Item1}")</span>
                             </HeadingTemplate>
                             <ChildContent>
                                 @*Depending on the layer, we manipulate the ids so the filters work*@
@@ -62,23 +61,22 @@
                                     case LayerType.Item:
                                         <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
                                                          LastLayer="@LastLayer" SearchText=@SearchText IdItem="@data.Item2" IdAsset="@null"
-                                                         IdDamageScenario="@null" />
+                                                         IdDamageScenario="@null" IdThreatScenario="@null" />
                                         break;
                                     case LayerType.Asset:
                                         <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
                                                          LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@data.Item2"
-                                                         IdDamageScenario="@null" />
+                                                         IdDamageScenario="@null" IdThreatScenario="@null" />
                                         break;
                                     case LayerType.DamageScenario:
                                         <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
                                                          LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null"
-                                                         IdDamageScenario="@data.Item2" />
+                                                         IdDamageScenario="@data.Item2" IdThreatScenario="@null" />
                                         break;
                                     case LayerType.ThreatScenario:
-                                        @*ToDo: Add Threat Scenarios*@
                                         <OverviewElement IdProject="@IdProject" CurrentLayer="@((LayerType)((int)CurrentLayer + 1))"
                                                          LastLayer="@LastLayer" SearchText=@SearchText IdItem="@null" IdAsset="@null"
-                                                         IdDamageScenario="@null" />
+                                                         IdDamageScenario="@null" IdThreatScenario="@data.Item2" />
                                         break;
 
                                 }
@@ -108,6 +106,7 @@
     [Parameter, EditorRequired] public long? IdItem { get; set; }
     [Parameter, EditorRequired] public long? IdAsset { get; set; }
     [Parameter, EditorRequired] public long? IdDamageScenario { get; set; }
+    [Parameter, EditorRequired] public long? IdThreatScenario { get; set; }
     [Parameter, EditorRequired] public LayerType CurrentLayer { get; set; }
     [Parameter, EditorRequired] public LayerType LastLayer { get; set; }
     [Parameter, EditorRequired]
@@ -133,6 +132,11 @@
                     DamageScenarioGrid.RefreshGrid();
                 }
 
+                else if (ThreatScenarioGrid is not null)
+                {
+                    ThreatScenarioGrid.RefreshGrid();
+                }
+
             }
             else if (isLastLayer is false)
             {
@@ -156,16 +160,32 @@
         isLastLayer = CurrentLayer == LastLayer;
     }
 
+    private string GetStringForOverview() {
+        switch (CurrentLayer) {
+            case LayerType.Item:
+                return "Item: ";
+            case LayerType.Asset:
+                return "Asset: ";
+            case LayerType.DamageScenario:
+                return "Damage Scenario: ";
+            case LayerType.ThreatScenario:
+                return "Threat Scenario: ";
+            default:
+                return "";
+        }
+    }
+
     //All Provicers
     private GridItemsProvider<ItemDefinition>? itemsProvider { get; set; }
     private GridItemsProvider<Asset>? assetsProvider { get; set; }
     private GridItemsProvider<DamageScenario>? damageScenarioProvider { get; set; }
-    private GridItemsProvider<ThreatScenario>? threatScenariorovider { get; set; }
+    private GridItemsProvider<ThreatScenario>? threatScenarioProvider { get; set; }
 
     private PaginationUI pagination { get; set; } = default!;
     private AssetTable? AssetGrid { get; set; } = null;
     private ItemDefinitionTable? ItemGrid { get; set; } = null;
     private DamageScenarioTable? DamageScenarioGrid { get; set; } = null;
+    private ThreatScenarioTable? ThreatScenarioGrid { get; set; } = null;
 
     private string randomToStopDoubleKey = string.Empty;
 
@@ -187,6 +207,13 @@
                            d.Description.Contains(SearchText) ||
                            d.DamageScenarioNumber.ToString().Contains(SearchText));
 
+    private Func<IQueryable<ThreatScenario>, IQueryable<ThreatScenario>> ThreatScenarioFilter =>
+        q => q
+              .Where(t => IdDamageScenario == null || IdDamageScenario == -1 || IdDamageScenario == t.DamageScenarios!.Id)
+              .Where(t => string.IsNullOrEmpty(SearchText) ||
+                           t.Name.Contains(SearchText) ||
+                           t.Description.Contains(SearchText));
+
     protected async override Task OnInitializedAsync()
     {
         _renderVersion++;
@@ -195,6 +222,7 @@
         itemsProvider = ItemService.GetItemsProvider((long)IdProject, filter: ItemFilter);
         assetsProvider = AssetService.GetItemsProvider((long)IdProject, filter: AssetFilter);
         damageScenarioProvider = DamageScenarioService.GetItemsProvider((long)IdProject, filter: DamageScenarioFilter);
+        threatScenarioProvider = ThreatScenarioService.GetItemsProvider((long)IdProject, filter: ThreatScenarioFilter);
     }
 
     private List<(string, long)> displayData { get; set; } = [];
@@ -209,6 +237,7 @@
             LayerType.Item => await ItemService.CountAllItems((long)IdProject, ItemFilter),
             LayerType.Asset => await AssetService.CountAllItems((long)IdProject, AssetFilter),
             LayerType.DamageScenario => await DamageScenarioService.CountAllItems((long)IdProject, DamageScenarioFilter),
+            LayerType.ThreatScenario => await ThreatScenarioService.CountAllItems((long)IdProject, ThreatScenarioFilter),
             _ => 0
         };
         await pagination.pagination.SetTotalItemCountAsync(count);
@@ -225,6 +254,8 @@
         Func<IQueryable<Asset>, IQueryable<Asset>> AssetPage = q => AssetFilter(q).Skip(skip).Take(take);
         Func<IQueryable<DamageScenario>, IQueryable<DamageScenario>> DamageScenarioPage = q =>
     DamageScenarioFilter(q).Skip(skip).Take(take);
+        Func<IQueryable<ThreatScenario>, IQueryable<ThreatScenario>> ThreatScenarioPage = q =>
+    ThreatScenarioFilter(q).Skip(skip).Take(take);
         displayData = CurrentLayer switch
         {
             LayerType.Item => (await ItemService.GetItems((long)IdProject, filter: ItemPage)).Item1.Select(i =>
@@ -233,6 +264,8 @@
 (a.AssetName, a.Id)).ToList(),
             LayerType.DamageScenario => (await DamageScenarioService.GetItems((long)IdProject, filter:
     DamageScenarioPage)).Item1.Select(d => (d.DamageScenarioNumber.ToString(), d.Id)).ToList(),
+            LayerType.ThreatScenario => (await ThreatScenarioService.GetItems((long)IdProject, filter:
+    ThreatScenarioPage)).Item1.Select(t => (t.Name, t.Id)).ToList(),
             _ => []
         };
     }

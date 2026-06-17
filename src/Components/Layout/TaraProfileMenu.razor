@@ -1,6 +1,9 @@
 @inject NavigationManager NavigationManager
 @inject IJSRuntime JSRuntime
+@inject SessionService Session
+@inject tara_tool.Data.Services.ProfilePictureStateService PicState
 @rendermode InteractiveServer
+@implements IDisposable
 
 <AuthorizeView>
     <Authorized>
@@ -11,7 +14,9 @@
         </script>
 
         <FluentProfileMenu @bind-Open="@openProfileMenu" FullName="@EMail.Split('@').FirstOrDefault(EMail)"
-                           EMail="@EMail" HeaderLabel="Logged in as" TopCorner=true OnFooterLinkClick=@RedirectToAccountPage>
+                           EMail="@EMail" HeaderLabel="Logged in as" TopCorner=true
+                           Image="@pictureDataUrl"
+                           OnFooterLinkClick=@RedirectToAccountPage>
             <HeaderTemplate>
                 <FluentLabel part="header-label">Logged in as</FluentLabel>
             </HeaderTemplate>
@@ -64,6 +69,7 @@
 @code {
     private bool openProfileMenu { get; set; } = false;
     private string? currentUrl;
+    private string? pictureDataUrl;
 
     [Parameter]
     public required string EMail { get; set; }
@@ -72,6 +78,34 @@
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
         NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Subscribe to picture changes
+        PicState.OnChange += OnPicChanged;
+
+        // Load initial picture from DB
+        ApplicationUser? user = await Session.GetApplicationUserAsync();
+        if (user?.ProfilePicture is { Length: > 0 })
+        {
+            pictureDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(user.ProfilePicture)}";
+            StateHasChanged();
+        }
+    }
+
+    private void OnPicChanged()
+    {
+        pictureDataUrl = PicState.PictureDataUrl;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+        PicState.OnChange -= OnPicChanged;
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)

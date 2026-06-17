@@ -53,6 +53,7 @@ builder.Services.AddTransient<SessionService>();
 builder.Services.AddTransient<AssetService>();
 builder.Services.AddTransient<TagService>();
 builder.Services.AddDatabaseServices();
+builder.Services.AddScoped<ProfilePictureStateService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 

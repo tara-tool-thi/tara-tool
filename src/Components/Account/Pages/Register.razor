@@ -1,11 +1,7 @@
 @page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
-@using System.Text
-@using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.WebUtilities
-@using tara_tool.Data
 @using tara_tool.Data.Tables
 
 
@@ -21,9 +17,6 @@
 <PageTitle>Register</PageTitle>
 
 <h1>Register</h1>
-
-@*Needs to be removed at a later time!*@
-<h1 style="color: red;">MAKE ADMIN TOGGLE HAS NOT BEEN REMOVED!</h1>
 
 <FluentGrid>
     <FluentGridItem xs="12" sm="4">
@@ -48,9 +41,6 @@
                 <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword" Label="Confirm Password" Placeholder="*******" Required="true" Style="width: 100%" />
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
 
-                @*Needs to be removed at a later time!*@
-                <FluentCheckbox Name="Input.MakeAdmin" @bind-Value="Input.MakeAdmin" Label="MAKE ADMIN" Disabled="firstUser"/>
-
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%" >Register</FluentButton>
             </FluentStack>
         </EditForm>
@@ -74,11 +64,9 @@
 
     private string? errorMessage;
 
-    // Needs to be removed at a later time!
     protected override void OnInitialized()
     {
-        firstUser = !UserManager.Users.Any();
-        Input ??= new() { MakeAdmin = firstUser };
+        Input ??= new();
     }
 
     public async Task RegisterUser(EditContext editContext)
@@ -127,10 +115,6 @@
         await UserManager.UpdateAsync(user);
         user.NameOfUser = Input.Username;
         await UserManager.UpdateAsync(user);
-
-        // Needs to be removed at a later time!
-        if (Input.MakeAdmin)
-            await UserManager.AddToRoleAsync(user, "Admin");
 
         HttpContext.Response.Cookies.Append
         (
@@ -195,8 +179,5 @@
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
 
-        //ToDo: Needs to be removed at a later time!
-        [Display(Name = "Make Admin")]
-        public bool MakeAdmin { get; set; }
     }
 }

@@ -84,6 +84,51 @@ footer a:hover {
     border-color: rgba(255, 255, 255, 0.28);
 }
 
+.path-dropdown-select-placeholder::part(control) {
+    color: var(--foreground-on-accent-focus);
+    font-style: italic;
+}
+
+.path-dropdown-scroll-container {
+    overflow-x: auto;
+    scroll-margin-right: auto;
+    /* auto is better than scroll */
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    flex-shrink: 1;
+    /* allow it to shrink */
+    min-width: 0;
+    /* CRITICAL: lets flex children shrink below content size */
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar {
+    height: 3px;
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar-thumb {
+    background-color: var(--neutral-stroke-rest);
+    border-radius: 999px;
+}
+
+.path-dropdown-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+    /* matches header background */
+}
+
+.path-dropdown-scroll-container-icon {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: -0.125em;
+    cursor: pointer;
+}
+
+.path-dropdown-step {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
 .alert {
     border: 1px dashed var(--accent-fill-rest);
     padding: 5px;
@@ -250,7 +295,7 @@ table th {
 }
 
 .tiny-text {
-    color: var(--neutral-foreground-rest);
+    color: var(--neutral-fill-strong-hover);
     font-size: 1em;
 }
 
@@ -302,25 +347,332 @@ h6 {
     margin-right: 4px;
 }
 
+.impact-negligible {
+    color: #6b7280;
+}
+
+.impact-moderate {
+    color: #f59e0b;
+}
+
+.impact-major {
+    color: #ea580c;
+}
+
+.impact-severe {
+    color: #dc2626;
+}
+
 .management-data-grid {
     width: 100%;
     margin: 0 auto;
     overflow-x: auto;
 }
 
-.impact-negligible { color: #6b7280; }
-.impact-moderate  { color: #f59e0b; }
-.impact-major     { color: #ea580c; }
-.impact-severe    { color: #dc2626; }
+.impact-negligible {
+    color: #6b7280;
+}
+
+.impact-moderate {
+    color: #f59e0b;
+}
+
+.impact-major {
+    color: #ea580c;
+}
+
+.impact-severe {
+    color: #dc2626;
+}
 
 .margin-box {
     margin: 1em;
 }
 
-.theme-toggle-spacing {
+.button-toggle-spacing {
     margin-right: 12px;
 }
 
+<<<<<<< HEAD
 .text-danger {
     color: red;
+=======
+.project-name-input {
+    width: 280px;
+}
+.toolbar-stack {
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.search-field {
+    flex-grow: 1;
+}
+
+/* AttackPathCard reusable styles (moved from component-specific CSS) */
+.drag-cell {
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    user-select: none;
+}
+
+.drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: grab;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-cell> :not(.drag-handle) {
+    flex: 1;
+    min-width: 0;
+}
+
+.drop-target {
+    padding: 6px 0;
+    border-top: 2px solid transparent;
+}
+
+.drop-hover {
+    border-top-color: var(--accent-fill-rest);
+    background-color: var(--neutral-layer-2);
+}
+
+.drop-target-below {
+    padding: 6px 0;
+    border-bottom: 2px solid transparent;
+}
+
+.step-textarea-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+.step-textarea-wrapper> :not(.remove-step-button) {
+    flex: 1;
+    min-width: 0;
+}
+
+.remove-step-button {
+    flex-shrink: 0;
+    margin-top: 4px;
+}
+
+.add-step-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.add-step-container .fluent-button {
+    gap: 0.5rem;
+}
+
+.drop-hover-below {
+    border-bottom-color: var(--accent-fill-rest);
+    background-color: var(--neutral-layer-2);
+}
+
+.attack-step-empty-table {
+    margin-bottom: 0;
+}
+
+.empty-step-cell {
+    color: var(--neutral-foreground-rest);
+    opacity: 0.8;
+    padding: 18px 10px;
+    text-align: center;
+}
+
+/* AttackPathCard layout classes */
+.attackpath-card {
+    border: 1px solid var(--neutral-stroke-divider-rest);
+    border-radius: 4px;
+    background-color: var(--neutral-layer-1);
+    overflow: visible;
+    width: 100%;
+}
+
+.attackpath-header {
+    background-color: transparent;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+}
+
+.attackpath-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--neutral-foreground-rest);
+    border: 1px solid var(--neutral-stroke-divider-rest);
+    padding: 0px 8px;
+    height: 32px;
+    width: 48px;
+    box-sizing: border-box;
+    text-align: center;
+}
+
+.attackpath-grid {
+    padding: 10px;
+}
+
+.attackpath-risk {
+    margin-top: 15px;
+    border: 1px solid var(--neutral-stroke-divider-rest);
+    padding: 10px;
+    background-color: transparent;
+}
+
+.attackpath-rightcol {
+    border-left: 1px solid var(--neutral-stroke-divider-rest);
+    min-width: 0;
+}
+
+.attackpath-select-field {
+    width: 100%;
+    min-width: 0;
+}
+
+.attackpath-select-field fluent-select {
+    max-width: 100%;
+}
+
+.attackpath-small {
+    font-size: 0.8rem;
+    color: var(--neutral-foreground-rest);
+    display: block;
+    margin-bottom: 2px;
+}
+
+.attackpath-danger {
+    font-size: 0.75rem;
+    color: #d13438;
+    width: 100%;
+}
+
+.attackpath-riskvalue {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #d13438;
+    width: 100%;
+}
+
+/* ThreatScenarioPage header bar */
+.ts-header-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: stretch;
+    gap: 0;
+    border: 1px solid #8a8886;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.ts-header-name {
+    border-right: 1px solid #8a8886;
+    padding: 0 20px;
+    font-weight: bold;
+    min-width: 180px;
+    max-width: 280px;
+}
+
+.ts-header-name-text {
+    display: block;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.ts-header-description {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    min-width: 0;
+    padding: 8px 15px;
+}
+
+.ts-header-description-field {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    margin-right: 8px;
+    font-weight: 600;
+}
+
+.ts-header-description-input {
+    width: 100%;
+}
+
+.ts-header-risk {
+    padding: 4px 15px;
+    min-width: 80px;
+    border-left: 1px solid #8a8886;
+}
+
+.ts-header-risk-label {
+    font-size: 0.9rem;
+}
+
+.threat-scenario-attackpaths-shell {
+    width: 100%;
+    overflow-x: clip;
+    display: flex;
+    justify-content: center;
+}
+
+.threat-scenario-attackpaths {
+    box-sizing: border-box;
+    padding: 20px;
+    width: 100%;
+    max-width: 900px;
+    min-width: 0;
+    flex: 0 1 900px;
+}
+
+@media (max-width: 900px) {
+    .threat-scenario-attackpaths {
+        padding-inline: 12px;
+    }
+
+    .attackpath-grid fluent-grid-item {
+        grid-column: span 12;
+    }
+
+    .attackpath-rightcol {
+        border-left: 0;
+        border-top: 1px solid var(--neutral-stroke-divider-rest);
+        padding-top: 12px;
+    }
+}
+
+.breadcrumb-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    /* smooth scroll on iOS */
+    scrollbar-width: thin;
+}
+
+hr {
+    color: var(--accent-base-color);
+}
+
+.overview-accordion-spacing {
+    margin-top: 10px;
+    padding: 10px;
+>>>>>>> main
 }
