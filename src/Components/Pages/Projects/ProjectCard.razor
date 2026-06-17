@@ -13,7 +13,7 @@
         }
         <FluentSpacer />
         <p class="date-text">
-            @Project.DateLastChanged.ToString("dd/MM/yyyy")
+            @Project.DateLastChanged.ToShortDateString()
         </p>
     </FluentStack>
     <p class="tiny-text">@GetUpdatedString()</p>
