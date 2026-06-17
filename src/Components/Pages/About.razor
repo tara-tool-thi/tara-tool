@@ -23,7 +23,7 @@
     <FluentButton IconStart="@(new Icons.Regular.Size20.Scales())" OnClick="@RedirectToLicence">Licence</FluentButton>
 </FluentStack>
 
-<BackButton Href="/" />
+<BackButton />
 
 @code {
     private void RedirectToGithub() => JSRuntime.InvokeVoidAsync("open", "https://www.github.com/tara-tool-thi/tara-tool",

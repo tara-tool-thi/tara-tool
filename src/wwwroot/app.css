@@ -400,6 +400,7 @@ h6 {
     z-index: 100;
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1.5px var(--neutral-stroke-strong-rest);
+}
 .project-name-input {
     width: 280px;
 }

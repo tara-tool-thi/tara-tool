@@ -58,7 +58,7 @@
 }
 else
 {
-    <BackButton Href="@($"/Project/{itemDefinition.IdProject}")" />
+    <BackButton />
     <FluentStack Orientation="Orientation.Vertical" Width="100%">
         <div class="fullwidth">
             <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after=@(() =>
