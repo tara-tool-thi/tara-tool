@@ -3,8 +3,10 @@
 @using tara_tool.Data.Services
 
 @inject ThreatScenarioService threatScenarioService
+@inject IJSRuntime JS
 
 
+<div id="@("ap-card-" + attackPath.Id)">
 <FluentStack Class="attackpath-card">
     <FluentAccordionItem Expanded="@attackPath.AccordionExpanded" Style="width: 100%;">
         <HeadingTemplate>
@@ -189,6 +191,8 @@
     </FluentAccordionItem>
 </FluentStack>
 
+</div>
+
     <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete attack path confirmation">
         <FluentDialogHeader>
             <h3>Delete Attack Path</h3>
@@ -218,6 +222,7 @@
     [Parameter] public string ImpactCategory { get; set; } = string.Empty;
 
     private bool showDeleteDialog = false;
+    private bool _shouldFocusNewStep = false;
 
     private string AttackFeasibilityScore = string.Empty;
 
@@ -372,8 +377,20 @@
 
     private async Task AddNewStep()
     {
+        bool isFirst = !attackPath.Steps.Any();
         attackPath.Steps.Add(new AttackStep { Text = string.Empty, AttackPath = attackPath });
+        if (isFirst)
+            _shouldFocusNewStep = true;
         await OnFieldChanged.InvokeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_shouldFocusNewStep)
+        {
+            _shouldFocusNewStep = false;
+            await JS.InvokeVoidAsync("focusLastTextAreaInCard", $"ap-card-{attackPath.Id}");
+        }
     }
 
     private async Task RemoveStep(AttackStep step)

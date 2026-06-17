@@ -126,7 +126,7 @@ if(newId)
 }
 
 Console.WriteLine(asciiArt);
-Console.WriteLine("Welcome to TARA tool :)");
+Console.WriteLine("Welcome to THIARA :)");
 
 if(newId)
 {

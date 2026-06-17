@@ -15,7 +15,7 @@
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
              HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-    <h2>Item Definition</h2>
+    <h1>Item Definition</h1>
     <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
     <FluentTooltip Anchor="iso-help-button">
         <p><strong>ISO/SAE 21434 - Item Definition</strong></p>
@@ -44,11 +44,13 @@
         </FluentBadge>
     }
     <FluentSpacer />
-    <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
+    <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)" Title="Delete item">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
         Delete Item
     </FluentButton>
 </FluentStack>
+
+<p class="tiny-text">Define the item, its boundaries, and manage its assets.</p>
 
 <DeletionDialog ItemName="@itemDefinition?.ItemName" OnDelete="DeleteAsync" @ref=@deletionDialog />
 
@@ -60,14 +62,12 @@ else
 {
     <FluentStack Orientation="Orientation.Vertical" Width="100%">
         <div class="fullwidth">
-            <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                genericAutosave.ScheduleAutoSave()) Label="Item Name" Placeholder="Enter item name..." Class="fullwidth"
+            <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave()) Label="Item Name" Placeholder="Enter item name..." Class="fullwidth"
                              Immediate="true" ImmediateDelay="500" />
         </div>
 
         <div class="fullwidth">
-            <FluentTextArea @bind-Value="itemDefinition!.ItemDescription" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            genericAutosave.ScheduleAutoSave()) Label="Item Description"
+            <FluentTextArea @bind-Value="itemDefinition!.ItemDescription" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave()) Label="Item Description"
                             Placeholder="Describe the item and its purpose..." Rows="4" Class="fullwidth" Immediate="true"
                             ImmediateDelay="500" />
         </div>
@@ -77,12 +77,12 @@ else
                 <FluentLabel>Technical Sketch</FluentLabel>
                 @if (imagePreviewUrl is not null)
                 {
-                    <FluentButton Appearance="Appearance.Outline" OnClick="RemoveImage" Color="var(--error)">
+                    <FluentButton Appearance="Appearance.Outline" OnClick="RemoveImage" Color="var(--error)" Title="Remove technical sketch">
                         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
                         Remove
                     </FluentButton>
                     <FluentButton Appearance="Appearance.Accent" IconStart="@(new Icons.Regular.Size20.FullScreenMaximize())"
-                                  OnClick="ShowTechnicalSketch">
+                                  OnClick="ShowTechnicalSketch" Title="Show technical sketch">
                         Show
                     </FluentButton>
                 }
@@ -113,32 +113,44 @@ else
         </FluentStack>
 
         <FluentAccordion Class="fullwidth">
-            <FluentAccordionItem Expanded="@ExpandedItemBoundaryText" Heading="Item Boundary">
-                <FluentTextArea @bind-Value="itemDefinition!.ItemBoundaryText" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             genericAutosave.ScheduleAutoSave()) Placeholder="Describe the item boundaries and interfaces..."
-                                Rows="5" Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+            <FluentAccordionItem Expanded="@ExpandedItemBoundaryText">
+                <HeadingTemplate>
+                    <strong>Item Boundary</strong>
+                </HeadingTemplate>
+                <ChildContent>
+                    <FluentTextArea @bind-Value="itemDefinition!.ItemBoundaryText" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave()) Placeholder="Describe the item boundaries and interfaces..."
+                                    Rows="5" Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+                </ChildContent>
             </FluentAccordionItem>
-            <FluentAccordionItem Expanded="@ExpandedItemFunction" Heading="Item Functions">
-                <FluentTextArea @bind-Value="itemDefinition!.ItemFunction" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            genericAutosave.ScheduleAutoSave()) Placeholder="List the functions this item fulfills..." Rows="5"
-                                Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+            <FluentAccordionItem Expanded="@ExpandedItemFunction">
+                <HeadingTemplate>
+                    <strong>Item Functions</strong>
+                </HeadingTemplate>
+                <ChildContent>
+                    <FluentTextArea @bind-Value="itemDefinition!.ItemFunction" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave()) Placeholder="List the functions this item fulfills..." Rows="5"
+                                    Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+                </ChildContent>
             </FluentAccordionItem>
-            <FluentAccordionItem Expanded="@ExpandedPreliminaryArchitectureText" Heading="Preliminary Architecture">
-                <FluentTextArea @bind-Value="itemDefinition!.PreliminaryArchitectureText" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    genericAutosave.ScheduleAutoSave()) Placeholder="Describe the preliminary architecture..." Rows="5"
-                                Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+            <FluentAccordionItem Expanded="@ExpandedPreliminaryArchitectureText">
+                <HeadingTemplate>
+                    <strong>Preliminary Architecture</strong>
+                </HeadingTemplate>
+                <ChildContent>
+                    <FluentTextArea @bind-Value="itemDefinition!.PreliminaryArchitectureText" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave()) Placeholder="Describe the preliminary architecture..." Rows="5"
+                                    Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+                </ChildContent>
             </FluentAccordionItem>
-            <FluentAccordionItem Expanded="@ExpandedOperationalEnvironmentText" Heading="Operational Environment">
-                <FluentTextArea @bind-Value="itemDefinition!.OperationalEnvironmentText" @bind-Value:after=@(() =>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             genericAutosave.ScheduleAutoSave())
-                                Placeholder="Describe the operational environment and operating conditions..." Rows="5"
-                                Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+            <FluentAccordionItem Expanded="@ExpandedOperationalEnvironmentText">
+                <HeadingTemplate>
+                    <strong>Operational Environment</strong>
+                </HeadingTemplate>
+                <ChildContent>
+                    <FluentTextArea @bind-Value="itemDefinition!.OperationalEnvironmentText" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave())
+                                    Placeholder="Describe the operational environment and operating conditions..." Rows="5"
+                                    Class="fullwidth" Immediate="true" ImmediateDelay="500" />
+                </ChildContent>
             </FluentAccordionItem>
         </FluentAccordion>
-
-        <br />
-        <hr />
-        <br />
 
         <FluentAccordion ActiveId="@activeId" Class="fullwidth accordion">
             <FluentAccordionItem Expanded="true">
@@ -147,7 +159,8 @@ else
                                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
                         <span><strong>Assets</strong></span>
                         <FluentSpacer />
-                        <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateNewAsset">
+                        <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateNewAsset"
+                                      Appearance="Appearance.Accent" Title="New Asset">
                             New Asset
                         </FluentButton>
                     </FluentStack>
@@ -155,10 +168,8 @@ else
                 <ChildContent>
                     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
                                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-                        <div>
                             <FluentSearch Immediate=true ImmediateDelay="500" @bind-Value="@assetSearchText"
-                                          Label="Search Asset by Name, Description or Group" />
-                        </div>
+                                          Placeholder="Search by name, description or group" Class="search-width" />
                         <FluentSpacer />
                         <div>
                             <FluentCheckbox Label="Only show Assets with no Damage Scenarios"

@@ -24,7 +24,7 @@
         <GenericAutosave TEntity="DamageScenario" Entity="@damageScenario" SaveService="@DamageScenarioService"
                          @ref=@genericAutosave />
         <FluentSpacer />
-        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
+        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)" Title="Delete damage scenario">
             <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
             Delete Damage Scenario
         </FluentButton>
@@ -43,33 +43,43 @@
         </FluentStack>
 
         <FluentAccordion Class="fullwidth">
-            <FluentAccordionItem Expanded=true Heading="Affected Security Goals">
-                <FluentStack>
-                    <FluentCheckbox @bind-Value=@damageScenario.ConfidentialityAffected
-                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
-                        Confidentiality
-                    </FluentCheckbox>
-                    <FluentCheckbox @bind-Value=@damageScenario.IntegrityAffected
-                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
-                        Integrity
-                    </FluentCheckbox>
-                    <FluentCheckbox @bind-Value=@damageScenario.AvailabilityAffected
-                                    @bind-Value:after=@genericAutosave.ScheduleAutoSave>
-                        Availability
-                    </FluentCheckbox>
-                </FluentStack>
+            <FluentAccordionItem Expanded=true>
+                <HeadingTemplate>
+                    <strong>Affected Security Goals</strong>
+                </HeadingTemplate>
+                <ChildContent>
+                    <FluentStack>
+                        <FluentCheckbox @bind-Value=@damageScenario.ConfidentialityAffected
+                                        @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                            Confidentiality
+                        </FluentCheckbox>
+                        <FluentCheckbox @bind-Value=@damageScenario.IntegrityAffected
+                                        @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                            Integrity
+                        </FluentCheckbox>
+                        <FluentCheckbox @bind-Value=@damageScenario.AvailabilityAffected
+                                        @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                            Availability
+                        </FluentCheckbox>
+                    </FluentStack>
+                </ChildContent>
             </FluentAccordionItem>
-            <FluentAccordionItem Expanded=true Heading="Impact Rating">
-                <FluentStack>
-                    <ImpactRatingCard @bind-Value=@damageScenario.Safety @bind-Value:after=@genericAutosave.ScheduleAutoSave
-                                      CategoryName="Safety" />
-                    <ImpactRatingCard @bind-Value=@damageScenario.Financial
-                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Financial" />
-                    <ImpactRatingCard @bind-Value=@damageScenario.Operational
-                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Operational" />
-                    <ImpactRatingCard @bind-Value=@damageScenario.Privacy
-                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
-                </FluentStack>
+            <FluentAccordionItem Expanded=true>
+                <HeadingTemplate>
+                    <strong>Impact Rating</strong>
+                </HeadingTemplate>
+                <ChildContent>
+                    <FluentStack>
+                        <ImpactRatingCard @bind-Value=@damageScenario.Safety @bind-Value:after=@genericAutosave.ScheduleAutoSave
+                                          CategoryName="Safety" />
+                        <ImpactRatingCard @bind-Value=@damageScenario.Financial
+                                          @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Financial" />
+                        <ImpactRatingCard @bind-Value=@damageScenario.Operational
+                                          @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Operational" />
+                        <ImpactRatingCard @bind-Value=@damageScenario.Privacy
+                                          @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
+                    </FluentStack>
+                </ChildContent>
             </FluentAccordionItem>
             <FluentAccordionItem Expanded=true>
                 <HeadingTemplate>
@@ -78,7 +88,8 @@
                         <span><strong>Threat Scenarios</strong></span>
                         <FluentSpacer />
                         <div @onclick:stopPropagation="true">
-                            <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateThreatScenario">
+                            <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateThreatScenario"
+                                          Appearance="Appearance.Accent" Title="New Threat Scenario">
                                 New Threat Scenario
                             </FluentButton>
                         </div>

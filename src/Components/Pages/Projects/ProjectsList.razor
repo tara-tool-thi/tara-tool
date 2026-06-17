@@ -8,9 +8,9 @@
 
 <FluentStack Class="toolbar-stack" Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
              HorizontalAlignment="HorizontalAlignment.Left">
-    <FluentSearch Placeholder="Search projects by name…" Class="search-field" @bind-Value=@TitleSearch Immediate=true
+    <FluentSearch Placeholder="Search projects by name…" Class="search-width" @bind-Value=@TitleSearch Immediate=true
                   ImmediateDelay="500" />
-    <FluentButton id="SelectOwnerPopoverButton" OnClick="@(() => openOwnerPopover = !openOwnerPopover)">
+    <FluentButton id="SelectOwnerPopoverButton" Title="Filter by owner" OnClick="@(() => openOwnerPopover = !openOwnerPopover)">
         @if (openOwnerPopover)
         {
             <FluentIcon Value=@(new Icons.Regular.Size16.ChevronUp()) Color="Color.Neutral" Slot="end" />

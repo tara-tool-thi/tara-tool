@@ -12,7 +12,7 @@
 <PageTitle>Threat Scenario</PageTitle>
 
 <FluentStack VerticalAlignment="VerticalAlignment.Center">
-    <h2>Threat Scenario</h2>
+    <h1>Threat Scenario</h1>
     <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
     <FluentTooltip Anchor="iso-help-button">
         <p><strong>ISO/SAE 21434 - Threat Scenario</strong></p>
@@ -24,7 +24,7 @@
     <GenericAutosave TEntity="ThreatScenario" Entity="@thisTS" SaveService="@threatScenarioService"
                      @ref=@genericAutosave />
     <FluentSpacer/>
-    <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)">
+    <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)" Title="Delete threat scenario">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
         Delete
     </FluentButton>
@@ -61,7 +61,7 @@
 
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center" Class="threat-scenario-attackpaths-shell">
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Class="threat-scenario-attackpaths" HorizontalAlignment="HorizontalAlignment.Center">
-        <FluentSearch Placeholder="Free text search" @bind-Value=@searchText Immediate=true Class="fullwidth"
+        <FluentSearch Placeholder="Free text search" @bind-Value=@searchText Immediate=true Class="search-width"
                   ImmediateDelay="500" />
         @if (FilteredAttackPaths.Any())
         {
@@ -95,7 +95,8 @@
 
         <FluentButton Appearance="Appearance.Neutral"
                     OnClick="AddAP"
-                    Class="fullwidth">
+                    Class="fullwidth"
+                    Title="Add new attack path">
             <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
             New Attack Path
         </FluentButton>

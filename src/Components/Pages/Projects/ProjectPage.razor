@@ -31,60 +31,47 @@
 
 <PageTitle>Project</PageTitle>
 
-<br />
-<FluentStack>
-    <h2>
-        <FluentStack Orientation="Orientation.Horizontal"
-                     VerticalAlignment="VerticalAlignment.Center"
-                     @key="@retrievedProjectLastModifiedDate">
-            @if (isRenamingProjectName)
-            {
-                <FluentTextField @bind-Value="newProjectName"
-                                 Placeholder="Project name"
-                                 Class="project-name-input" />
-
-                <FluentButton Appearance="Appearance.Accent" OnClick="SaveProjectNameAsync">
-                    Save
-                </FluentButton>
-
-                <FluentButton Appearance="Appearance.Outline" OnClick="CancelRenameProjectName">
-                    Cancel
-                </FluentButton>
-            }
-            else
-            {
-                @projectName
-                @if (canManage && !isArchived)
-                {
-                    <FluentButton Appearance="Appearance.Stealth"
-                        Title="Rename project"
-                        IconStart="@(new Icons.Regular.Size20.Edit())"
-                        OnClick="StartRenameProjectName" />
-                }
-            }
-
-            @if (isArchived)
-            {
-                <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
-                    Archived
-                </FluentBadge>
-            }
-            <FluentSpacer />
-        </FluentStack>
-    </h2>
+<FluentStack VerticalAlignment="VerticalAlignment.Center">
+    @if (isRenamingProjectName)
+    {
+        <FluentTextField @bind-Value="newProjectName"
+                         Placeholder="Project name"
+                         Class="project-name-input" />
+        <FluentButton Appearance="Appearance.Accent" OnClick="SaveProjectNameAsync" Title="Save project name">
+            Save
+        </FluentButton>
+        <FluentButton Appearance="Appearance.Outline" OnClick="CancelRenameProjectName" Title="Cancel rename">
+            Cancel
+        </FluentButton>
+    }
+    else
+    {
+        <h1>@projectName</h1>
+        @if (canManage && !isArchived)
+        {
+            <FluentButton Appearance="Appearance.Stealth"
+                          Title="Rename project"
+                          IconStart="@(new Icons.Regular.Size20.Edit())"
+                          OnClick="StartRenameProjectName" />
+        }
+    }
+    @if (isArchived)
+    {
+        <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
+            <FluentIcon Value="@(new Icons.Regular.Size16.Archive())" Class="icon-spacing" />
+            Archived
+        </FluentBadge>
+    }
     <FluentSpacer />
-    <span class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</span>
-
-
     @if (canManage)
     {
         <FluentButton Appearance="Appearance.Outline" Title="Project Settings"
                       IconStart="@(new Icons.Regular.Size20.Settings())"
                       OnClick="@(() => NavigationManager.NavigateTo($"/Project/{urlId}/Settings"))" />
     }
-
 </FluentStack>
+
+<p class="tiny-text">Last Edited: @retrievedProjectLastModifiedDate</p>
 
 @if (isArchived)
 {
@@ -92,15 +79,16 @@
         This project is archived and cannot be edited.
     </FluentMessageBar>
 }
-<br />
+
 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
-    <FluentTextField Label="Search for an Item" Placeholder="Search by name, function or environment"
-                     Style="width: 250px;" @bind-Value="searchText" Immediate="true" ImmediateDelay="500" />
+    <FluentSearch Placeholder="Search by name, function or environment"
+                  Class="search-width" @bind-Value="searchText" Immediate="true" ImmediateDelay="500" />
     <FluentSpacer />
 
     @if (!isArchived)
     {
-        <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))">
+        <FluentButton IconStart="@(new Icons.Regular.Size16.Add())" OnClick="@(() => addItem("New unnamed Item"))"
+                      Appearance="Appearance.Accent" Title="New Item">
             New Item
         </FluentButton>
     }
@@ -216,7 +204,7 @@
     {
         string trimmedProjectName = newProjectName.Trim();
 
-        if (string.IsNullOrWhiteSpace(trimmedProjectName)) 
+        if (string.IsNullOrWhiteSpace(trimmedProjectName))
         {
             return;
         }
@@ -225,11 +213,11 @@
 
         Project? requestedProject = await retrieveProjectInfo();
 
-            if (requestedProject != null)
-            {
-                projectName = requestedProject.ProjectName;
-                retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
-            }
+        if (requestedProject != null)
+        {
+            projectName = requestedProject.ProjectName;
+            retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+        }
 
         isRenamingProjectName = false;
     }
