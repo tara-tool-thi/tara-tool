@@ -337,12 +337,10 @@
         if(userWithForgottenPassword != null){
             await UserManager.RemovePasswordAsync(userWithForgottenPassword);
             string randomPassword = GenerateRandomPassword();
-            Console.WriteLine(randomPassword);
+            //Console.WriteLine(randomPassword);
             await UserManager.AddPasswordAsync(userWithForgottenPassword, randomPassword);
             await ApplicationUserService.ToggleResetPassword(id);
             await OpenDialogAdminInfoResetPassword(randomPassword);
-            //userWithForgottenPassword.ResetPassword = true;
-            //Dialog oder so, der dem Admin das Passwort anzeigt mit Möglichkeit zum Kopieren
         }
     }
 
@@ -411,8 +409,8 @@
         };
 
         string[] randomChars = new[] {
-            "ABCDEFGHJKLMNOPQRSTUVWXYZ",    // uppercase
-            "abcdefghijkmnopqrstuvwxyz",    // lowercase
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",    // uppercase
+            "abcdefghijklmnopqrstuvwxyz",    // lowercase
             "0123456789",                   // digits
             "!@$?_-"                        // non-alphanumeric
         };
