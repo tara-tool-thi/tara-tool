@@ -411,7 +411,7 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
         AccessControl? ac = await context.AccessControls.FirstOrDefaultAsync(
-            a => a.Id == accessControlId);
+            a => a.Id == accessControlId && a.Project.Id == projectId);
 
         if (ac == null || ac.Owner)
         {
@@ -568,16 +568,18 @@ public class ProjectService(
         using ApplicationDbContext applicationDbContext =
             await _contextFactory.CreateDbContextAsync();
 
-        Project? project = await applicationDbContext.Projects.FirstOrDefaultAsync(
-            i => i.Id == itemToDelete.Id);
+        Project? project = await applicationDbContext.Projects.Include(a => a.Access).ThenInclude(a => a.ApplicationUser).FirstOrDefaultAsync(i => i.Id == itemToDelete.Id);
 
         if (project is null)
         {
             return;
         }
 
-        await foreach (AccessControl accessControl in project.Access
-                           .ToAsyncEnumerable())
+        ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+
+        if(user is null || project.Access.Any(a => a.Owner == true && a.ApplicationUser.Id == user.Id) == false) return;
+
+        await foreach (AccessControl accessControl in project.Access.ToAsyncEnumerable())
         {
             applicationDbContext.AccessControls.Remove(accessControl);
         }
