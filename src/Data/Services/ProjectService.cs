@@ -369,11 +369,12 @@ public class ProjectService(
 
         if (newOwnerAc is null)
         {
-            context.Users.Attach(newOwner);
+            ApplicationUser? applicationUser = await context.Users.FirstOrDefaultAsync(u => u.Id == newOwner.Id);
+            if (applicationUser is null) return false;
             newOwnerAc = new AccessControl
             {
                 Project = project,
-                ApplicationUser = newOwner,
+                ApplicationUser = applicationUser,
                 Owner = true,
                 Manage = true,
                 WriteAccess = true,
