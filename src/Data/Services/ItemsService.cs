@@ -198,7 +198,7 @@ public class ItemDefinitionService(
             }
 
             int total = await itemDefinitions.CountAsync();
-            List<ItemDefinition> items = await request.ApplySorting(itemDefinitions)
+            List<ItemDefinition> items = await request.ApplySorting(itemDefinitions.OrderBy(i => i.ItemNumber))
                                              .Skip(request.StartIndex)
                                              .Take(request.Count ?? 20)
                                              .ToListAsync(request.CancellationToken);

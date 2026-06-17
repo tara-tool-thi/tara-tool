@@ -338,7 +338,7 @@ public class ThreatScenarioService(
                       projectId);
 
             int total = await query.CountAsync(request.CancellationToken);
-            List<ThreatScenario> items = await request.ApplySorting(query)
+            List<ThreatScenario> items = await request.ApplySorting(query.OrderBy(ts => ts.Id))
                                              .Skip(request.StartIndex)
                                              .Take(request.Count ?? 20)
                                              .ToListAsync(request.CancellationToken);

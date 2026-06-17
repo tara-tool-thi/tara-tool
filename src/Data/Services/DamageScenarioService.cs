@@ -145,7 +145,7 @@ public class DamageScenarioService(
                 damageScenario = filter(damageScenario);
 
             int total = await damageScenario.CountAsync();
-            List<DamageScenario> items = await request.ApplySorting(damageScenario)
+            List<DamageScenario> items = await request.ApplySorting(damageScenario.OrderBy(ds => ds.Id))
                                              .Skip(request.StartIndex)
                                              .Take(request.Count ?? 20)
                                              .ToListAsync(request.CancellationToken);

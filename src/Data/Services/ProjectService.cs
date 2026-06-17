@@ -372,7 +372,7 @@ public class ProjectService(
             }
 
             int total = await projects.CountAsync();
-            List<Project> items = await request.ApplySorting(projects)
+            List<Project> items = await request.ApplySorting(projects.OrderBy(p => p.Id))
                                       .Skip(request.StartIndex)
                                       .Take(request.Count ?? 20)
                                       .ToListAsync(request.CancellationToken);
@@ -606,9 +606,10 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
 
+        string normalizedEmail = email.ToUpper();
         ApplicationUser? targetUser =
-            await context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email ==
-                                                                    email);
+            await context.ApplicationUsers.FirstOrDefaultAsync(u => u.NormalizedEmail ==
+                                                                    normalizedEmail);
         if (targetUser == null)
             return "User not found.";
 
