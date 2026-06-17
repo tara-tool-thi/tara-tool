@@ -87,14 +87,6 @@ public class ProjectService(
             project.IsArchived = false;
 
 
-
-            // Build canonical set from project.Tags (same instances as asset.Tag after deserialization)
-            HashSet<Tag> canonicalTags = new(ReferenceEqualityComparer.Instance);
-            foreach (Tag tag in project.Tags)
-                canonicalTags.Add(tag);
-
-
-
             foreach (ItemDefinition itemDef in project.ItemDefinitions)
             {
                 itemDef.Id = 0;
@@ -118,8 +110,7 @@ public class ProjectService(
 
                     if (asset.Tag != null)
                     {
-                        if (asset.Tag != null)
-                            asset.IdTag = 0;
+                        asset.IdTag = 0;
                     }
 
                     foreach (DamageScenario ds in asset.DamageScenarios)
@@ -381,7 +372,7 @@ public class ProjectService(
             }
 
             int total = await projects.CountAsync();
-            List<Project> items = await request.ApplySorting(projects)
+            List<Project> items = await request.ApplySorting(projects.OrderBy(p => p.Id))
                                       .Skip(request.StartIndex)
                                       .Take(request.Count ?? 20)
                                       .ToListAsync(request.CancellationToken);
@@ -420,7 +411,7 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
         AccessControl? ac = await context.AccessControls.FirstOrDefaultAsync(
-            a => a.Id == accessControlId);
+            a => a.Id == accessControlId && a.Project.Id == projectId);
 
         if (ac == null || ac.Owner)
         {
@@ -585,16 +576,18 @@ public class ProjectService(
         using ApplicationDbContext applicationDbContext =
             await _contextFactory.CreateDbContextAsync();
 
-        Project? project = await applicationDbContext.Projects.FirstOrDefaultAsync(
-            i => i.Id == itemToDelete.Id);
+        Project? project = await applicationDbContext.Projects.Include(a => a.Access).ThenInclude(a => a.ApplicationUser).FirstOrDefaultAsync(i => i.Id == itemToDelete.Id);
 
         if (project is null)
         {
             return;
         }
 
-        await foreach (AccessControl accessControl in project.Access
-                           .ToAsyncEnumerable())
+        ApplicationUser? user = await sessionService.GetApplicationUserAsync();
+
+        if(user is null || project.Access.Any(a => a.Owner == true && a.ApplicationUser.Id == user.Id) == false) return;
+
+        await foreach (AccessControl accessControl in project.Access.ToAsyncEnumerable())
         {
             applicationDbContext.AccessControls.Remove(accessControl);
         }
@@ -623,9 +616,10 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
 
+        string normalizedEmail = email.ToUpper();
         ApplicationUser? targetUser =
-            await context.ApplicationUsers.FirstOrDefaultAsync(u => u.Email ==
-                                                                    email);
+            await context.ApplicationUsers.FirstOrDefaultAsync(u => u.NormalizedEmail ==
+                                                                    normalizedEmail);
         if (targetUser == null)
             return "User not found.";
 

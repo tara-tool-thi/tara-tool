@@ -64,16 +64,19 @@ public class DamageScenarioService(
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
 
-        context.Attach(entityToDelete);
-        if (entityToDelete is not null
+        DamageScenario? damageScenario = await context.DamageScenarios
+            .Include(e => e.Asset)
+            .ThenInclude(e => e != null ? e.ItemDefinition : null)
+            .FirstOrDefaultAsync(a => a.Id == entityToDelete.Id);
+
+        if (damageScenario is not null
             and { Asset.ItemDefinition.IdProject: long projId } &&
             await accessControlService.CheckUserAccessRightsWrite(projId) is true)
         {
-            context.Remove(entityToDelete);
-            await context.Projects.Where(p => p.Id == entityToDelete.Asset.ItemDefinition.IdProject).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+            context.Remove(damageScenario);
+            await context.Projects.Where(p => p.Id == damageScenario.Asset.ItemDefinition.IdProject).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
             await context.SaveChangesAsync();
         }
-        return;
     }
 
     public async Task<DamageScenario?> Save(DamageScenario entityToSave)
@@ -150,7 +153,7 @@ public class DamageScenarioService(
                 damageScenario = filter(damageScenario);
 
             int total = await damageScenario.CountAsync();
-            List<DamageScenario> items = await request.ApplySorting(damageScenario)
+            List<DamageScenario> items = await request.ApplySorting(damageScenario.OrderBy(ds => ds.Id))
                                              .Skip(request.StartIndex)
                                              .Take(request.Count ?? 20)
                                              .ToListAsync(request.CancellationToken);

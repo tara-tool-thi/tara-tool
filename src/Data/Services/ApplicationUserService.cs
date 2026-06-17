@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
 using tara_tool.Data;
 using tara_tool.Data.Tables;
 
@@ -30,8 +29,9 @@ public class ApplicationUserService(IDbContextFactory<ApplicationDbContext> cont
 
     public async Task<bool> CheckEmailDuplicate(string email)
     {
+        string normalized = email.ToUpper();
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
-        return await context.ApplicationUsers.AnyAsync(p => p.Email == email);
+        return await context.ApplicationUsers.AnyAsync(p => p.NormalizedEmail == normalized);
     }
 
     public async Task<bool> CheckNameOfUserDuplicate(string username)

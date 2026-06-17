@@ -127,7 +127,7 @@ public class AssetService(
             }
 
             int total = await Asset.CountAsync();
-            List<Asset> items = await request.ApplySorting(Asset)
+            List<Asset> items = await request.ApplySorting(Asset.OrderBy(a => a.Id))
                                     .Skip(request.StartIndex)
                                     .Take(request.Count ?? 20)
                                     .ToListAsync(request.CancellationToken);
