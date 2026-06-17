@@ -98,7 +98,7 @@ public class PendingRegistrationService(
     {
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
-        return await context.PendingRegistrations.AnyAsync(p => p.Email == email);
+        return await context.PendingRegistrations.AnyAsync(p => p.Email.Equals(email.ToUpper()));
     }
 
 }
