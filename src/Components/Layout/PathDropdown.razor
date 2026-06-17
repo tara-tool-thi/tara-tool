@@ -19,7 +19,7 @@
                 <FluentIcon Value="@(new Icons.Regular.Size16.ChevronRight())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"/>
                 <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                               OnClick="@(() => HandleProjectChange(selectedProject, true))">
-                    @(selectedProject.Id == -1 ? "*" : selectedProject.ProjectName)
+                    @(selectedProject.Id == -1 ? "All Projects" : selectedProject.ProjectName)
                 </FluentButton>
                 <FluentButton Id="project-menu-anchor" Appearance="Appearance.Lightweight" Class="path-dropdown-select" OnClick="@(() => _projectMenuOpen = !_projectMenuOpen)">
                     <FluentIcon Value="@(new Icons.Regular.Size16.ChevronDown())" Color="@Color.Fill" Class="path-dropdown-scroll-container-icon"/>
@@ -29,7 +29,7 @@
                     {
                         <FluentMenuItem OnClick="@(() => OnProjectChange(p))"
                                         Selected="@(p.Id == selectedProject?.Id)">
-                            @(p.Id == -1 ? "*" : p.ProjectName)
+                            @(p.Id == -1 ? "All Projects" : p.ProjectName)
                         </FluentMenuItem>
                     }
                 </FluentMenu>
@@ -41,7 +41,7 @@
                 {
                     <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                   OnClick="@(() => HandleItemChange(selectedItem, true))">
-                        @(selectedItem.Id == -1 ? "*" : selectedItem.ItemName)
+                        @(selectedItem.Id == -1 ? "All Items" : selectedItem.ItemName)
                     </FluentButton>
                 }
                 else
@@ -58,7 +58,7 @@
                     {
                         <FluentMenuItem OnClick="@(() => OnItemChanged(i))"
                                         Selected="@(i.Id == selectedItem?.Id)">
-                            @(i.Id == -1 ? "*" : i.ItemName)
+                            @(i.Id == -1 ? "All Items" : i.ItemName)
                         </FluentMenuItem>
                     }
                 </FluentMenu>
@@ -72,7 +72,7 @@
                     {
                         <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                       OnClick="@(() => HandleAssetChange(selectedAsset, true))">
-                            @(selectedAsset.Id == -1 ? "*" : selectedAsset.AssetName)
+                            @(selectedAsset.Id == -1 ? "All Assets" : selectedAsset.AssetName)
                         </FluentButton>
                     }
                     else
@@ -89,7 +89,7 @@
                         {
                             <FluentMenuItem OnClick="@(() => OnAssetChange(a))"
                                             Selected="@(a.Id == selectedAsset?.Id)">
-                                @(a.Id == -1 ? "*" : a.AssetName)
+                                @(a.Id == -1 ? "All Assets" : a.AssetName)
                             </FluentMenuItem>
                         }
                     </FluentMenu>
@@ -103,7 +103,7 @@
                         {
                             <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                           OnClick="@(() => HandleDamageScenarioChange(selectedDamageScenario, true))">
-                                @(selectedDamageScenario.Id == -1 ? "*" : ($"Damage Scenario {selectedDamageScenario.DamageScenarioNumber.ToString()}"))
+                                @(selectedDamageScenario.Id == -1 ? "All Damage Scenarios" : ($"Damage Scenario {selectedDamageScenario.DamageScenarioNumber.ToString()}"))
                             </FluentButton>
                         }
                         else
@@ -120,7 +120,7 @@
                             {
                                 <FluentMenuItem OnClick="@(() => OnDamageScenarioChange(d))"
                                                 Selected="@(d.Id == selectedDamageScenario?.Id)">
-                                    @(d.Id == -1 ? "*" : ($"Damage Scenario {d.DamageScenarioNumber.ToString()}"))
+                                    @(d.Id == -1 ? "All Damage Scenarios" : ($"Damage Scenario {d.DamageScenarioNumber.ToString()}"))
                                 </FluentMenuItem>
                             }
                         </FluentMenu>
@@ -134,7 +134,7 @@
                             {
                                 <FluentButton Appearance="Appearance.Lightweight" Class="path-dropdown-select"
                                               OnClick="@(() => HandleThreatScenarioChange(selectedThreatScenario, true))">
-                                    @(selectedThreatScenario.Id == -1 ? "*" : selectedThreatScenario.Name)
+                                    @(selectedThreatScenario.Id == -1 ? "All Threat Scenarios" : selectedThreatScenario.Name)
                                 </FluentButton>
                             }
                             else
@@ -151,7 +151,7 @@
                                 {
                                     <FluentMenuItem OnClick="@(() => OnThreatScenarioChange(t))"
                                                     Selected="@(t.Id == selectedThreatScenario?.Id)">
-                                        @(t.Id == -1 ? "*" : t.Name)
+                                        @(t.Id == -1 ? "All Threat Scenarios" : t.Name)
                                     </FluentMenuItem>
                                 }
                             </FluentMenu>
@@ -198,9 +198,9 @@
         string url = Navigator.ToBaseRelativePath(Navigator.Uri);
         string[] urlSplitted = url.Split("/");
 
-        //Prevent Resetting when in overview
         if (url.StartsWith("Overview"))
         {
+            await HandleOverviewUrl(url);
             return;
         }
 
@@ -524,6 +524,109 @@ a.Asset!.Id == asset.Id))).Item1);
         _threatMenuOpen = false;
         if (selectedThreatScenario?.Id == threatScenario.Id) return;
         await HandleThreatScenarioChange(threatScenario);
+    }
+
+    private async Task HandleOverviewUrl(string url)
+    {
+        int queryStart = url.IndexOf('?');
+        if (queryStart < 0) return;
+
+        Microsoft.Extensions.Primitives.StringValues pv, iv, av, dv, tv;
+        System.Collections.Generic.Dictionary<string, Microsoft.Extensions.Primitives.StringValues> queryParams =
+            Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(url.Substring(queryStart));
+
+        if (!queryParams.TryGetValue("IdProject", out pv) || !long.TryParse(pv, out long idProject)) return;
+        long? idItem = queryParams.TryGetValue("IdItem", out iv) && long.TryParse(iv, out long i) ? i : (long?)null;
+        long? idAsset = queryParams.TryGetValue("IdAsset", out av) && long.TryParse(av, out long a) ? a : (long?)null;
+        long? idDs = queryParams.TryGetValue("IdDamageScenario", out dv) && long.TryParse(dv, out long d) ? d : (long?)null;
+        long? idTs = queryParams.TryGetValue("IdThreatScenario", out tv) && long.TryParse(tv, out long t) ? t : (long?)null;
+
+        // Guard: already showing this exact state — avoid unnecessary reloads on in-page navigation
+        if (selectedProject?.Id == idProject &&
+            selectedItem?.Id == idItem &&
+            selectedAsset?.Id == idAsset &&
+            selectedDamageScenario?.Id == idDs &&
+            selectedThreatScenario?.Id == idTs)
+            return;
+
+        AllProjects.Clear();
+        AllItems.Clear();
+        AllAssets.Clear();
+        AllDamadgeScenarios.Clear();
+        AllThreatScenarios.Clear();
+        selectedProject = null;
+        selectedItem = null;
+        selectedAsset = null;
+        selectedDamageScenario = null;
+        selectedThreatScenario = null;
+
+        AllProjects = await ProjectService.GetProjectsAsync();
+        Project? project = await ProjectService.GetItemByIdAsync(idProject, null);
+        if (project is null) return;
+        selectedProject = project;
+
+        if (idItem is null) return;
+
+        AllItems.Add(new ItemDefinition { Id = -1, Project = default! });
+        AllItems.AddRange(await ItemService.GetItemsAsync(project.Id));
+
+        if (idItem == -1)
+        {
+            selectedItem = AllItems.First(x => x.Id == -1);
+            AllAssets.Add(new Asset { Id = -1 });
+            return;
+        }
+
+        ItemDefinition? item = AllItems.FirstOrDefault(x => x.Id == idItem);
+        if (item is null) return;
+        selectedItem = item;
+
+        if (idAsset is null) return;
+
+        AllAssets.Add(new Asset { Id = -1 });
+        AllAssets.AddRange((await AssetService.GetItems(project.Id, filter: q => q.Where(x => x.IdItemDefinition == idItem))).Item1);
+
+        if (idAsset == -1)
+        {
+            selectedAsset = AllAssets.First(x => x.Id == -1);
+            AllDamadgeScenarios.Add(new DamageScenario { Id = -1 });
+            return;
+        }
+
+        Asset? asset = AllAssets.FirstOrDefault(x => x.Id == idAsset);
+        if (asset is null) return;
+        selectedAsset = asset;
+
+        if (idDs is null) return;
+
+        AllDamadgeScenarios.Add(new DamageScenario { Id = -1 });
+        AllDamadgeScenarios.AddRange((await DamageScenarioService.GetItems(project.Id, filter: q => q.Where(x => x.Asset!.Id == idAsset))).Item1);
+
+        if (idDs == -1)
+        {
+            selectedDamageScenario = AllDamadgeScenarios.First(x => x.Id == -1);
+            AllThreatScenarios.Add(new ThreatScenario { Id = -1 });
+            return;
+        }
+
+        DamageScenario? damageScenario = AllDamadgeScenarios.FirstOrDefault(x => x.Id == idDs);
+        if (damageScenario is null) return;
+        selectedDamageScenario = damageScenario;
+
+        if (idTs is null) return;
+
+        AllThreatScenarios.Add(new ThreatScenario { Id = -1 });
+        AllThreatScenarios.AddRange((await ThreatScenarioService.GetItems(project.Id, filter: q => q.Where(x => x.DamageScenarios!.Id == idDs))).Item1);
+
+        if (idTs == -1)
+        {
+            selectedThreatScenario = AllThreatScenarios.First(x => x.Id == -1);
+            return;
+        }
+
+        ThreatScenario? threatScenario = AllThreatScenarios.FirstOrDefault(x => x.Id == idTs);
+        if (threatScenario is null) return;
+        selectedThreatScenario = threatScenario;
     }
 
     public void Dispose()

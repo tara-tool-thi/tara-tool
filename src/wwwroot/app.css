@@ -85,7 +85,7 @@ footer a:hover {
 }
 
 .path-dropdown-select-placeholder::part(control) {
-    color: var(--foreground-on-accent-focus);
+    color: #fff;
     font-style: italic;
 }
 

@@ -106,7 +106,7 @@ public class DamageScenarioService(
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
         IQueryable<DamageScenario> damageScenarios =
-            context.DamageScenarios.AsNoTracking().AsQueryable();
+            context.DamageScenarios.AsNoTracking().Include(a => a.Asset).ThenInclude(a => a.ItemDefinition).AsQueryable();
 
         if (include is not null)
             damageScenarios = include(damageScenarios);
