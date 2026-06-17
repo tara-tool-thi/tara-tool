@@ -5,6 +5,7 @@
 @rendermode InteractiveServer
 
 @inject UserManager<ApplicationUser> UserManager
+@inject ProjectService ProjectService
 @inject SessionService SessionService
 @inject IToastService ToastService
 
@@ -15,10 +16,12 @@
 
 <FluentDialogBody>
     Are you sure you want to delete the account of <strong>@Content.Email</strong>? This cannot be undone.
+    @if (numberOfProjects > 0)
+    {
     <br />
-    All projects owned by this user will also be deleted.
+    <p>All projects owned by this user will also be deleted.</p>
     <br />
-    To transfer all of his projects enter an email and click the button.
+    <p>To transfer all of his projects enter an email and click the button.</p>
     <FluentStack Orientation="Orientation.Horizontal" Class="margin-top-10">
         <FluentTextField @bind-Value="transferEmail" TextFieldType="TextFieldType.Email" />
         @if (transfer == true)
@@ -34,6 +37,7 @@
             </FluentButton>
         }
     </FluentStack>
+    }
 </FluentDialogBody>
 
 
@@ -58,9 +62,12 @@
 
     private bool transfer = false;
 
+    private int numberOfProjects = 0;
+
     protected override async Task OnInitializedAsync()
     {
         transferEmail = SessionService.GetApplicationUserAsync().Result!.Email;
+        numberOfProjects = (await ProjectService.GetOwnedProjectsAsync(Content)).Count;
     }
 
     private async Task unsetTransfer()
