@@ -12,7 +12,7 @@
 <PageTitle>Threat Scenario</PageTitle>
 
 <FluentStack VerticalAlignment="VerticalAlignment.Center">
-    <h2>Threat Scenario</h2>
+    <h1>Threat Scenario</h1>
     <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
     <FluentTooltip Anchor="iso-help-button">
         <p><strong>ISO/SAE 21434 - Threat Scenario</strong></p>
@@ -36,7 +36,7 @@
 
 <FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
     <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
-        <span class="ts-header-name-text">@("TS" + TSId)</span>
+        <h4 class="margin-box">TS&nbsp;@TSId</h4>
     </FluentStack>
 
     <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
