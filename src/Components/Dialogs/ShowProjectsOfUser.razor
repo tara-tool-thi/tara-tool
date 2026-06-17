@@ -14,7 +14,9 @@
 
 <EditForm EditContext="editContext" FormName="transferProjects" OnValidSubmit="@CloseDialog">
 <FluentDialogBody>
-    <FluentDataGrid Items="Projects.AsQueryable()" TGridItem="Project" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridProjects">
+    @if (paginationProjects is not null)
+    {
+    <FluentDataGrid Items="Projects.AsQueryable()" TGridItem="Project" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" Pagination="@paginationProjects.pagination" @ref="gridProjects">
         <PropertyColumn Property="@(p => p.ProjectName)" Sortable="true" />
         <PropertyColumn Property="@(p => p.DateLastChanged)" Sortable="true" />
         <TemplateColumn Title="Transfer ownership" Context="projectRow">
@@ -31,6 +33,8 @@
             </FluentStack>
         </TemplateColumn>
     </FluentDataGrid>
+    }
+    <PaginationUI @ref=@paginationProjects />
 </FluentDialogBody>
 
 <FluentDialogFooter>
@@ -51,6 +55,7 @@
 
     private List<Project> Projects = new();
     private FluentDataGrid<Project> gridProjects = default!;
+    private PaginationUI paginationProjects { get; set; } = default!;
 
     private Dictionary<long, (bool transfer, string? email)> pendingTransfers = new();
 

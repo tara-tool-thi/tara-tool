@@ -14,8 +14,11 @@
 
 
 <FluentDialogBody>
-    Are you sure you want to delete <strong>@Content.Email</strong>? This cannot be undone.
+    Are you sure you want to delete the account of <strong>@Content.Email</strong>? This cannot be undone.
+    <br />
     All projects owned by this user will also be deleted.
+    <br />
+    To transfer all of his projects enter an email and click the button.
     <FluentStack Orientation="Orientation.Horizontal" Class="margin-top-10">
         <FluentTextField @bind-Value="transferEmail" TextFieldType="TextFieldType.Email" />
         @if (transfer == true)

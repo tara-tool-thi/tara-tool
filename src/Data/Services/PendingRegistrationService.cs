@@ -91,4 +91,11 @@ public class PendingRegistrationService(
         }
     }
 
+    public async Task<bool> EmailUsed(string email)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        return await context.PendingRegistrations.AnyAsync(p => p.Email == email);
+    }
+
 }
