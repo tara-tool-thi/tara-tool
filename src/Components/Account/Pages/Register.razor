@@ -1,10 +1,7 @@
 @page "/Account/Register"
 
 @using System.ComponentModel.DataAnnotations
-@using System.Text
-@using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
-@using Microsoft.AspNetCore.WebUtilities
 @using tara_tool.Data.Tables
 
 
@@ -89,22 +86,17 @@
 
         bool initialUser = !UserManager.Users.Any();
 
-        List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
-        int NumberOfPendingRegistrations = pendingRegistrations.Count();
-
-
-         if (!await PendingRegistration.Check(Input.Email, @id, initialUser))
-         {
-             errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
-             return;
-         }
+        if (!await PendingRegistration.Check(Input.Email, @id, initialUser))
+        {
+            errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
+            return;
+        }
 
         if (await ApplicationUserService.CheckEmailDuplicate(Input.Email))
         {
             errorMessage = "Error: The email address is already taken.";
             return;
         }
-
 
         if (await ApplicationUserService.CheckNameOfUserDuplicate(Input.Username))
         {
@@ -127,9 +119,9 @@
             return;
         }
 
-        if (initialUser && (NumberOfPendingRegistrations == 1))
+        if (initialUser)
         {
-             await UserManager.AddToRoleAsync(user, "Admin");
+            await UserManager.AddToRoleAsync(user, "Admin");
         }
 
         HttpContext.Response.Cookies.Append
