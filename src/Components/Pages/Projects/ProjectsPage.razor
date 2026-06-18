@@ -29,8 +29,6 @@
 
 @code {
 
-    private string id;
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender) {
@@ -59,10 +57,8 @@
 
     private async Task<bool> CheckResetPassword(){
         ApplicationUser? currentUser = await GetCurrentUser();
-        if (currentUser != null){
-            id = currentUser.Id;
-        }
-        return await ApplicationUserService.CheckResetPassword(id);
+        if (currentUser is null) return false;
+        else return await ApplicationUserService.CheckResetPassword(currentUser.Id);
     }
 
     private async Task<ApplicationUser?> GetCurrentUser(){
