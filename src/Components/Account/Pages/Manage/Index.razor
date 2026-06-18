@@ -1,4 +1,4 @@
-﻿@page "/Account/Manage"
+@page "/Account/Manage"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -16,36 +16,32 @@
 
 <FluentGrid>
     <FluentGridItem xs="12" sm="6">
-        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator />
-            <FluentValidationSummary class="text-danger" role="alert" />
+
+        @* Profile picture (interactive island) *@
+        @if (user is not null)
+        {
+            <div class="profile-picture-section">
+                <FluentLabel Typo="Typography.Subject" Class="profile-picture-label">
+                    Profile Picture
+                </FluentLabel>
+                <ProfilePictureUpload UserId="@user.Id" Username="@(username ?? string.Empty)" />
+            </div>
+        }
+
             <FluentTextField Value="@username" Placeholder="Please choose your username." Disabled Label="Username"
                              Appearance=FluentInputAppearance.Filled Style="width: 100%" />
-            <FluentTextField Name="Input.PhoneNumber" @bind-Value="Input.PhoneNumber"
-                             Placeholder="Please enter your phone number." Label="Phone number" Style="width: 100%" />
-            <FluentValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
-            <p style="margin-top: 10px; text-align: end;">
-                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
-            </p>
-        </EditForm>
     </FluentGridItem>
 </FluentGrid>
 
 @code {
     private ApplicationUser? user;
     private string? username;
-    private string? phoneNumber;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new();
-
         user = await UserManager.GetUserAsync(HttpContext.User);
         if (user is null)
         {
@@ -54,9 +50,6 @@
         }
 
         username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
-
-        Input.PhoneNumber ??= phoneNumber;
     }
 
     private async Task OnValidSubmitAsync()
@@ -67,24 +60,7 @@
             return;
         }
 
-        if (Input.PhoneNumber != phoneNumber)
-        {
-            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-            if (!setPhoneResult.Succeeded)
-            {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
-                return;
-            }
-        }
-
         await SignInManager.RefreshSignInAsync(user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
-    }
-
-    private sealed class InputModel
-    {
-        [Phone]
-        [Display(Name = "Phone number")]
-        public string? PhoneNumber { get; set; }
     }
 }

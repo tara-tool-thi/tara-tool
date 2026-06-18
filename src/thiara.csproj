@@ -20,6 +20,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="10.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0" />
+    <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>

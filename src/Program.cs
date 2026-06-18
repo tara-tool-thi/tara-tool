@@ -53,6 +53,7 @@ builder.Services.AddTransient<SessionService>();
 builder.Services.AddTransient<AssetService>();
 builder.Services.AddTransient<TagService>();
 builder.Services.AddDatabaseServices();
+builder.Services.AddScoped<ProfilePictureStateService>();
 builder.Services
     .AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
@@ -118,10 +119,18 @@ UserManager<ApplicationUser> UserManager = scope.ServiceProvider.GetRequiredServ
 PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
 string link = "";
 bool newId = !UserManager.Users.Any() && !await PendingRegistrationService.Any();
+string? id;
 if(newId)
 {
-    string? id = await PendingRegistrationService.Create("");
-    link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
+    id = await PendingRegistrationService.Create("");
+}
+else
+{
+    id = await PendingRegistrationService.GetIdCountOne();
+    if (!UserManager.Users.Any() && id != null)
+    {
+        newId = true;
+    }
 }
 
 Console.WriteLine(asciiArt);
@@ -129,6 +138,7 @@ Console.WriteLine("Welcome to THIARA :)");
 
 if(newId)
 {
+    link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
     Console.WriteLine("Use the following link to register the first user: ");
     Console.WriteLine(link);
 }

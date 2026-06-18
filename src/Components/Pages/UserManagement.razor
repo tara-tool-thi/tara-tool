@@ -35,7 +35,7 @@
     <h4 class="margin-bottom-16">Pending Registrations</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
     <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations" @key=pendingRegistrations>
-        <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
+        <PropertyColumn Property="@(w => w.Email.ToLower())" Sortable="true" />
         <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
             @GenerateRegistrationLink(pendingRow.Id)
         </TemplateColumn>
@@ -81,7 +81,7 @@
             <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" title="Reset Password of User" >
                 <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
             </FluentButton>
-            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
+            <FluentButton aria-label="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
         </TemplateColumn>

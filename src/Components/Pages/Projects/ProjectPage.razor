@@ -34,8 +34,35 @@
 <br />
 <FluentStack>
     <h2>
-        <FluentStack @key="@retrievedProjectLastModifiedDate">
-            @projectName
+        <FluentStack Orientation="Orientation.Horizontal"
+                     VerticalAlignment="VerticalAlignment.Center"
+                     @key="@retrievedProjectLastModifiedDate">
+            @if (isRenamingProjectName)
+            {
+                <FluentTextField @bind-Value="newProjectName"
+                                 Placeholder="Project name"
+                                 Class="project-name-input" />
+
+                <FluentButton Appearance="Appearance.Accent" OnClick="SaveProjectNameAsync">
+                    Save
+                </FluentButton>
+
+                <FluentButton Appearance="Appearance.Outline" OnClick="CancelRenameProjectName">
+                    Cancel
+                </FluentButton>
+            }
+            else
+            {
+                @projectName
+                @if (canManage && !isArchived)
+                {
+                    <FluentButton Appearance="Appearance.Stealth"
+                        Title="Rename project"
+                        IconStart="@(new Icons.Regular.Size20.Edit())"
+                        OnClick="StartRenameProjectName" />
+                }
+            }
+
             @if (isArchived)
             {
                 <FluentBadge Appearance="Appearance.Neutral" Class="badge-archived">
@@ -94,6 +121,8 @@
     private string projectName = "";
     private bool canManage = false;
     private bool isArchived = false;
+    private bool isRenamingProjectName = false;
+    private string newProjectName = "";
 
     private DateTime retrievedProjectLastModifiedDate;
     private bool localDateTimeUpdatePending;
@@ -169,6 +198,40 @@
         Project? retrievedProject = await ProjectService.GetItemByIdAsync(urlId, null);
 
         return retrievedProject;
+    }
+
+    private void StartRenameProjectName()
+    {
+        newProjectName = projectName;
+        isRenamingProjectName = true;
+    }
+
+    private void CancelRenameProjectName()
+    {
+        newProjectName = string.Empty;
+        isRenamingProjectName = false;
+    }
+
+    private async Task SaveProjectNameAsync()
+    {
+        string trimmedProjectName = newProjectName.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedProjectName)) 
+        {
+            return;
+        }
+
+        await ProjectService.UpdateProjectNameAsync(urlId, trimmedProjectName);
+
+        Project? requestedProject = await retrieveProjectInfo();
+
+            if (requestedProject != null)
+            {
+                projectName = requestedProject.ProjectName;
+                retrievedProjectLastModifiedDate = requestedProject.DateLastChanged;
+            }
+
+        isRenamingProjectName = false;
     }
 
 

@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using tara_tool.Data.Enums;
 using tara_tool.Data.Tables;
-
 
 namespace tara_tool.Data;
 
@@ -20,9 +18,9 @@ public class ApplicationDbContext(
     public DbSet<Asset> Assets { get; set; }
     public DbSet<Tag> Tags { get; set; }
     public DbSet<DamageScenario> DamageScenarios { get; set; }
-    public DbSet<TreatmentDecision> TreatmentDecisions { get; set; }
     public DbSet<ThreatScenario> ThreatScenarios { get; set; }
     public DbSet<AttackPath> AttackPaths { get; set; }
+    public DbSet<AttackStep> AttackSteps { get; set; }
 
     static public void GetDbConfig(DbContextOptionsBuilder databaseBuilder,
                                    WebApplicationBuilder builder)
@@ -78,10 +76,14 @@ public class ApplicationDbContext(
             .HasOne(e => e.ThreatScenarios)
             .WithMany(e => e.AttackPaths)
             .IsRequired();
+        builder.Entity<AttackPath>()
+            .HasMany(ap => ap.Steps)
+            .WithOne(step => step.AttackPath)
+            .OnDelete(DeleteBehavior.Cascade)
+            .IsRequired(true);
         builder.Entity<Tag>()
             .HasOne(e => e.Project)
             .WithMany(e => e.Tags)
-            .HasForeignKey(e => e.IdProject)
             .IsRequired(true);
     }
 }

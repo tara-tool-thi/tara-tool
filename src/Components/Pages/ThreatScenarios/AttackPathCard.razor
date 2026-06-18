@@ -1,0 +1,467 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@using tara_tool.Data.Enums;
+@using tara_tool.Data.Services
+
+@inject ThreatScenarioService threatScenarioService
+
+
+<FluentStack Class="attackpath-card">
+    <FluentAccordionItem Expanded="@attackPath.AccordionExpanded" Style="width: 100%;">
+        <HeadingTemplate>
+            @* Header Bar *@
+            <FluentStack Orientation="Orientation.Horizontal" Class="attackpath-header">
+                <FluentLabel Class="attackpath-badge">@("AP" + attackPath.Id)</FluentLabel>
+                <FluentSpacer Width="12"/>
+                <FluentTextField @bind-Value="@attackPath.Name" Style="width: 100%"
+                                 Immediate="true"
+                                 ImmediateDelay="500"
+                                 @bind-Value:after="HandleFieldChanged" />
+                <FluentSpacer />
+
+                <FluentButton Title="Delete attack path"
+                              Appearance="Appearance.Outline"
+                              OnClick="@(()=> showDeleteDialog = true)">
+                    <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
+                </FluentButton>
+            </FluentStack>
+        </HeadingTemplate>
+
+        <ChildContent>
+            <FluentGrid Spacing="2" Class="attackpath-grid">
+                @* LEFT COLUMN: The Steps Table *@
+                <FluentGridItem xs="9">
+                    @if (attackPath.Steps.Any())
+                    {
+                        <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="min-height: 50px; overflow: visible;">
+                            <ChildContent>
+                                <TemplateColumn Title="#" Width="40px">
+                                    <br />
+                                    @(attackPath.Steps.IndexOf(context) + 1)
+                                </TemplateColumn>
+
+                                <TemplateColumn Title="Steps">
+                                    <div class="drop-target @(hoverAbove == context ? "drop-hover" : "")"
+                                        @ondragenter="() => hoverAbove = context"
+                                        @ondragleave="() => hoverAbove = null"
+                                        @ondragover:preventDefault
+                                        @ondrop="() => DropAbove(context)"
+                                        @ondragend="() => hoverAbove = null">
+                                    </div>
+
+                                    <div class="drag-cell">
+                                        <div class="step-textarea-wrapper">
+                                            <FluentTextArea @bind-Value="context.Text"
+                                                Rows="2"
+                                                Immediate="true"
+                                                ImmediateDelay="500"
+                                                @bind-Value:after="HandleFieldChanged"
+                                                Style="flex: 1;" />
+
+                                        </div>
+                                        <FluentButton Style="max-width: 40px" Appearance="Appearance.Outline" Class="remove-step-button" OnClick="() => RemoveStep(context)" Title="Remove step">
+                                                <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" />
+                                        </FluentButton>
+                                        <div class="drag-handle"
+                                            draggable="true"
+                                            @ondragstart="() => DragStart(context)"
+                                            title="Drag to reorder">
+                                            <FluentIcon Value="@(new Icons.Regular.Size20.Reorder())" Color="Color.Neutral" />
+                                        </div>
+                                    </div>
+
+                                    @if(context == attackPath.Steps.Last())
+                                    {
+                                        <div class="drop-target-below @(hoverBelow == context ? "drop-hover-below" : "")"
+                                        @ondragenter="() => hoverBelow = context"
+                                        @ondragleave="() => hoverBelow = null"
+                                        @ondragover:preventDefault
+                                        @ondrop="() => DropBelow(context)"
+                                        @ondragend="() => hoverBelow = null">
+                                        </div>
+                                    }
+                                </TemplateColumn>
+                            </ChildContent>
+
+                        </FluentDataGrid>
+                    }
+                    else
+                    {
+                        <FluentLabel Typo="Typography.Body" Alignment="HorizontalAlignment.Center" Style="opacity: 0.6; padding: 10px; height: 60%">
+                                No steps yet.
+                        </FluentLabel>
+                    }
+
+                    <div class="add-step-container">
+                        <FluentButton Appearance="Appearance.Outline" IconStart="@(new Icons.Regular.Size20.Add())" OnClick="AddNewStep" Title="Add step">
+                            New step
+                        </FluentButton>
+                    </div>
+
+                    @* Risk Decision Section *@
+                    <FluentStack Class="attackpath-risk" Orientation="Orientation.Vertical">
+                        <FluentStack Orientation="Orientation.Horizontal">
+                            <FluentLabel Class="attackpath-small">Risk treatment decision</FluentLabel>
+                            <FluentSpacer/>
+                            <FluentCheckbox @bind-Value="@attackPath.RiskTreatmentBool" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged"/> Done
+                        </FluentStack>
+                        <FluentTextArea Class="fullwidth" @bind-Value="@attackPath.RiskTreatmentText" Immediate="true" ImmediateDelay="500" @bind-Value:after="HandleFieldChanged" />
+                    </FluentStack>
+            </FluentGridItem>
+
+
+
+                @* RIGHT COLUMN: Dropdown Inputs *@
+                <FluentGridItem xs="3" Class="attackpath-rightcol">
+                    <FluentStack Orientation="Orientation.Vertical" VerticalGap="8">
+                        <div class="attackpath-select-field">
+                            <span class="attackpath-small">Elapsed Time</span>
+                            <FluentSelect Value="@(attackPath.ElapsedTime.ToString() ?? "")"
+                                ValueChanged="@OnElapsedTimeChanged"
+                                Items="@ElapsedTimeOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%; min-width: 0;" />
+                        </div>
+
+                        <div class="attackpath-select-field">
+                            <span class="attackpath-small">Specialist Expertise</span>
+                            <FluentSelect Value="@(attackPath.SpecialistExpertise.ToString() ?? "")"
+                                ValueChanged="@OnExpertiseChanged"
+                                Items="@ExpertiseOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%; min-width: 0;" />
+                        </div>
+
+                        <div class="attackpath-select-field">
+                            <span class="attackpath-small">Knowledge of Item</span>
+                            <FluentSelect Value="@(attackPath.KnowledgeOfComponents.ToString() ?? "")"
+                                ValueChanged="@OnKnowledgeChanged"
+                                Items="@KnowledgeOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%; min-width: 0;" />
+                        </div>
+
+                        <div class="attackpath-select-field">
+                            <span class="attackpath-small">Window of Opportunity</span>
+                            <FluentSelect Value="@(attackPath.WindowOfOpportunity.ToString() ?? "")"
+                                ValueChanged="@OnWindowChanged"
+                                Items="@WindowOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%; min-width: 0;" />
+                        </div>
+
+                        <div class="attackpath-select-field">
+                            <span class="attackpath-small">Equipment</span>
+                            <FluentSelect Value="@(attackPath.Equipment.ToString() ?? "")"
+                                ValueChanged="@OnEquipmentChanged"
+                                Items="@EquipmentOptions"
+                                OptionText="@(opt => opt.Text)"
+                                OptionValue="@(opt => opt.Value.ToString())"
+                                Style="width: 100%; min-width: 0;" />
+                        </div>
+
+                        <FluentDivider Style="margin-top: 10px; margin-bottom: 10px;" />
+                            <FluentStack Orientation="Orientation.Vertical">
+
+                                    <div style="font-size: 0.75rem; width: 100%; color: @FeasibilityColor;">
+                                        <FluentStack>
+                                            <span>Attack Feasibility:</span>
+                                            <FluentSpacer />
+                                            <span style="font-weight: bold;">@AttackFeasibilityScore</span>
+                                        </FluentStack>
+                                    </div>
+                                    <div style="font-size: 1rem; width: 100%; color: @FeasibilityColor; font-weight: bold;">
+                                        <FluentStack>
+                                            <span>Risk Value:</span>
+                                            <FluentSpacer />
+                                            <span>@(ImpactCategory + APRiskValue)</span>
+                                        </FluentStack>
+                                    </div>
+
+                            </FluentStack>
+                    </FluentStack>
+                </FluentGridItem>
+            </FluentGrid>
+        </ChildContent>
+    </FluentAccordionItem>
+</FluentStack>
+
+    <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete attack path confirmation">
+        <FluentDialogHeader>
+            <h3>Delete Attack Path</h3>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            Are you sure you want to delete <strong>Attack Path: @attackPath.Name</strong>? This cannot be undone.
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+                <FluentSpacer />
+                <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = false)">Cancel</FluentButton>
+                <FluentButton Appearance="Appearance.Accent" BackgroundColor="var(--error)" OnClick="ConfirmDeleteAsync">Delete</FluentButton>
+            </FluentStack>
+        </FluentDialogFooter>
+    </FluentDialog>
+
+
+@code {
+    [Parameter] public AttackPath attackPath { get; set; } = default!;
+
+    [Parameter] public EventCallback OnFieldChanged { get; set; }
+
+    [Parameter] public EventCallback<long> OnDelete { get; set; }
+
+    [Parameter] public float ImpactRating { get; set; }
+
+    [Parameter] public string ImpactCategory { get; set; } = string.Empty;
+
+    private bool showDeleteDialog = false;
+
+    private string AttackFeasibilityScore = string.Empty;
+
+    private string APRiskValue = string.Empty;
+
+    private string FeasibilityColor => attackPath.AttackFeasibilityRating switch
+    {
+        AttackFeasibilityRating.VeryLow => "#0b6a0b",
+        AttackFeasibilityRating.Low => "#13a10e",
+        AttackFeasibilityRating.Medium => "#f7630c",
+        AttackFeasibilityRating.High => "#d13438",
+        AttackFeasibilityRating.Critical => "#a4262c",
+        _ => "#605e5c"
+    };
+
+
+    private AttackStep? hoverAbove;
+    private AttackStep? hoverBelow;
+    private AttackStep? draggedItem;
+
+    // --- MAPPING LISTS ---
+    // Map the Enum to a user-friendly string
+    private List<SelectOption<ElapsedTime>> ElapsedTimeOptions = new() {
+        new() { Value = ElapsedTime.lt1Day, Text = "< 1 day" },
+        new() { Value = ElapsedTime.lt1Week, Text = "< 1 week" },
+        new() { Value = ElapsedTime.lt1Month, Text = "< 1 month" },
+        new() { Value = ElapsedTime.lt6Month, Text = "< 6 months" },
+        new() { Value = ElapsedTime.gt6Month, Text = "> 6 months" }
+    };
+
+    private List<SelectOption<SpecialistExpertise>> ExpertiseOptions = new() {
+        new() { Value = SpecialistExpertise.Layman, Text = "Layman" },
+        new() { Value = SpecialistExpertise.Proficient, Text = "Proficient" },
+        new() { Value = SpecialistExpertise.Expert, Text = "Expert" },
+        new() { Value = SpecialistExpertise.MultipleExpert, Text = "Multiple experts" }
+    };
+
+    private List<SelectOption<KnowledgeOfComponents>> KnowledgeOptions = new() {
+        new() { Value = KnowledgeOfComponents.Public, Text = "Public" },
+        new() { Value = KnowledgeOfComponents.Restricted, Text = "Restricted" },
+        new() { Value = KnowledgeOfComponents.Confidential, Text = "Confidential" },
+        new() { Value = KnowledgeOfComponents.StrictlyConfidential, Text = "Strictly confidential" }
+    };
+
+    private List<SelectOption<WindowOfOpportunity>> WindowOptions = new() {
+        new() { Value = WindowOfOpportunity.Unlimited, Text = "Unlimited" },
+        new() { Value = WindowOfOpportunity.Easy, Text = "Easy" },
+        new() { Value = WindowOfOpportunity.Moderate, Text = "Moderate" },
+        new() { Value = WindowOfOpportunity.Difficult, Text = "Difficult" }
+    };
+
+    private List<SelectOption<Equipment>> EquipmentOptions = new() {
+        new() { Value = Equipment.Standard, Text = "Standard" },
+        new() { Value = Equipment.Specialized, Text = "Specialized" },
+        new() { Value = Equipment.Bespoken, Text = "Bespoke" },
+        new() { Value = Equipment.MultipleBespoken, Text = "Multiple Bespoke" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CalculateAndSetAttackFeasibilityScore();
+        await CalculateRiskValue();
+    }
+
+    // --- ENUM HANDLERS ---
+
+    private async Task OnElapsedTimeChanged(string? val)
+    {
+        if (Enum.TryParse<ElapsedTime>(val, out ElapsedTime result))
+        {
+            attackPath.ElapsedTime = result;
+            await CalculateAndSetAttackFeasibilityScore();
+            await CalculateRiskValue();
+            await OnFieldChanged.InvokeAsync();
+        }
+    }
+
+    private async Task OnExpertiseChanged(string? val)
+    {
+        if (Enum.TryParse<SpecialistExpertise>(val, out SpecialistExpertise result))
+        {
+            attackPath.SpecialistExpertise = result;
+            await CalculateAndSetAttackFeasibilityScore();
+            await CalculateRiskValue();
+            await OnFieldChanged.InvokeAsync();
+        }
+    }
+
+    private async Task OnKnowledgeChanged(string? val)
+    {
+        if (Enum.TryParse<KnowledgeOfComponents>(val, out KnowledgeOfComponents result))
+        {
+            attackPath.KnowledgeOfComponents = result;
+            await CalculateAndSetAttackFeasibilityScore();
+            await CalculateRiskValue();
+            await OnFieldChanged.InvokeAsync();
+        }
+    }
+
+    private async Task OnWindowChanged(string? val)
+    {
+        if (Enum.TryParse<WindowOfOpportunity>(val, out WindowOfOpportunity result))
+        {
+            attackPath.WindowOfOpportunity = result;
+            await CalculateAndSetAttackFeasibilityScore();
+            await CalculateRiskValue();
+            await OnFieldChanged.InvokeAsync();
+        }
+    }
+
+    private async Task OnEquipmentChanged(string? val)
+    {
+        if (Enum.TryParse<Equipment>(val, out Equipment result))
+        {
+            attackPath.Equipment = result;
+            await CalculateAndSetAttackFeasibilityScore();
+            await CalculateRiskValue();
+            await OnFieldChanged.InvokeAsync();
+        }
+    }
+
+    private async Task CalculateAndSetAttackFeasibilityScore()
+    {
+        ElapsedTime ET = attackPath.ElapsedTime;
+
+        int AttackFeasibilityScoreInt = (int)attackPath.ElapsedTime + (int)attackPath.SpecialistExpertise + (int)attackPath.KnowledgeOfComponents + (int)attackPath.WindowOfOpportunity + (int)attackPath.Equipment;
+
+        AttackFeasibilityRating rating;
+        if (10 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.Critical;
+        else if (14 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.High;
+        else if (20 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.Medium;
+        else if (24 > AttackFeasibilityScoreInt)
+            rating = AttackFeasibilityRating.Low;
+        else
+            rating = AttackFeasibilityRating.VeryLow;
+
+        attackPath.AttackFeasibilityRating = rating;
+
+        AttackFeasibilityScore = rating.ToString().Replace("VeryLow", "Very Low");
+    }
+
+    private async Task HandleFieldChanged()
+    {
+        if (OnFieldChanged.HasDelegate)
+        {
+            await OnFieldChanged.InvokeAsync();
+        }
+    }
+
+    private async Task AddNewStep()
+    {
+        attackPath.Steps.Add(new AttackStep { Text = string.Empty, AttackPath = attackPath });
+        await OnFieldChanged.InvokeAsync();
+    }
+
+    private async Task RemoveStep(AttackStep step)
+    {
+        attackPath.Steps.Remove(step);
+        await OnFieldChanged.InvokeAsync();
+    }
+
+    private async Task DragStart(AttackStep item)
+    {
+        draggedItem = item;
+    }
+
+    private async Task DropAbove(AttackStep targetItem)
+    {
+        if (draggedItem is null || draggedItem == targetItem)
+        {
+            hoverAbove = null;
+            hoverBelow = null;
+            return;
+        }
+
+        int oldIndex = attackPath.Steps.IndexOf(draggedItem);
+        int newIndex = attackPath.Steps.IndexOf(targetItem);
+
+        attackPath.Steps.RemoveAt(oldIndex);
+
+        if (oldIndex < newIndex)
+            newIndex--;
+
+        attackPath.Steps.Insert(newIndex, draggedItem);
+
+        hoverAbove = null;
+        hoverBelow = null;
+        draggedItem = null;
+
+        StateHasChanged();
+        await HandleFieldChanged();
+    }
+
+    private async Task DropBelow(AttackStep targetItem)
+    {
+        if (draggedItem is null || draggedItem == targetItem)
+        {
+            hoverAbove = null;
+            hoverBelow = null;
+            return;
+        }
+
+        int oldIndex = attackPath.Steps.IndexOf(draggedItem);
+        int targetIndex = attackPath.Steps.IndexOf(targetItem);
+
+        attackPath.Steps.RemoveAt(oldIndex);
+
+        if (oldIndex < targetIndex)
+            targetIndex--;
+
+        attackPath.Steps.Insert(targetIndex + 1, draggedItem);
+
+        hoverAbove = null;
+        hoverBelow = null;
+        draggedItem = null;
+
+        StateHasChanged();
+        await HandleFieldChanged();
+    }
+
+    private async Task OnDeleteClick()
+    {
+        await OnDelete.InvokeAsync(attackPath.Id);
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        showDeleteDialog = false;
+        await OnDelete.InvokeAsync(attackPath.Id);
+        StateHasChanged();
+    }
+
+    private async Task CalculateRiskValue()
+    {
+        APRiskValue = threatScenarioService.CalculateAttackPathRiskValue(attackPath, ImpactRating);
+    }
+
+    //Helper class for enum dropdowns
+    public class SelectOption<T>
+    {
+        public T Value { get; set; } = default!;
+        public string Text { get; set; } = string.Empty;
+    }
+}

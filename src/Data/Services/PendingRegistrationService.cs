@@ -8,6 +8,7 @@ public class PendingRegistrationService(
 {
     public async Task<string?> Create(string email)
     {
+        email = email.ToUpper();
         string id = RandomNumberGenerator.GetHexString(64, true);
 
         PendingRegistration pendingRegistration = new(){Email=email, Id=id};
@@ -20,6 +21,7 @@ public class PendingRegistrationService(
 
     private async Task<bool> Save(PendingRegistration entityToSave)
     {
+        entityToSave.Email = entityToSave.Email.ToUpper();
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
         try
@@ -37,6 +39,7 @@ public class PendingRegistrationService(
 
     public async Task<bool> Check(string email, string id, bool firstUser)
     {
+        email = email.ToUpper();
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
         if (firstUser)
@@ -73,6 +76,29 @@ public class PendingRegistrationService(
         using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
 
         return await context.PendingRegistrations.AnyAsync();
+    }
+
+    public async Task<string?> GetIdCountOne()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        int count = context.PendingRegistrations.Count();
+        if(count == 1)
+        {
+            List<PendingRegistration> pendingRegistrations = await GetAllPendingRegistrations();
+            return pendingRegistrations.First().Id;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> EmailUsed(string email)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        return await context.PendingRegistrations.AnyAsync(p => p.Email.Equals(email.ToUpper()));
     }
 
 }
