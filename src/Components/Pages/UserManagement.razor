@@ -337,10 +337,11 @@
         if(userWithForgottenPassword != null){
             await UserManager.RemovePasswordAsync(userWithForgottenPassword);
             string randomPassword = GenerateRandomPassword();
-            //Console.WriteLine(randomPassword);
             await UserManager.AddPasswordAsync(userWithForgottenPassword, randomPassword);
             await ApplicationUserService.ToggleResetPassword(id);
             await OpenDialogAdminInfoResetPassword(randomPassword);
+        } else {
+            Console.WriteLine("Failed to reset the password");
         }
     }
 
