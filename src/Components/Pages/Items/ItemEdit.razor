@@ -58,6 +58,7 @@
 }
 else
 {
+    <BackButton />
     <FluentStack Orientation="Orientation.Vertical" Width="100%">
         <div class="fullwidth">
             <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after=@(() =>
@@ -140,7 +141,7 @@ else
         <hr />
         <br />
 
-        <FluentAccordion ActiveId="@activeId" Class="fullwidth accordion">
+        <FluentAccordion ActiveId="@activeId" Class="fullwidth accordion" Style="margin-bottom: 60px;">  
             <FluentAccordionItem Expanded="true">
                 <HeadingTemplate>
                     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
@@ -175,6 +176,10 @@ else
             </FluentAccordionItem>
         </FluentAccordion>
     </FluentStack>
+
+    <br />
+    <br />
+    <br />
 }
 
 @code {
