@@ -21,27 +21,26 @@
     <PageTitle>User Management</PageTitle>
 
     <h1>User Management</h1>
-
-    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
-            HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-        <FluentSpacer />
-        <FluentButton OnClick="OpenDialogInviteUserLink" IconStart=@(new Icons.Regular.Size20.Add())>
-            New User
-        </FluentButton>
-    </FluentStack>
+    <p class="tiny-text">Manage users and pending registrations</p>
 
 @if(paginationPendingRegistrations is not null)
 {
-    <h4 class="margin-bottom-16">Pending Registrations</h4>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+        <h4 class="margin-bottom-16">Pending Registrations</h4>
+        <FluentSpacer />
+        <FluentButton Title="Generate registration link" OnClick="OpenDialogInviteUserLink" IconStart=@(new Icons.Regular.Size20.Add())>
+            New User
+        </FluentButton>
+    </FluentStack>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
     <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations" @key=pendingRegistrations>
-        <PropertyColumn Property="@(w => w.Email.ToLower())" Sortable="true" />
+        <PropertyColumn Title="Email" Property="@(w => w.Email.ToLower())" Sortable="true" />
         <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
             @GenerateRegistrationLink(pendingRow.Id)
         </TemplateColumn>
         <TemplateColumn Context="pendingRow">
-            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) Title="Copy Link"/>
-            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
+            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) Title="Copy link"/>
+            <FluentButton aria-label="Delete pending registration" Title="Delete registration link" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
         </TemplateColumn>
@@ -67,7 +66,7 @@
         <PropertyColumn Property="@(p => p.NameOfUser)" Title="Username" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
         <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
         <TemplateColumn Title="Projects" Context="userRow">
-            <FluentButton aria-label="Show projects of user" OnClick="@(() => OpenDialogShowProjects(userRow))" IconStart="@(new Icons.Regular.Size20.AppsList())">
+            <FluentButton Title="Show projects of user" OnClick="@(() => OpenDialogShowProjects(userRow))" IconStart="@(new Icons.Regular.Size20.AppsList())">
                 Show projects
             </FluentButton>
         </TemplateColumn>
@@ -78,10 +77,10 @@
             } else {
                 <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown()) Title="Add to Admin Group"/>
             }
-            <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" title="Reset Password of User" >
+            <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" Title="Reset Password of User" >
                 <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
             </FluentButton>
-            <FluentButton aria-label="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
+            <FluentButton Title="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
                 <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
             </FluentButton>
         </TemplateColumn>
