@@ -71,9 +71,6 @@
             {
                 Console.WriteLine("email already used");
                 errorMessage = "Email already used.";
-                @* MessageService.ShowMessageBar(errorMessage, MessageIntent.Error);
-                Console.WriteLine("after MessageService");
-                return; *@
                 ToastService.ShowError(errorMessage);
             }
             else
