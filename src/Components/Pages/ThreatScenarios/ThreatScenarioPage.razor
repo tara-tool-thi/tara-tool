@@ -15,30 +15,32 @@
     <h2>Threat Scenario</h2>
     <div class="info-help-container">
         <FluentIcon Value="@(new Icons.Regular.Size24.Info())" />
-        <div class="info-help-panel tooltip-content">
-            <p><strong>Threat Scenario</strong></p>
-            <p>Identify attack paths, assess attack feasibility, and determine the risk for each threat scenario.</p>
-            <p class="tooltip-section-heading">TS Description</p>
-            <p>Concrete threat at the asset level. Describe what an attacker tries to achieve and on which interface or component.</p>
-            <p class="tooltip-section-heading">Attack Path (AP)</p>
-            <p>Each TS can have multiple attack paths. Give each AP a meaningful name (replace "New unnamed attack path") and break it down into steps below.</p>
-            <p class="tooltip-section-heading">Steps</p>
-            <p>Sequence of concrete actions from entry to effect, without gaps. Example: <em>1) OBD port access · 2) read out firmware · 3) extract algorithms</em></p>
-            <p class="tooltip-section-heading">Feasibility Factors</p>
-            <p>Five dropdowns on the right side of each AP — they aggregate to the Attack Feasibility rating shown below.</p>
-            <ul>
-                <li><strong>Elapsed Time:</strong> ≤1 day … &gt;6 months</li>
-                <li><strong>Specialist Expertise:</strong> Layman … Multiple Experts</li>
-                <li><strong>Knowledge of Item:</strong> Public … Strictly Confidential</li>
-                <li><strong>Window of Opportunity:</strong> Unlimited … None</li>
-                <li><strong>Equipment:</strong> Standard … Multiple Bespoke</li>
-            </ul>
-            <p class="tooltip-section-heading">Risk Treatment Decision</p>
-            <p>Free-text field to document how the risk is handled: <strong>Avoid · Reduce · Share · Retain</strong>. Tick <em>Done</em> once the AP has been fully assessed.</p>
-            <p class="tooltip-section-heading">Attack Feasibility &amp; Risk Value</p>
-            <p>Both values are calculated automatically: Attack Feasibility aggregates the five factors above; Risk Value combines feasibility with the impact rating of the linked damage scenario (e.g. P1 … P5).</p>
-            <div class="tooltip-tip">
-                <strong>Tip:</strong> A TS can have multiple attack paths — the highest feasibility rating across all APs determines the TS's overall risk value.
+        <div class="info-help-panel">
+            <div class="tooltip-content">
+                <p><strong>Threat Scenario</strong></p>
+                <p>Identify attack paths, assess attack feasibility, and determine the risk for each threat scenario.</p>
+                <p class="tooltip-section-heading">TS Description</p>
+                <p>Concrete threat at the asset level. Describe what an attacker tries to achieve and on which interface or component.</p>
+                <p class="tooltip-section-heading">Attack Path (AP)</p>
+                <p>Each TS can have multiple attack paths. Give each AP a meaningful name (replace "New unnamed attack path") and break it down into steps below.</p>
+                <p class="tooltip-section-heading">Steps</p>
+                <p>Sequence of concrete actions from entry to effect, without gaps. Example: <em>1) OBD port access · 2) read out firmware · 3) extract algorithms</em></p>
+                <p class="tooltip-section-heading">Feasibility Factors</p>
+                <p>Five dropdowns on the right side of each AP — they aggregate to the Attack Feasibility rating shown below.</p>
+                <ul>
+                    <li><strong>Elapsed Time:</strong> ≤1 day … &gt;6 months</li>
+                    <li><strong>Specialist Expertise:</strong> Layman … Multiple Experts</li>
+                    <li><strong>Knowledge of Item:</strong> Public … Strictly Confidential</li>
+                    <li><strong>Window of Opportunity:</strong> Unlimited … None</li>
+                    <li><strong>Equipment:</strong> Standard … Multiple Bespoke</li>
+                </ul>
+                <p class="tooltip-section-heading">Risk Treatment Decision</p>
+                <p>Free-text field to document how the risk is handled: <strong>Avoid · Reduce · Share · Retain</strong>. Tick <em>Done</em> once the AP has been fully assessed.</p>
+                <p class="tooltip-section-heading">Attack Feasibility &amp; Risk Value</p>
+                <p>Both values are calculated automatically: Attack Feasibility aggregates the five factors above; Risk Value combines feasibility with the impact rating of the linked damage scenario (e.g. P1 … P5).</p>
+                <div class="tooltip-tip">
+                    <strong>Tip:</strong> A TS can have multiple attack paths — the highest feasibility rating across all APs determines the TS's overall risk value.
+                </div>
             </div>
         </div>
     </div>
