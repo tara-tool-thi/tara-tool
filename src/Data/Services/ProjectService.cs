@@ -421,6 +421,9 @@ public class ProjectService(
         ac.ReadAccess = read;
         ac.WriteAccess = write;
         ac.Manage = manage;
+
+        await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+
         await context.SaveChangesAsync();
         return true;
     }
@@ -446,6 +449,9 @@ public class ProjectService(
         }
 
         context.AccessControls.Remove(ac);
+
+        await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
+
         await context.SaveChangesAsync();
     }
 
@@ -512,6 +518,8 @@ public class ProjectService(
         newOwnerAc.Manage = true;
         newOwnerAc.WriteAccess = true;
         newOwnerAc.ReadAccess = true;
+
+        await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
 
         await context.SaveChangesAsync();
         return true;
@@ -635,6 +643,8 @@ public class ProjectService(
             Project = project,
             ApplicationUser = targetUser,
         };
+
+        project.DateLastChanged = DateTime.UtcNow;
 
         await context.AccessControls.AddAsync(accessControl);
         await context.SaveChangesAsync();
