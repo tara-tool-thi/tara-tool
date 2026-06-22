@@ -94,7 +94,7 @@
 
 
 @code {
-    private ClaimsPrincipal? user { get; set; }
+    private ClaimsPrincipal? currentUser { get; set; }
 
     private FluentDataGrid<PendingRegistration> gridPendingRegistrations = default!;
     private FluentDataGrid<ApplicationUser> gridUsers = default!;
@@ -183,8 +183,8 @@
 
 
     protected override async Task OnInitializedAsync() {
-        user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
-        if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
+        currentUser = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
+        if (currentUser is null || !currentUser.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
         if(users.Count == 0 || pendingRegistrations.Count == 0)
         {
             await OnRefreshUsers();
@@ -223,7 +223,7 @@
     {
         IDialogReference dialogInviteUser = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
         DialogResult? result = await dialogInviteUser.Result;
-        if (user is null || !user.IsInRole("Admin")) return;
+        if (currentUser is null || !currentUser.IsInRole("Admin")) return;
         string? email = (string?)result?.Data;
         if(email == null)
             return;
@@ -240,15 +240,15 @@
         IDialogReference dialogCopyLink = await this.DialogService.ShowDialogAsync<Dialogs.InviteLink>(GenerateRegistrationLink(id), new DialogParameters { });
     }
 
-    private async Task OpenDialogShowProjects(ApplicationUser user)
+    private async Task OpenDialogShowProjects(ApplicationUser userWithProjects)
     {
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ShowProjectsOfUser>(user, new DialogParameters {Width="50%", });
-        if (user is null || user.IsInRole("Admin") == false) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ShowProjectsOfUser>(userWithProjects, new DialogParameters {Width="50%", });
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
     }
 
     private async Task OpenDialogChangeRoleToAdmin(string id)    // Methods necessary for pending registration links
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
         if (userToChangeRole == null) return;
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToAdmin>(userToChangeRole, new DialogParameters { });
@@ -262,7 +262,7 @@
 
     private async Task OpenDialogChangeRoleToUser(string id)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
         if (userToChangeRole == null) return;
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToUser>(userToChangeRole, new DialogParameters { });
@@ -276,7 +276,7 @@
 
     private async Task OpenDialogDeleteUser(ApplicationUser userToDelete)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         if(IsCurrentUser(userToDelete.Id).Result != true)
         {
             IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
@@ -294,7 +294,7 @@
 
     private async Task OpenDialogResetPassword(ApplicationUser userWithForgottenPassword)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         if(IsCurrentUser(userWithForgottenPassword.Id).Result != true)
         {
             IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ResetPassword>(userWithForgottenPassword, new DialogParameters { });
@@ -311,7 +311,7 @@
     }
 
     private async Task OpenDialogAdminInfoResetPassword(string password){
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.AdminInfoResetPassword>(password, new DialogParameters { });
     }
 
@@ -319,7 +319,7 @@
     // Delete methods
     private async Task DeletePendingRegistration(string id)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         await PendingRegistrationService.Delete(id);
         ToastService.ShowSuccess("Deleted pending registration");
         await OnRefreshPendingRegistrations();
@@ -327,7 +327,7 @@
 
     private async Task DeleteUser(string id)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         ApplicationUser? userToDelete = await UserManager.FindByIdAsync(id);
         if(userToDelete != null)
         {
@@ -341,7 +341,7 @@
 
     private async Task ResetPassword (string id)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         ApplicationUser? userWithForgottenPassword = await UserManager.FindByIdAsync(id);
         if(userWithForgottenPassword != null){
             await UserManager.RemovePasswordAsync(userWithForgottenPassword);
@@ -358,13 +358,13 @@
     // Methods necessary for pending registration links
     private string GenerateRegistrationLink(string id)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return "";
         return NavigationManager.BaseUri + "Account/Register?id=" + id;
     }
 
     private async Task CopyLinkToClipboard(string? id)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         string? link = null;
         if(id != null)
         {
@@ -384,28 +384,28 @@
     // Methods for managing users
     private async Task<string> GetRolesForUser (ApplicationUser user)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return "";
         IList<string> roles = await UserManager.GetRolesAsync(user);
         return string.Join(", ", roles);
     }
 
     private async Task ChangeRoleToAdmin (ApplicationUser userToCangeRole)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         await UserManager.AddToRoleAsync(userToCangeRole, "Admin");
         return;
     }
 
     private async Task ChangeRoleToUser (ApplicationUser userToChangeRole)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
         await UserManager.RemoveFromRoleAsync(userToChangeRole, "Admin");
         return;
     }
 
     private async Task<bool> IsCurrentUser (string id)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
+        if (this.currentUser is null || this.currentUser.IsInRole("Admin") == false) return false;
         ApplicationUser? currentUser = SessionService.GetApplicationUserAsync().Result;
         if (currentUser == null)
             return false;
@@ -414,7 +414,6 @@
 
     public static string GenerateRandomPassword(PasswordOptions? opts = null)
     {
-        if (user is null || user.IsInRole("Admin") == false) return;
         if (opts == null) opts = new PasswordOptions()
         {
             RequiredLength = 8,
