@@ -393,6 +393,31 @@ h6 {
     margin-right: 12px;
 }
 
+.password-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-foreground-rest);
+    width: 20px;
+    height: 20px;
+    position: relative;
+}
+
+.password-toggle-btn span {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle-btn .eye-hide {
+    display: none;
+}
+
 .back-button-fixed {
     position: fixed;
     bottom: 50px;

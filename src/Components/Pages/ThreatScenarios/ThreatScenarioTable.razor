@@ -1,5 +1,4 @@
 @rendermode InteractiveServer
-@using tara_tool.Data.Enums
 @using tara_tool.Data.Tables
 @inject NavigationManager NavigationManager
 @inject ThreatScenarioService ThreatScenarioService
@@ -11,11 +10,6 @@
         <PropertyColumn Property="@(p => p.Id)" Sortable="true" Title="ID" />
         <PropertyColumn Property="@(p => p.Name)" Sortable="true" Title="Name" />
         <PropertyColumn Property="@(p => p.Description)" Sortable="true" Title="Description" />
-        <TemplateColumn Sortable="true" SortBy="@strideSort" Title="STRIDE">
-            <ChildContent>
-                <span>@context.StrideCategorie.ToString()</span>
-            </ChildContent>
-        </TemplateColumn>
         <TemplateColumn Sortable="true" SortBy="@riskValueSort" Title="Risk Value">
             <ChildContent>
                 <span>@context.RiskValue</span>
@@ -42,7 +36,6 @@
     private PaginationUI paginationUI { get; set; } = default!;
     private FluentDataGrid<ThreatScenario> grid = default!;
 
-    private GridSort<ThreatScenario> strideSort = GridSort<ThreatScenario>.ByAscending(e => e.StrideCategorie);
     private GridSort<ThreatScenario> riskValueSort = GridSort<ThreatScenario>.ByAscending(e => e.RiskValue);
     private GridSort<ThreatScenario> attackPathsCountSort = GridSort<ThreatScenario>.ByAscending(e => e.AttackPaths.Count());
 
