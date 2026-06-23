@@ -35,11 +35,17 @@
     </p>
 
     <FluentStack Orientation="Orientation.Vertical" VerticalGap=4>
-        <FluentStack VerticalAlignment="VerticalAlignment.Center">
-            <h4 class="margin-box">DS&nbsp;@damageScenario?.DamageScenarioNumber</h4>
-            <FluentTextArea Class="fullwidth" @bind-Value=@damageScenario!.Description
-                            @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />@*This warns of null deref, but null
-        check happens above…*@
+        <FluentStack Class="ts-header-bar" Style="display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: stretch; gap: 0;">
+            <FluentStack Class="ts-header-name" VerticalAlignment="VerticalAlignment.Center" HorizontalAlignment="HorizontalAlignment.Center">
+                <h4 class="margin-box">DS&nbsp;@damageScenario?.DamageScenarioNumber</h4>
+            </FluentStack>
+
+            <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
+                <span class="ts-header-description-field">
+                <FluentTextArea Class="ts-header-description-input" @bind-Value=@damageScenario!.Description
+                                @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />
+                </span>
+            </FluentStack>
         </FluentStack>
 
         <FluentAccordion Class="fullwidth">

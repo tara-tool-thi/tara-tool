@@ -672,3 +672,7 @@ hr {
     margin-top: 10px;
     padding: 10px;
 }
+
+fluent-radio.impact-radio::part(label), h5.impact-title {
+    color: black;
+}
