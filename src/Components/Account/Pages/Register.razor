@@ -26,19 +26,29 @@
             <h3>Create a new Account</h3>
             <hr />
             <FluentStack Orientation="Orientation.Vertical">
-                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Autofocus="true" Style="width: 100%" />
+                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Autofocus="true" Class="fullwidth" />
                 <FluentValidationMessage For="() => Input.Email" class="text-danger" />
 
                 <FluentTextField Name="Input.Username" @bind-Value="Input.Username" Label="Username" Placeholder="John Doe" Required="true" Style="width: 100%;"></FluentTextField>
                 <FluentValidationMessage For="() => Input.Username" class="text-danger" />
 
-                <FluentTextField Name="Input.Organization" @bind-Value="Input.Organization" Label="Organization" Placeholder="University of Applied Sciences Ingolstadt" Required="false" Style="width: 100%;"></FluentTextField>
+                <FluentTextField Name="Input.Organization" @bind-Value="Input.Organization" Label="Organization" Placeholder="University of Applied Sciences Ingolstadt" Required="false" Class="fullwidth"></FluentTextField>
                 <FluentValidationMessage For="() => Input.Organization" class="text-danger" />
 
-                <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password" Label="Password" Placeholder="*******" Required="true" Style="width: 100%" />
+                <FluentTextField TextFieldType="TextFieldType.Password" Name="Input.Password" @bind-Value="Input.Password" Label="Password" Placeholder="*******" Required="true" Class="fullwidth">
+                    <button slot="end" type="button" class="password-toggle-btn" onclick="togglePasswordVisibility(this)">
+                        <span class="eye-show"><FluentIcon Value="new Icons.Regular.Size20.Eye()" /></span>
+                        <span class="eye-hide"><FluentIcon Value="new Icons.Regular.Size20.EyeOff()" /></span>
+                    </button>
+                </FluentTextField>
                 <FluentValidationMessage For="() => Input.Password" class="text-danger" />
 
-                <FluentTextField type="password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword" Label="Confirm Password" Placeholder="*******" Required="true" Style="width: 100%" />
+                <FluentTextField TextFieldType="TextFieldType.Password" Name="Input.ConfirmPassword" @bind-Value="Input.ConfirmPassword" Label="Confirm Password" Placeholder="*******" Required="true" Class="fullwidth">
+                    <button slot="end" type="button" class="password-toggle-btn" onclick="togglePasswordVisibility(this)">
+                        <span class="eye-show"><FluentIcon Value="new Icons.Regular.Size20.Eye()" /></span>
+                        <span class="eye-hide"><FluentIcon Value="new Icons.Regular.Size20.EyeOff()" /></span>
+                    </button>
+                </FluentTextField>
                 <FluentValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
 
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width: 100%" >Register</FluentButton>

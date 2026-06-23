@@ -397,6 +397,39 @@ h6 {
     color: red;
 }
 
+.password-toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-foreground-rest);
+    width: 20px;
+    height: 20px;
+    position: relative;
+}
+
+.password-toggle-btn span {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle-btn .eye-hide {
+    display: none;
+}
+
+.back-button-fixed {
+    position: fixed;
+    bottom: 50px;
+    left: 26px;
+    z-index: 100;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1.5px var(--neutral-stroke-strong-rest);
+}
 .project-name-input {
     width: 280px;
 }

@@ -91,6 +91,37 @@
 <PaginationUI @ref=@paginationUsers />
 
 
+@* Dialog that contains the invite link *@
+<div>
+    <FluentDialog title="Invite link" @ref="copyLink" @bind-Hidden="@inviteLinkHidden" @ondialogdismiss=CloseCopyLink>
+        <FluentDialogHeader ShowDismiss="true">
+            <FluentStack VerticalAlignment="VerticalAlignment.Center">
+                <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
+                <h3>Invite link</h3>
+            </FluentStack>
+        </FluentDialogHeader>
+        <FluentDialogBody>
+            <FluentStack Orientation="Orientation.Vertical">
+                <p class="margin-bottom-0">This is the register link for the new user:</p>
+                <FluentStack Orientation="Orientation.Horizontal">
+                    <FluentTextField ReadOnly="true" @bind-Value="link" class="fullwidth"></FluentTextField>
+                    <FluentButton OnClick="@(() => CopyLinkToClipboard(null))" IconStart=@(new Icons.Regular.Size20.Copy())/>
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" class="margin-top-10">
+                    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" Class="min-width-24"/>
+                    <p class="margin-bottom-0">Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+                </FluentStack>
+            </FluentStack>
+        </FluentDialogBody>
+        <FluentDialogFooter>
+            <FluentSpacer/>
+            <FluentButton OnClick=CloseCopyLink Appearance="Appearance.Accent">OK</FluentButton>
+        </FluentDialogFooter>
+    </FluentDialog>
+</div>
+
+<BackButton />
+
 </AuthorizeView>
 
 
