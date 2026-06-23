@@ -70,19 +70,21 @@
                 Show projects
             </FluentButton>
         </TemplateColumn>
-        <TemplateColumn Context="userRow" Align="@Align.End">
-            @if (IsCurrentUser(userRow.Id).Result){
-            } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
-                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract()) Title="Remove from Admin Group" />
-            } else {
-                <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown()) Title="Add to Admin Group"/>
-            }
-            <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" Title="Reset Password of User" >
-                <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
-            </FluentButton>
-            <FluentButton Title="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
-                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
-            </FluentButton>
+        <TemplateColumn Context="userRow">
+            <FluentStack HorizontalAlignment="HorizontalAlignment.Right" Orientation="Orientation.Horizontal" class="maxwidth-100">
+                @if (IsCurrentUser(userRow.Id).Result) {
+                } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
+                    <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract()) Title="Remove from Admin Group" />
+                } else {
+                    <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown()) Title="Add to Admin Group"/>
+                }
+                <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" Title="Reset Password of User" >
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
+                </FluentButton>
+                <FluentButton Title="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+                </FluentButton>
+            </FluentStack>
         </TemplateColumn>
      </FluentDataGrid>
 }

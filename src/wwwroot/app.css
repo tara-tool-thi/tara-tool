@@ -393,10 +393,10 @@ h6 {
     margin-right: 12px;
 }
 
-<<<<<<< HEAD
 .text-danger {
     color: red;
-=======
+}
+
 .project-name-input {
     width: 280px;
 }
@@ -674,5 +674,8 @@ hr {
 .overview-accordion-spacing {
     margin-top: 10px;
     padding: 10px;
->>>>>>> main
+}
+
+.maxwidth-100 {
+    max-width: 100px;
 }
