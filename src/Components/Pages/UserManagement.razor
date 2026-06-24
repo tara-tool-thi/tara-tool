@@ -34,15 +34,17 @@
     </FluentStack>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
     <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations" @key=pendingRegistrations>
-        <PropertyColumn Title="Email" Property="@(w => w.Email.ToLower())" Sortable="true" />
+        <PropertyColumn Title="Email" Property="@(w => w.Email.ToLower())" Sortable="true" class="min-width-max-content" />
         <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
             @GenerateRegistrationLink(pendingRow.Id)
         </TemplateColumn>
         <TemplateColumn Context="pendingRow">
-            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) Title="Copy link"/>
-            <FluentButton aria-label="Delete pending registration" Title="Delete registration link" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
-            </FluentButton>
+            <FluentStack Orientation="Orientation.Horizontal" class="maxwidth-100">
+                <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) Title="Copy link"/>
+                <FluentButton aria-label="Delete pending registration" Title="Delete registration link" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+                </FluentButton>
+            </FluentStack>
         </TemplateColumn>
     </FluentDataGrid>
 }
@@ -52,41 +54,45 @@
 {
     <h4 class="margin-bottom-16">Registered Users</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
-    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" ShowHover="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
-        <TemplateColumn Title="Email" SortBy="@emailSort" Context="userRow">
-            <FluentStack Style="align-items: center">
-                <ChildContent>
-                    @userRow.Email @if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
-                        <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" Class="icon-spacing" Style="height: 1hl; width: 1hl; scale: 1.2;" Id="IsAdminIcon" />
-                        <FluentTooltip Anchor="IsAdminIcon" Position="TooltipPosition.End">Admin</FluentTooltip>
-                    }
-                </ChildContent>
-            </FluentStack>
-        </TemplateColumn>
-        <PropertyColumn Property="@(p => p.NameOfUser)" Title="Username" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
-        <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
-        <TemplateColumn Title="Projects" Context="userRow">
-            <FluentButton Title="Show projects of user" OnClick="@(() => OpenDialogShowProjects(userRow))" IconStart="@(new Icons.Regular.Size20.AppsList())">
-                Show projects
-            </FluentButton>
-        </TemplateColumn>
-        <TemplateColumn Context="userRow">
-            <FluentStack HorizontalAlignment="HorizontalAlignment.Right" Orientation="Orientation.Horizontal" class="maxwidth-100">
-                @if (IsCurrentUser(userRow.Id).Result) {
-                } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
-                    <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract()) Title="Remove from Admin Group" />
-                } else {
-                    <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown()) Title="Add to Admin Group"/>
-                }
-                <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" Title="Reset Password of User" >
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
-                </FluentButton>
-                <FluentButton Title="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
-                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
-                </FluentButton>
-            </FluentStack>
-        </TemplateColumn>
-     </FluentDataGrid>
+    <div class="table-users-1">
+        <div class="table-users-2">
+            <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" Style="min-width: max-content" ShowHover="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+                <TemplateColumn Title="Email" SortBy="@emailSort" Context="userRow">
+                    <FluentStack Style="align-items: center">
+                        <ChildContent>
+                            @userRow.Email @if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" Class="icon-spacing" Style="height: 1hl; width: 1hl; scale: 1.2;" Id="IsAdminIcon" />
+                                <FluentTooltip Anchor="IsAdminIcon" Position="TooltipPosition.End">Admin</FluentTooltip>
+                            }
+                        </ChildContent>
+                    </FluentStack>
+                </TemplateColumn>
+                <PropertyColumn Property="@(p => p.NameOfUser)" Title="Username" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
+                <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
+                <TemplateColumn Title="Projects" Context="userRow">
+                    <FluentButton Title="Show projects of user" OnClick="@(() => OpenDialogShowProjects(userRow))" IconStart="@(new Icons.Regular.Size20.AppsList())">
+                        Show projects
+                    </FluentButton>
+                </TemplateColumn>
+                <TemplateColumn Context="userRow">
+                    <FluentStack HorizontalAlignment="HorizontalAlignment.Right" Orientation="Orientation.Horizontal" class="maxwidth-100">
+                        @if (IsCurrentUser(userRow.Id).Result) {
+                        } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
+                            <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract()) Title="Remove from Admin Group" />
+                        } else {
+                            <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown()) Title="Add to Admin Group"/>
+                        }
+                        <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" Title="Reset Password of User" >
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
+                        </FluentButton>
+                        <FluentButton Title="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+                        </FluentButton>
+                    </FluentStack>
+                </TemplateColumn>
+            </FluentDataGrid>
+        </div>
+    </div>
 }
 <PaginationUI @ref=@paginationUsers />
 

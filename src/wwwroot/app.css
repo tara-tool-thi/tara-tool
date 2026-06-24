@@ -294,6 +294,16 @@ table th {
     border-bottom: calc(var(--stroke-width) * 1px) solid var(--neutral-stroke-divider-rest);
 }
 
+.table-users-1 {
+    display: table;
+    table-layout: fixed;
+    width: 100%;
+}
+
+.table-users-2 {
+    overflow-x: auto;
+}
+
 .tiny-text {
     color: var(--neutral-fill-strong-hover);
     font-size: 1em;
@@ -305,6 +315,10 @@ table th {
 
 .fullwidth {
     width: 100%;
+}
+
+.min-width-max-content {
+    min-width: max-content;
 }
 
 .margin-bottom-16 {
