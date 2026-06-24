@@ -3,11 +3,11 @@
 
 <FluentCard Width="min-content" MinimalStyle=true Style=@style>
     <FluentRadioGroup @bind-Value=@Value @bind-Value:after=@(async () => await ValueChanged.InvokeAsync(Value))>
-            <h5>@CategoryName</h5>
-            <FluentRadio Value="ImpactRatingValue.Severe">Severe</FluentRadio>
-            <FluentRadio Value="ImpactRatingValue.Major">Major</FluentRadio>
-            <FluentRadio Value="ImpactRatingValue.Moderate">Moderate</FluentRadio>
-            <FluentRadio Value="ImpactRatingValue.Negligible">Negligible</FluentRadio>
+            <h5 Class="impact-title">@CategoryName</h5>
+            <FluentRadio Value="ImpactRatingValue.Severe"     Class="impact-radio">Severe</FluentRadio>
+            <FluentRadio Value="ImpactRatingValue.Major"      Class="impact-radio">Major</FluentRadio>
+            <FluentRadio Value="ImpactRatingValue.Moderate"   Class="impact-radio">Moderate</FluentRadio>
+            <FluentRadio Value="ImpactRatingValue.Negligible" Class="impact-radio">Negligible</FluentRadio>
     </FluentRadioGroup>
 </FluentCard>
 

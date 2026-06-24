@@ -35,7 +35,7 @@
                     {
                         <FluentDataGrid TGridItem="AttackStep" Items="@attackPath.Steps.AsQueryable()" MultiLine="true" Style="min-height: 50px; overflow: visible;">
                             <ChildContent>
-                                <TemplateColumn Title="#" Width="40px">
+                                <TemplateColumn Title="#" Width="50px">
                                     <br />
                                     @(attackPath.Steps.IndexOf(context) + 1)
                                 </TemplateColumn>

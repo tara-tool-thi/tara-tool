@@ -622,6 +622,7 @@ h6 {
     border: 1px solid #8a8886;
     width: 100%;
     margin-bottom: 4px;
+    border-radius: 4px;
 }
 
 .ts-header-name {
@@ -718,6 +719,8 @@ hr {
     padding: 10px;
 }
 
+fluent-radio.impact-radio::part(label), h5.impact-title {
+    color: black;
 .info-help-container {
     position: relative;
     display: inline-flex;
