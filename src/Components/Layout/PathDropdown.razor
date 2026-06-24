@@ -232,8 +232,6 @@
         if (!long.TryParse(id, out long idLong)) return;
 
 
-        // 👇 Guard: don't re-run if we're already showing this entity
-
         //Listen to States -> Set Data -> reset otherwise
         if (urlPrefix == "Project")
         {
