@@ -15,13 +15,21 @@
 
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
         <h1>Asset Nr: @asset.AssetNumber</h1>
-        <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
-        <FluentTooltip Anchor="iso-help-button">
-            <p><strong>ISO/SAE 21434 - Asset</strong></p>
-            <p>The following aspects must be defined:</p>
-            <ul>
-                <li><strong>Placeholder:</strong> Placeholder</li>
-            </ul>
+        <FluentIcon Id="asset-info-icon" Value="@(new Icons.Regular.Size24.Info())" />
+        <FluentTooltip Anchor="asset-info-icon" MaxWidth="450px" >
+            <p><strong>Asset</strong></p>
+            <p>Describes a single valuable object from the item's asset list and collects all related damage scenarios.</p>
+            <p class="tooltip-section-heading">Asset Name</p>
+            <p>Short, unique name for the asset, consistent with the entry in the item's asset list. Example: <em>"Firmware of BMS"</em></p>
+            <p class="tooltip-section-heading">Select Group</p>
+            <p>Assign the asset to a group (e.g. BMS, CMC, Gateway). Groups help with filtering and reusing similar damage scenarios across multiple assets. Use the <strong>+</strong> button next to the dropdown to create a new group.</p>
+            <p class="tooltip-section-heading">Description</p>
+            <p>State the function of the asset and which CIA properties are security-critical. Example: <em>"Controls charging/discharging, cell balancing, safety shutdowns — Integrity is safety-critical."</em></p>
+            <p class="tooltip-section-heading">Damage Scenarios</p>
+            <p>Negative consequences if the asset's CIA properties are violated. Each row shows Nr., Description, the CIA checkboxes (Confidentiality, Integrity, Availability), and the four impact ratings (Safety, Financial, Operational, Privacy).</p>
+            <div class="tooltip-tip">
+                <strong>Tip:</strong> Typically 3–6 damage scenarios per asset — at least one per relevant CIA aspect, otherwise blind spots remain.
+            </div>
         </FluentTooltip>
         <GenericAutosave TEntity="Asset" Entity="@asset" SaveService="@AssetService" @ref=@genericAutosave />
         <FluentSpacer />

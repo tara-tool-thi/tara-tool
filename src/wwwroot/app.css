@@ -704,3 +704,54 @@ hr {
     margin-top: 10px;
     padding: 10px;
 }
+
+.info-help-container {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.info-help-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 460px;
+    max-height: 80vh;
+    overflow-y: auto;
+    z-index: 10000;
+    background-color: var(--neutral-layer-floating);
+    border: 1px solid var(--neutral-stroke-rest);
+    border-radius: var(--control-corner-radius, 4px);
+    padding: 12px 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+    color: var(--neutral-foreground-rest);
+}
+
+.info-help-container:hover .info-help-panel {
+    display: block;
+}
+
+.tooltip-tip {
+    border: 1px solid var(--accent-fill-rest);
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: var(--accent-foreground-rest);
+}
+
+.tooltip-section-heading {
+    margin: 8px 0 2px 0;
+    font-weight: 600;
+}
+
+.tooltip-content p,
+.tooltip-content ul,
+.tooltip-content li {
+    margin: 4px 0;
+}
+
+.tooltip-content ul {
+    padding-left: 16px;
+}
