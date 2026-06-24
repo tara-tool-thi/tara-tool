@@ -77,10 +77,11 @@
                              HorizontalAlignment="HorizontalAlignment.SpaceBetween">
                     <span><strong>Damage Scenarios</strong></span>
                     <FluentSpacer />
-                    <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateDamageScenario"
-                                  Appearance="Appearance.Accent" Title="New Damage Scenario">
-                        New Damage Scenario
-                    </FluentButton>
+                    <div @onclick:stopPropagation="true">
+                        <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateDamageScenario">
+                            New Damage Scenario
+                        </FluentButton>
+                    </div>
                 </FluentStack>
             </HeadingTemplate>
             <ChildContent>
