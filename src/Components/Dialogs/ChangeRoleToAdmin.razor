@@ -1,0 +1,42 @@
+@using System.ComponentModel.DataAnnotations
+@implements IDialogContentComponent<ApplicationUser>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <h3>Change Role of User</h3>
+</FluentDialogHeader>
+
+
+<FluentDialogBody>
+        Do you want to grant admin priviledges to the user <strong>@Content.Email</strong>?
+</FluentDialogBody>
+
+
+<FluentDialogFooter>
+        <FluentStack Orientation="Orientation.Horizontal" Width="100%" Style="gap: 0.5rem;">
+            <FluentSpacer />
+            <FluentButton Appearance="Appearance.Outline" OnClick="@CancelDialog">Cancel
+            </FluentButton>
+            <FluentButton Appearance="Appearance.Accent" OnClick="@CloseDialog">Save
+            </FluentButton>
+        </FluentStack>
+ </FluentDialogFooter>
+
+
+@code
+{
+    [Parameter]
+    public ApplicationUser Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private async Task CloseDialog()
+    {
+        await Dialog!.CloseAsync();
+    }
+    private async Task CancelDialog()
+    {
+        await Dialog!.CancelAsync();
+    }
+}

@@ -108,12 +108,12 @@ foreach (string role in roles.Where(
     await roleManager.CreateAsync(new IdentityRole(role));
 
 string asciiArt = """
-        ________  _________    ____  ___    
-       /_  __/ / / /  _/   |  / __ \/   |   
-        / / / /_/ // // /| | / /_/ / /| |   
-       / / / __  // // ___ |/ _, _/ ___ |   
-      /_/ /_/ /_/___/_/  |_/_/ |_/_/  |_|   
-                                      
+        ________  _________    ____  ___
+       /_  __/ / / /  _/   |  / __ \/   |
+        / / / /_/ // // /| | / /_/ / /| |
+       / / / __  // // ___ |/ _, _/ ___ |
+      /_/ /_/ /_/___/_/  |_/_/ |_/_/  |_|
+
 
     """;
 
@@ -121,10 +121,18 @@ UserManager<ApplicationUser> UserManager = scope.ServiceProvider.GetRequiredServ
 PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
 string link = "";
 bool newId = !UserManager.Users.Any() && !await PendingRegistrationService.Any();
+string? id = null;
 if(newId)
 {
-    string? id = await PendingRegistrationService.Create("");
-    link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
+    id = await PendingRegistrationService.Create("");
+}
+else
+{
+    id = await PendingRegistrationService.GetIdCountOne();
+    if (!UserManager.Users.Any() && id != null)
+    {
+        newId = true;
+    }
 }
 
 Console.WriteLine(asciiArt);
@@ -132,6 +140,7 @@ Console.WriteLine("Welcome to THIARA :)");
 
 if(newId)
 {
+    link = builder.Configuration[WebHostDefaults.ServerUrlsKey] + "/Account/Register?id=" + id;
     Console.WriteLine("Use the following link to register the first user: ");
     Console.WriteLine(link);
 }

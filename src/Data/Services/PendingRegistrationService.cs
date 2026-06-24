@@ -78,4 +78,27 @@ public class PendingRegistrationService(
         return await context.PendingRegistrations.AnyAsync();
     }
 
+    public async Task<string?> GetIdCountOne()
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        int count = context.PendingRegistrations.Count();
+        if(count == 1)
+        {
+            List<PendingRegistration> pendingRegistrations = await GetAllPendingRegistrations();
+            return pendingRegistrations.First().Id;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> EmailUsed(string email)
+    {
+        using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+        return await context.PendingRegistrations.AnyAsync(p => p.Email.Equals(email.ToUpper()));
+    }
+
 }

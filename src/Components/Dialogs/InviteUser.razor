@@ -1,7 +1,15 @@
 @using System.ComponentModel.DataAnnotations
-@using tara_tool.Components.Account.Pages.Manage
+@using tara_tool.Components.Account.Shared
+
 @implements IDialogContentComponent<string>
+
 @rendermode InteractiveServer
+
+@inject PendingRegistrationService PendingRegistrationService
+@inject UserManager<ApplicationUser> UserManager
+@inject IMessageService MessageService
+@inject IToastService ToastService
+
 
 <FluentDialogHeader ShowDismiss="true">
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
@@ -14,6 +22,8 @@
 <EditForm Model="Input" method="post" FormName="addUser" OnValidSubmit="submit">
     <FluentDialogBody>
         <DataAnnotationsValidator />
+        <div class="center">
+        </div>
         <FluentTextField Name="Input.Email" TextFieldType="TextFieldType.Email" @bind-Value=Input.Email Placeholder="example@thi.de" Label="Enter email address:" Required="true" Immediate=true Autofocus="true"/>
         <FluentValidationMessage For="() => Input.Email" class="text-danger" />
         <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Class="margin-top-10">
@@ -36,6 +46,8 @@
     [CascadingParameter]
     public FluentDialog? Dialog { get; set; }
 
+    private string? errorMessage;
+
     private InputModel Input { get; set; } = new InputModel();
 
     public class InputModel
@@ -54,8 +66,17 @@
     {
         if (!string.IsNullOrWhiteSpace(Input.Email))
         {
-            Content = Input.Email;
-            await Dialog!.CloseAsync(Content);
+            if (await PendingRegistrationService.EmailUsed(Input.Email) || (await UserManager.FindByEmailAsync(Input.Email) != null))
+            {
+                Console.WriteLine("email already used");
+                errorMessage = "Email already used.";
+                ToastService.ShowError(errorMessage);
+            }
+            else
+            {
+                Content = Input.Email;
+                await Dialog!.CloseAsync(Content);
+            }
         }
     }
 

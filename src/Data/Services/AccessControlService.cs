@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using tara_tool.Data.Tables;
 namespace tara_tool.Data.Services;
 
 
-public class AccessControlService(IDbContextFactory<ApplicationDbContext> contextFactory, SessionService sessionService)
+public class AccessControlService(IDbContextFactory<ApplicationDbContext> contextFactory, SessionService sessionService, UserManager<ApplicationUser> userManager)
 {
     public async Task<bool> CheckUserAccessRightsRead(long ProjectId)
     {
@@ -55,5 +56,44 @@ public class AccessControlService(IDbContextFactory<ApplicationDbContext> contex
 
         await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
         return await context.AccessControls.AnyAsync(a => a.Project.Id == ProjectId && a.ApplicationUser.Id == user.Id && a.Owner == true);
+    }
+
+    ///<summary>
+    /// Deletes all AccessControl items for <paramref name="user"/>.
+    ///</summary>
+    public async Task<bool> DeleteUserAccessesAsync(ApplicationUser user)
+    {
+        try
+        {
+            await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+
+            context.AccessControls.RemoveRange(context.AccessControls
+                                                  .Include(a => a.ApplicationUser)
+                                                  .Where(a => a.ApplicationUser.Id == user.Id));
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteOrphansAsync()
+    {
+        try
+        {
+            await using ApplicationDbContext context = await contextFactory.CreateDbContextAsync();
+            List<string> userIds = [..userManager.Users.Select(u => u.Id)];
+            context.AccessControls.RemoveRange(
+                context.AccessControls.Include(a => a.ApplicationUser).Where(a => !userIds.Contains(a.ApplicationUser.Id))
+            );
+            await context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }

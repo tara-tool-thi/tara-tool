@@ -1,0 +1,64 @@
+@implements IDialogContentComponent<string>
+@rendermode InteractiveServer
+
+@inject IToastService ToastService
+@inject IJSRuntime JSRuntime
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
+        <h3>Invite link</h3>
+    </FluentStack>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical">
+        <p class="margin-bottom-0">This is the register link for the new user:</p>
+        <FluentStack Orientation="Orientation.Horizontal">
+            <FluentTextField ReadOnly="true" @bind-Value="Content" class="fullwidth"></FluentTextField>
+            <FluentButton OnClick="@(() => CopyLinkToClipboard(Content))" IconStart=@(new Icons.Regular.Size20.Copy())/>
+        </FluentStack>
+        <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" class="margin-top-10">
+            <FluentIcon Value="@(new Icons.Regular.Size24.Info())" Class="min-width-24"/>
+            <p class="margin-bottom-0">Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
+        </FluentStack>
+    </FluentStack>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentSpacer/>
+    <FluentButton OnClick=CloseDialog Appearance="Appearance.Accent">OK</FluentButton>
+</FluentDialogFooter>
+
+
+@code
+{
+    [Parameter]
+    public string Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private async Task CloseDialog()
+    {
+        await Dialog!.CloseAsync();
+    }
+    private async Task CancelDialog()
+    {
+        await Dialog!.CancelAsync();
+    }
+
+    private async Task CopyLinkToClipboard(string? link)
+    {
+        if(link != null)
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", link);
+            ToastService.ShowSuccess("Link copied to clipboard");
+        }
+        else
+        {
+            ToastService.ShowError("Failed to copy link");
+        }
+    }
+
+}

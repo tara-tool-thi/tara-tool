@@ -1,0 +1,130 @@
+@using Microsoft.CodeAnalysis.CSharp.Syntax
+@using Microsoft.CodeAnalysis.Differencing
+@implements IDialogContentComponent<ApplicationUser>
+@rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> UserManager
+@inject ProjectService ProjectService
+@inject SessionService SessionService
+@inject IToastService ToastService
+
+<FluentDialogHeader ShowDismiss="true">
+    <h3>Projects of user @Content.Email</h3>
+</FluentDialogHeader>
+
+<EditForm EditContext="editContext" FormName="transferProjects" OnValidSubmit="@CloseDialog">
+<FluentDialogBody>
+    @if (paginationProjects is not null)
+    {
+    <FluentDataGrid Items="Projects.AsQueryable()" TGridItem="Project" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" Pagination="@paginationProjects.pagination" @ref="gridProjects">
+        <PropertyColumn Property="@(p => p.ProjectName)" Sortable="true" />
+        <PropertyColumn Property="@(p => p.DateLastChanged)" Sortable="true" />
+        <TemplateColumn Title="Transfer ownership" Context="projectRow">
+            <FluentStack Orientation="Orientation.Horizontal">
+                @if (pendingTransfers[projectRow.Id].transfer == true)
+                {
+                    <FluentButton Appearance="Appearance.Accent" OnClick="@(() => toggleTransfer(projectRow.Id))" IconStart="@(new Icons.Regular.Size20.PersonSwap())" />
+                    <FluentTextField Name=Input Value="@pendingTransfers[projectRow.Id].email" ValueChanged="@(e => updateEmail(projectRow.Id, e))" Placeholder="Recipient email" Autofocus="true" TextFieldType="TextFieldType.Email" />
+                }
+                else
+                {
+                    <FluentButton IconStart="@(new Icons.Regular.Size20.PersonSwap())" OnClick="@(() => toggleTransfer(projectRow.Id))" />
+                }
+            </FluentStack>
+        </TemplateColumn>
+    </FluentDataGrid>
+    }
+    <PaginationUI @ref=@paginationProjects />
+</FluentDialogBody>
+
+<FluentDialogFooter>
+        <DataAnnotationsValidator />
+    <FluentButton Appearance="Appearance.Outline" OnClick="@CancelDialog">Cancel</FluentButton>
+    <FluentButton Appearance="Appearance.Accent" Type="ButtonType.Submit">Save</FluentButton>
+</FluentDialogFooter>
+</EditForm>
+
+
+@code
+{
+    [Parameter]
+    public ApplicationUser Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private List<Project> Projects = new();
+    private FluentDataGrid<Project> gridProjects = default!;
+    private PaginationUI paginationProjects { get; set; } = default!;
+
+    private Dictionary<long, (bool transfer, string? email)> pendingTransfers = new();
+
+    // necessary for EditForm (don't ask...)
+    private EditContext editContext = new(new());
+
+    protected override async Task OnInitializedAsync()
+    {
+        string? email = SessionService.GetApplicationUserAsync().Result!.Email;
+        Projects = await ProjectService.GetOwnedProjectsAsync(Content);
+        foreach(Project project in Projects)
+        {
+            pendingTransfers.Add(project.Id, (false, email));
+        }
+    }
+
+    private async Task updateEmail(long id, string? email)
+    {
+        pendingTransfers[id] = (pendingTransfers[id].transfer, email);
+    }
+
+    private async Task toggleTransfer(long id)
+    {
+        if(pendingTransfers[id].transfer)
+        {
+            pendingTransfers[id] = (false, pendingTransfers[id].email);
+        }
+        else
+        {
+            pendingTransfers[id] = (true, pendingTransfers[id].email);
+        }
+    }
+
+    private async Task CloseDialog()
+    {
+        bool allSuccessfull = true;
+        foreach(Project project in Projects)
+        {
+            if(pendingTransfers[project.Id].transfer)
+            {
+                ApplicationUser? transferRecipient = null;
+                if(pendingTransfers[project.Id].email != null)
+                {
+                transferRecipient = await UserManager.FindByEmailAsync(pendingTransfers[project.Id].email!);
+                Console.WriteLine($"transferRecipient: {transferRecipient}");
+                }
+                if(transferRecipient != null)
+                {
+                    if (!await ProjectService.TransferOwnershipAsync(project.Id, transferRecipient, true))
+                    {
+                        ToastService.ShowError($"Failed to transfer project {project.ProjectName}");
+                        allSuccessfull = false;
+                    }
+                }
+                else
+                {
+                    ToastService.ShowError($"Failed to transfer project {project.ProjectName}");
+                    allSuccessfull = false;
+                }
+            }
+        }
+        if(allSuccessfull)
+        {
+            ToastService.ShowSuccess("All projects transfered successfully.");
+        }
+        await Dialog!.CloseAsync();
+    }
+    private async Task CancelDialog()
+    {
+        await Dialog!.CancelAsync();
+    }
+}

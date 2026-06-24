@@ -63,10 +63,8 @@
             <FluentTextArea @bind-Value="@TSDescription"
                         Immediate="true"
                         ImmediateDelay="500"
-                        Class="ts-header-description-input"
-                        Style="width: 100%;"
-                        Placeholder="Add description here..."
-                        @ref=textarea
+                        Class="fullwidth"
+                        placeholder="Add description here..."
                         @bind-Value:after="@NotifyTSAutosave" />
         </span>
     </FluentStack>
@@ -147,6 +145,10 @@
 
 @if (thisTS is not null)
 {
+    <br />
+    <br />
+    <hr class="hr-invisible"/>
+
     <BackButton />
 }
 
