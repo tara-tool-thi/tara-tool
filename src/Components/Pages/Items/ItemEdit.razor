@@ -15,14 +15,30 @@
 
 <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
              HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-    <h1>Item Definition</h1>
-    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
-    <FluentTooltip Anchor="iso-help-button">
-        <p><strong>ISO/SAE 21434 - Item Definition</strong></p>
-        <p>The following aspects must be defined:</p>
-        <ul>
-            <li><strong>Placeholder:</strong> Placeholder</li>
-        </ul>
+    <h2>Item Definition</h2>
+    <FluentIcon Id="item-edit-info-icon" Value="@(new Icons.Regular.Size24.Info())" />
+    <FluentTooltip Anchor="item-edit-info-icon" MaxWidth="450px">
+        <p><strong>Item Definition</strong></p>
+        <p>Define the system under analysis, its functions, and its operational environment. This page sets the scope of the entire TARA.</p>
+        <p class="tooltip-section-heading">Item Name</p>
+        <p>Unique, project-wide consistent short name — without a version number. Example: <em>"EV Battery Pack"</em></p>
+        <p class="tooltip-section-heading">Item Description</p>
+        <p>Short summary of what the item is and what it does. Example: <em>"HV storage with BMS/CMC, CAN connection to gateway."</em></p>
+        <p class="tooltip-section-heading">Technical Sketch</p>
+        <p>Upload a block diagram, architecture sketch, or photo of the item via drag &amp; drop or the browse link. Helps reviewers understand the boundary at a glance.</p>
+        <p class="tooltip-section-heading">Item Boundary</p>
+        <p>Define what is in scope and what is explicitly out of scope. Everything outside the boundary is treated as the environment.</p>
+        <p class="tooltip-section-heading">Item Functions</p>
+        <p>List the functions the item provides to the vehicle or user. Each function should later be traceable to assets and damage scenarios.</p>
+        <p class="tooltip-section-heading">Preliminary Architecture</p>
+        <p>Components, interfaces, and data flows inside the item. Names used here should match the assets defined below.</p>
+        <p class="tooltip-section-heading">Operational Environment</p>
+        <p>Conditions and assumptions under which the item operates (temperature range, network access, user roles, …). Assumptions made explicit here determine which threats are relevant.</p>
+        <p class="tooltip-section-heading">Assets</p>
+        <p>List of all valuable objects with cybersecurity relevance. Each row shows Nr., Name, Description, Group, and the number of Damage Scenarios already attached.</p>
+        <div class="tooltip-tip">
+            <strong>Tip:</strong> Each asset will later have its own TARA branch — better to define one asset too many than one too few.
+        </div>
     </FluentTooltip>
     @if (itemDefinition != null && itemDefinition.Project != null && itemDefinition.Project.IsArchived)
     {

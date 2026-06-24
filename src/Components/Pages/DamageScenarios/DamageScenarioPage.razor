@@ -16,13 +16,28 @@
 
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
         <h1>Damage Scenario</h1>
-        <FluentIcon Value="@(new Icons.Regular.Size24.Info())" id="iso-help-button" />
-        <FluentTooltip Anchor="iso-help-button">
-            <p><strong>ISO/SAE 21434 - Asset</strong></p>
-            <p>The following aspects must be defined:</p>
+        <FluentIcon Id="damage-scenario-info-icon" Value="@(new Icons.Regular.Size24.Info())" />
+        <FluentTooltip Anchor="damage-scenario-info-icon" MaxWidth="450px">
+            <p><strong>Damage Scenario</strong></p>
+            <p>Map threat scenarios to damage scenarios, assess the impact of each damage scenario, and define their CIA properties.</p>
+            <p class="tooltip-section-heading">DS Description</p>
+            <p>Concrete negative consequence for stakeholders when a security goal of the asset is violated. Phrase it from the stakeholder's point of view (driver, OEM, third parties).</p>
+            <p class="tooltip-section-heading">Affected Security Goals</p>
+            <p>Tick which protection goals are violated: Confidentiality, Integrity, Availability. Multi-select possible — safety-related damages usually go through Integrity or Availability, IP loss through Confidentiality.</p>
+            <p class="tooltip-section-heading">Impact Rating</p>
+            <p>Rate the damage in four categories — the highest one determines the overall rating.</p>
             <ul>
-                <li><strong>Placeholder:</strong> Placeholder</li>
+                <li><strong>Safety:</strong> Severe = life-threatening</li>
+                <li><strong>Financial:</strong> € thresholds defined per project</li>
+                <li><strong>Operational:</strong> Severe = vehicle unusable</li>
+                <li><strong>Privacy:</strong> GDPR relevance</li>
             </ul>
+            <p>Each category has four radio options: Severe / Major / Moderate / Negligible.</p>
+            <p class="tooltip-section-heading">Threat Scenarios</p>
+            <p>Threats that can trigger this DS. Each row shows ID, Name, Description, STRIDE category, Risk Value, and number of Attack Paths.</p>
+            <div class="tooltip-tip">
+                <strong>Tip:</strong> Link asset → violated CIA → damage in one sentence. The highest impact rating across S/F/O/P drives the final risk value of the connected threat scenarios.
+            </div>
         </FluentTooltip>
         <GenericAutosave TEntity="DamageScenario" Entity="@damageScenario" SaveService="@DamageScenarioService"
                          @ref=@genericAutosave />
