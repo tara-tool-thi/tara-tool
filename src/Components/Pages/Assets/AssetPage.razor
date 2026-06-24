@@ -154,7 +154,7 @@
         DialogResult result = await dialog.Result;
         if (result is { Cancelled: true } or { Data: null }) return;
 
-        var goals = (CreateDamageScenarioDialog.Goals)result.Data;
+        CreateDamageScenarioDialog.Goals goals = (CreateDamageScenarioDialog.Goals)result.Data;
         DamageScenario? ds = await DamageScenarioService.CreateNew(
             IdAsset, goals.Confidentiality, goals.Integrity, goals.Availability);
         if (ds is not null)
