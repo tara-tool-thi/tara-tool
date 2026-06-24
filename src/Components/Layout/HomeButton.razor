@@ -1,9 +1,8 @@
+@using tara_tool.Data.Icons
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
-<FluentButton OnClick=@(() => NavigationManager.NavigateTo("/")) Class="path-dropdown-select">
-    <span style="display: inline-flex; align-items: center; gap: 6px;">
-        <img src="/favicon.svg" alt="" style="height: 22px; width: auto;" />
-        <b style="margin-top: 5px;">THIARA</b>
-    </span>
+<FluentButton OnClick=@(() => NavigationManager.NavigateTo("/")) Class="path-dropdown-select" >
+    <FluentIcon Value="@(new ThiaraIcons.Logo())" Slot="start" Style="height: 28px;"/>
+    <b>THIARA</b>
 </FluentButton>
 
