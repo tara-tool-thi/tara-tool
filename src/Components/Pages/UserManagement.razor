@@ -3,6 +3,7 @@
 @using System.Net.Mail
 @using tara_tool.Components.Account.Pages.Manage
 @using tara_tool.Data.Services
+@using System.Security.Cryptography
 @rendermode InteractiveServer
 
 @attribute [Authorize]
@@ -424,53 +425,42 @@
         return (currentUser.Id == id);
     }
 
-    public static string GenerateRandomPassword(PasswordOptions? opts = null)
+    public static string GenerateRandomPassword ()
     {
-        if (opts == null) opts = new PasswordOptions()
+
+        const string upper = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
+        const string lower = "abcdefghijkmnopqrstuvwxyz";
+        const string digits = "0123456789";
+        const string nonAlphanumeric = "!@$?_-#*";
+
+        // at least one of each
+        List<char> chars = new List<char>()
         {
-            RequiredLength = 8,
-            RequiredUniqueChars = 4,
-            RequireDigit = true,
-            RequireLowercase = true,
-            RequireNonAlphanumeric = true,
-            RequireUppercase = true
+            upper[System.Security.Cryptography.RandomNumberGenerator.GetInt32(upper.Length)],
+            lower[System.Security.Cryptography.RandomNumberGenerator.GetInt32(lower.Length)],
+            digits[System.Security.Cryptography.RandomNumberGenerator.GetInt32(digits.Length)],
+            nonAlphanumeric[System.Security.Cryptography.RandomNumberGenerator.GetInt32(nonAlphanumeric.Length)]
         };
 
-        string[] randomChars = new[] {
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",    // uppercase
-            "abcdefghijklmnopqrstuvwxyz",    // lowercase
-            "0123456789",                   // digits
-            "!@$?_-"                        // non-alphanumeric
-        };
+        string allChars = upper + lower + digits + nonAlphanumeric;
 
-        Random rand = new Random(Environment.TickCount);
-        List<char> chars = new List<char>();
-
-        if (opts.RequireUppercase)
-            chars.Insert(rand.Next(0, chars.Count),
-                randomChars[0][rand.Next(0, randomChars[0].Length)]);
-
-        if (opts.RequireLowercase)
-            chars.Insert(rand.Next(0, chars.Count),
-                randomChars[1][rand.Next(0, randomChars[1].Length)]);
-
-        if (opts.RequireDigit)
-            chars.Insert(rand.Next(0, chars.Count),
-                randomChars[2][rand.Next(0, randomChars[2].Length)]);
-
-        if (opts.RequireNonAlphanumeric)
-            chars.Insert(rand.Next(0, chars.Count),
-                randomChars[3][rand.Next(0, randomChars[3].Length)]);
-
-        for (int i = chars.Count; i < opts.RequiredLength
-            || chars.Distinct().Count() < opts.RequiredUniqueChars; i++)
+        while (chars.Count < 12)
         {
-            string rcs = randomChars[rand.Next(0, randomChars.Length)];
-            chars.Insert(rand.Next(0, chars.Count),
-                rcs[rand.Next(0, rcs.Length)]);
+            chars.Add(allChars[System.Security.Cryptography.RandomNumberGenerator.GetInt32(allChars.Length)]);
         }
 
-        return new string(chars.ToArray());
+        char[] array = chars.ToArray();
+        int i = array.Length;
+        while (i > 1)
+        {
+            i--;
+            int k = System.Security.Cryptography.RandomNumberGenerator.GetInt32(i+1); // upper bound exclusive
+            char val = array[k];
+            array[k] = array[i];
+            array[i] = val;
+        }
+        return new string(array);
+
     }
 
 }
