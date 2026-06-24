@@ -6,25 +6,22 @@ THIARA is an open-source **TARA tool** (Threat Analysis and Risk Assessment) for
 
 ### Docker (recommended)
 
-```bash
-docker pull <your-registry>/thiara:latest
-
-mkdir -p /srv/thiara/data
-
-docker run -d \
-  --name thiara \
-  --restart unless-stopped \
-  -p 8080:8080 \
-  -v /srv/thiara/data:/app/Data \
-  -e ASPNETCORE_ENVIRONMENT=Production \
-  -e ConnectionStrings__DefaultConnection="DataSource=/app/Data/app.db;Cache=Shared" \
-  <your-registry>/thiara:latest
-```
-
-Or with `docker-compose.yml` (set `thiara_IMAGE` in your environment):
+A minimal compose file is as follows:
 
 ```bash
-docker compose up -d
+services:
+  tara:
+    image: ghcr.io/tara-tool-thi/thiara:latest
+    restart: always
+    volumes:
+      - ./tara:/app/Data
+      - ./imprint.html:/app/wwwroot/imprint.html
+    ports:
+      - 8080:8080
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__DefaultConnection=DataSource=/app/Data/app.db;Cache=Shared
 ```
 
 On first start with an empty database, a one-time registration URL is printed to stdout. Open it to create the initial admin account. All subsequent users are invited through the in-app flow.
@@ -41,7 +38,7 @@ dotnet restore src/thiara.csproj
 dotnet run --project src/thiara.csproj
 ```
 
-The app starts on `https://localhost:5001` (or the port shown in the terminal). Migrations are applied automatically on startup.
+The app starts locally (see link in terminal). Migrations are applied automatically on startup.
 
 ## Overview
 
