@@ -41,18 +41,20 @@
                         </FluentTextField>
                         <FluentValidationMessage For="() => Input.Password" class="text-danger" />
                     </div>
-                    <br />
-                    <p>Forgot your password?
-                        <FluentAnchor Href="Account/ForgotPassword" Appearance="Appearance.Hypertext">Reset Password</FluentAnchor>
-                    </p>
+                    <FluentStack HorizontalAlignment="HorizontalAlignment.Left">
+                        Forgot your password?
+                        <br />
+                        Ask your admin to reset it.
+                    </FluentStack>
+                    <br>
                     <FluentStack>
                         <FluentCheckbox Name="Input.RememberMe" @bind-Value="Input.RememberMe" Label="Remember me" />
                     </FluentStack>
                     <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" class="fullwidth">Login</FluentButton>
                     <FluentStack HorizontalAlignment="HorizontalAlignment.Left">
-                    Don't have an account yet?
-                    <br>
-                    Ask your admin for an invitation.
+                        Don't have an account yet?
+                        <br>
+                        Ask your admin for an invitation.
                     </FluentStack>
                 </FluentStack>
             </FluentStack>
