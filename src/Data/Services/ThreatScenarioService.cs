@@ -325,7 +325,8 @@ public class ThreatScenarioService(
                 return GridItemsProviderResult.From(new List<ThreatScenario>(), 0);
             }
 
-            IQueryable<ThreatScenario> query = context.ThreatScenarios.AsNoTracking();
+            IQueryable<ThreatScenario> query = context.ThreatScenarios.AsNoTracking()
+                .Include(ts => ts.AttackPaths);
 
             if (include != null)
                 query = include(query);

@@ -34,7 +34,7 @@
             </ul>
             <p>Each category has four radio options: Severe / Major / Moderate / Negligible.</p>
             <p class="tooltip-section-heading">Threat Scenarios</p>
-            <p>Threats that can trigger this DS. Each row shows ID, Name, Description, STRIDE category, Risk Value, and number of Attack Paths.</p>
+            <p>Threats that can trigger this DS. Each row shows ID, Name, Description, Risk Value, and number of Attack Paths.</p>
             <div class="tooltip-tip">
                 <strong>Tip:</strong> Link asset → violated CIA → damage in one sentence. The highest impact rating across S/F/O/P drives the final risk value of the connected threat scenarios.
             </div>
@@ -61,26 +61,29 @@
         </FluentStack>
 
         <FluentAccordion Class="fullwidth">
-            <FluentAccordionItem Expanded=true>
-                <HeadingTemplate>
-                    <strong>Affected Security Goals</strong>
-                </HeadingTemplate>
-                <ChildContent>
+            <FluentAccordionItem Expanded=true Heading="Affected Security Goals">
+                <FluentStack Orientation="Orientation.Vertical" VerticalGap=4>
                     <FluentStack>
-                        <FluentCheckbox @bind-Value=@damageScenario.ConfidentialityAffected
-                                        @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        <FluentCheckbox Value="@damageScenario.ConfidentialityAffected"
+                                        ValueChanged="@(v => SetSecurityGoal(val => damageScenario!.ConfidentialityAffected = val, v))">
                             Confidentiality
                         </FluentCheckbox>
-                        <FluentCheckbox @bind-Value=@damageScenario.IntegrityAffected
-                                        @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        <FluentCheckbox Value="@damageScenario.IntegrityAffected"
+                                        ValueChanged="@(v => SetSecurityGoal(val => damageScenario!.IntegrityAffected = val, v))">
                             Integrity
                         </FluentCheckbox>
-                        <FluentCheckbox @bind-Value=@damageScenario.AvailabilityAffected
-                                        @bind-Value:after=@genericAutosave.ScheduleAutoSave>
+                        <FluentCheckbox Value="@damageScenario.AvailabilityAffected"
+                                        ValueChanged="@(v => SetSecurityGoal(val => damageScenario!.AvailabilityAffected = val, v))">
                             Availability
                         </FluentCheckbox>
                     </FluentStack>
-                </ChildContent>
+                    @if (securityGoalError)
+                    {
+                        <FluentMessageBar Intent="MessageIntent.Error" AllowDismiss="false">
+                            At least one security goal must remain selected.
+                        </FluentMessageBar>
+                    }
+                </FluentStack>
             </FluentAccordionItem>
             <FluentAccordionItem Expanded=true>
                 <HeadingTemplate>
@@ -183,6 +186,21 @@
         long? assetId = damageScenario?.Asset?.Id;
         if (damageScenario is not null) await DamageScenarioService.Delete(damageScenario);
         if (assetId is not null) NavigationManager.NavigateTo($"/Asset/{assetId}");
+    }
+
+    private bool securityGoalError = false;
+
+    private void SetSecurityGoal(Action<bool> setter, bool newValue)
+    {
+        setter(newValue);
+        if (!damageScenario!.ConfidentialityAffected && !damageScenario.IntegrityAffected && !damageScenario.AvailabilityAffected)
+        {
+            setter(!newValue); 
+            securityGoalError = true;
+            return;
+        }
+        securityGoalError = false;
+        genericAutosave.ScheduleAutoSave();
     }
 
     private async Task CreateThreatScenario()

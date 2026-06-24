@@ -1,0 +1,41 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+@implements IDialogContentComponent<CreateDamageScenarioDialog.Goals>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center">
+        <FluentIcon Value="@(new Icons.Regular.Size28.ShieldCheckmark())" />
+        <h3>New Damage Scenario</h3>
+    </FluentStack>
+</FluentDialogHeader>
+<FluentDialogBody>
+    <p>Select at least one affected security goal:</p>
+    <FluentStack>
+        <FluentCheckbox @bind-Value="Content.Confidentiality">Confidentiality</FluentCheckbox>
+        <FluentCheckbox @bind-Value="Content.Integrity">Integrity</FluentCheckbox>
+        <FluentCheckbox @bind-Value="Content.Availability">Availability</FluentCheckbox>
+    </FluentStack>
+</FluentDialogBody>
+<FluentDialogFooter>
+    <FluentButton Appearance="Appearance.Accent" Disabled="@(!IsValid)"
+                  OnClick="@(() => { if (Dialog is not null) Dialog.CloseAsync(Content); })">
+        Create
+    </FluentButton>
+</FluentDialogFooter>
+
+@code {
+    [Parameter]
+    public required Goals Content { get; set; }
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private bool IsValid => Content.Confidentiality || Content.Integrity || Content.Availability;
+
+    public class Goals
+    {
+        public bool Confidentiality { get; set; }
+        public bool Integrity { get; set; }
+        public bool Availability { get; set; }
+    }
+}

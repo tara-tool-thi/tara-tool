@@ -13,7 +13,7 @@ public class DamageScenarioService(
     : IDataService<DamageScenario>
 {
 
-    public async Task<DamageScenario?> CreateNew(long idAsset)
+    public async Task<DamageScenario?> CreateNew(long idAsset, bool confidentiality = false, bool integrity = false, bool availability = false)
     {
         using ApplicationDbContext context =
             await contextFactory.CreateDbContextAsync();
@@ -48,7 +48,10 @@ public class DamageScenarioService(
                                       .Max() +
                                   1
                             : 1,
-                Asset = asset
+                Asset = asset,
+                ConfidentialityAffected = confidentiality,
+                IntegrityAffected = integrity,
+                AvailabilityAffected = availability,
             };
 
         damageScenario.Asset.ItemDefinition.Project.DateLastChanged = DateTime.UtcNow;
