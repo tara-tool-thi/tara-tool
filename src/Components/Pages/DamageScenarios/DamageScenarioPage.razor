@@ -61,7 +61,7 @@
             <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
                 <span class="ts-header-description-field">
                 <FluentTextArea Class="fullwidth" @bind-Value=@damageScenario!.Description
-                                @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />
+                                @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true @ref=textarea />
                 </span>
             </FluentStack>
         </FluentStack>
@@ -206,7 +206,7 @@
         setter(newValue);
         if (!damageScenario!.ConfidentialityAffected && !damageScenario.IntegrityAffected && !damageScenario.AvailabilityAffected)
         {
-            setter(!newValue); 
+            setter(!newValue);
             securityGoalError = true;
             return;
         }
