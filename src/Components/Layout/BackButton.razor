@@ -1,0 +1,10 @@
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+
+<div class="back-button-fixed">
+    <FluentButton Appearance="Appearance.Neutral"
+                  IconStart="@(new Icons.Regular.Size20.ArrowLeft())"
+                  OnClick="@(() => JS.InvokeVoidAsync("history.back"))">
+        Back
+    </FluentButton>
+</div>

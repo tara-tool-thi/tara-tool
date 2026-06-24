@@ -126,6 +126,11 @@
 
 <div style="height: 1rem;"></div>
 
+@if (thisTS is not null)
+{
+    <BackButton />
+}
+
 @code {
     [Parameter]
     public long TSId { get; set; }

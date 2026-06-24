@@ -60,6 +60,7 @@
 }
 else
 {
+    <BackButton />
     <FluentStack Orientation="Orientation.Vertical" Width="100%">
         <div class="fullwidth">
             <FluentTextField @bind-Value="itemDefinition!.ItemName" @bind-Value:after=@(() => genericAutosave.ScheduleAutoSave()) Label="Item Name" Placeholder="Enter item name..." Class="fullwidth"
@@ -152,7 +153,11 @@ else
             </FluentAccordionItem>
         </FluentAccordion>
 
-        <FluentAccordion ActiveId="@activeId" Class="fullwidth accordion">
+        <br />
+        <hr />
+        <br />
+
+        <FluentAccordion ActiveId="@activeId" Class="fullwidth accordion" Style="margin-bottom: 60px;">  
             <FluentAccordionItem Expanded="true">
                 <HeadingTemplate>
                     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
@@ -186,6 +191,10 @@ else
             </FluentAccordionItem>
         </FluentAccordion>
     </FluentStack>
+
+    <br />
+    <br />
+    <br />
 }
 
 @code {
