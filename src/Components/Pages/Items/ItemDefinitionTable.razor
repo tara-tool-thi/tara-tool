@@ -7,7 +7,7 @@
     <FluentDataGrid TGridItem="ItemDefinition" ItemsProvider=@FilteredItemsProvider Pagination="@paginationUI.pagination" AutoFit=true
                     OnRowClick="onRowClick" RowStyle="@(item => "cursor: pointer;")" Style="max-height:50%; overflow:auto;" @ref="grid">
         <TemplateColumn Sortable="true" SortBy="@itemNumberSort" Title="Nr.">
-            @($"{context.ItemNumber}.")
+            @($"{context.ItemNumber}")
         </TemplateColumn>
         <PropertyColumn Property="@(p => p.ItemName)" Sortable="true" Title="Item Name" />
         <PropertyColumn Property="@(p => p.ItemFunction)" Sortable="true" Title="Item Function" />
