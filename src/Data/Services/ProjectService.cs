@@ -214,6 +214,16 @@ public class ProjectService(
         return await projectQuery.ToListAsync();
     }
 
+    public async Task<List<Project>> GetOwnedProjectsAsync(ApplicationUser user)
+    {
+        using ApplicationDbContext context =
+            await _contextFactory.CreateDbContextAsync();
+
+        if (user is null) return [];
+
+        return [.. context.Projects.Where(p => p.Access.Any(a => a.Owner == true && a.ApplicationUser.Id == user.Id))];
+    }
+
     public async Task<Project?> CreateNewProjectAsync(string name)
     {
         ApplicationUser? user = await sessionService.GetApplicationUserAsync();
@@ -498,29 +508,124 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
 
-        AccessControl? currentOwnerAc =
+        AccessControl? currentOwnerAccessControl =
             await context.AccessControls.FirstOrDefaultAsync(
                 a => a.Project.Id == projectId &&
                      a.ApplicationUser.Id == currentUser.Id && a.Owner);
 
-        AccessControl? newOwnerAc =
+        AccessControl? newOwnerAccessControl =
             await context.AccessControls.FirstOrDefaultAsync(
                 a => a.Id == newOwnerAccessControlId && a.Project.Id == projectId &&
                      !a.Owner);
 
-        if (currentOwnerAc == null || newOwnerAc == null)
+        if (currentOwnerAccessControl == null || newOwnerAccessControl == null)
         {
             return false;
         }
 
-        currentOwnerAc.Owner = false;
-        newOwnerAc.Owner = true;
-        newOwnerAc.Manage = true;
-        newOwnerAc.WriteAccess = true;
-        newOwnerAc.ReadAccess = true;
+        currentOwnerAccessControl.Owner = false;
+        newOwnerAccessControl.Owner = true;
+        newOwnerAccessControl.Manage = true;
+        newOwnerAccessControl.WriteAccess = true;
+        newOwnerAccessControl.ReadAccess = true;
 
         await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
 
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    /// <summary>
+    /// This overload does not require the new owner to already be a member of the project.
+    /// It exists in order to allow a user to transfer their projects to someone else when deleting their account.
+    /// </summary>
+    public async Task<bool> TransferOwnershipAsync
+    (
+        long projectId, ApplicationUser newOwner, bool omitOwnershipVerification = false
+    )
+    {
+        if (newOwner is null) return false;
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        ApplicationUser? currentUser = await sessionService.GetApplicationUserAsync();
+        if (currentUser is null) return false;
+
+        Project? project = context.Projects.Include(p => p.Access).ThenInclude(a => a.ApplicationUser).First(p => p.Id == projectId);
+        if (project is null) return false;
+
+        if (!project.Access.Any(a => a.ApplicationUser.Id == currentUser.Id && a.Owner) && !omitOwnershipVerification) return false;
+
+        AccessControl? currentOwnerAccessControl = await context.AccessControls.Include(a => a.ApplicationUser)
+            .FirstOrDefaultAsync(a => a.Project.Id == projectId && a.Owner);
+        if (currentOwnerAccessControl is null) return false;
+
+        AccessControl? newOwnerAccessControl = await context.AccessControls.Include(a => a.ApplicationUser)
+            .FirstOrDefaultAsync(a => a.ApplicationUser.Id == newOwner.Id && a.Project.Id == projectId && !a.Owner);
+
+        currentOwnerAccessControl.Owner = false;
+
+        if (newOwnerAccessControl is null)
+        {
+            ApplicationUser? applicationUser = await context.Users.FirstOrDefaultAsync(u => u.Id == newOwner.Id);
+            if (applicationUser is null) return false;
+            newOwnerAccessControl = new AccessControl
+            {
+                Project = project,
+                ApplicationUser = applicationUser,
+                Owner = true,
+                Manage = true,
+                WriteAccess = true,
+                ReadAccess = true
+            };
+            context.AccessControls.Add(newOwnerAccessControl);
+        }
+        else
+        {
+            newOwnerAccessControl.Owner = true;
+            newOwnerAccessControl.Manage = true;
+            newOwnerAccessControl.WriteAccess = true;
+            newOwnerAccessControl.ReadAccess = true;
+        }
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> TransferOrphanedProjectAsync(long projectId, ApplicationUser newOwner)
+    {
+        if (newOwner is null) return false;
+
+        using ApplicationDbContext context = await _contextFactory.CreateDbContextAsync();
+
+        Project? project = context.Projects.Include(p => p.Access).ThenInclude(a => a.ApplicationUser).First(p => p.Id == projectId);
+
+        if (project.Access.Any(a => a.Owner))
+            return false;
+
+        AccessControl? newOwnerAccessControl = await context.AccessControls.Include(a => a.ApplicationUser)
+            .FirstOrDefaultAsync(a => a.ApplicationUser.Id == newOwner.Id && a.Project.Id == projectId && !a.Owner);
+
+        if (newOwnerAccessControl is null)
+        {
+            context.Users.Attach(newOwner);
+            newOwnerAccessControl = new AccessControl
+            {
+                Project = project,
+                ApplicationUser = newOwner,
+                Owner = true,
+                Manage = true,
+                WriteAccess = true,
+                ReadAccess = true
+            };
+            context.AccessControls.Add(newOwnerAccessControl);
+        }
+        else
+        {
+            newOwnerAccessControl.Owner = true;
+            newOwnerAccessControl.Manage = true;
+            newOwnerAccessControl.WriteAccess = true;
+            newOwnerAccessControl.ReadAccess = true;
+        }
         await context.SaveChangesAsync();
         return true;
     }

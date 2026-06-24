@@ -59,7 +59,7 @@
 
             <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
                 <span class="ts-header-description-field">
-                <FluentTextArea Class="ts-header-description-input" @bind-Value=@damageScenario!.Description
+                <FluentTextArea Class="fullwidth" @bind-Value=@damageScenario!.Description
                                 @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />
                 </span>
             </FluentStack>
@@ -122,6 +122,11 @@
             </FluentAccordionItem>
         </FluentAccordion>
     </FluentStack>
+
+    <br />
+    <br />
+    <hr class="hr-invisible"/>
+
 }
 
 

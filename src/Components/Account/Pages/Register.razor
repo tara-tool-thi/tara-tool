@@ -27,7 +27,7 @@
             <h3>Create a new Account</h3>
             <hr />
             <FluentStack Orientation="Orientation.Vertical">
-                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Class="fullwidth" />
+                <FluentTextField Name="Input.Email" @bind-Value="Input.Email" AutoComplete="email" Required="true" Placeholder="example@thi.de" Label="Email" Autofocus="true" Class="fullwidth" />
                 <FluentValidationMessage For="() => Input.Email" class="text-danger" />
 
                 <FluentTextField Name="Input.Username" @bind-Value="Input.Username" Label="Username" Placeholder="John Doe" Required="true" Style="width: 100%;"></FluentTextField>
@@ -96,10 +96,17 @@
 
         bool initialUser = !UserManager.Users.Any();
 
+        List<PendingRegistration> pendingRegistrations = await PendingRegistration.GetAllPendingRegistrations();
+
         if (!await PendingRegistration.Check(Input.Email, @id, initialUser))
         {
             errorMessage = "Error: The email address does not match the invitation. Please use the email address the invitation was sent to.";
             return;
+        }
+
+        if (initialUser && (PendingRegistration.GetIdCountOne() != null))
+        {
+            await UserManager.AddToRoleAsync(user, "Admin");
         }
 
         if (await ApplicationUserService.CheckEmailDuplicate(Input.Email))

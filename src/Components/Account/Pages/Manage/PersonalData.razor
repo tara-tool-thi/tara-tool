@@ -1,4 +1,4 @@
-﻿@page "/Account/Manage/PersonalData"
+@page "/Account/Manage/PersonalData"
 
 @using Microsoft.AspNetCore.Identity
 @using tara_tool.Data
@@ -10,15 +10,12 @@
 <PageTitle>Personal Data</PageTitle>
 
 <StatusMessage />
-<h3>Personal Data</h3>
+<h3>Download or delete account data</h3>
 
 <FluentGrid>
     <FluentGridItem xs="12" sm="6">
         <p>Your account contains personal data that you have given us. This page allows you to download or delete that
             data.</p>
-            <p>
-                <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
-            </p>
             <form action="Account/Manage/DownloadPersonalData" method="post">
                 <AntiforgeryToken />
                 <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent" Style="width:20%;">Download
@@ -27,6 +24,9 @@
 
             <hr />
 
+            <p class="text-danger">
+                <strong>Deleting this data will permanently remove your account, <u>including projects you own</u> and you will not be able to recover them.</strong>
+            </p>
             <p style="margin-top: 10px; text-align: end;">
                 <FluentAnchor Href="Account/Manage/DeletePersonalData" Appearance="Appearance.Hypertext">Delete your
                     personal data</FluentAnchor>

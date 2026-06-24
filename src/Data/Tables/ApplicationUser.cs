@@ -10,5 +10,6 @@ public class ApplicationUser : IdentityUser
     public string? NameOfUser { get; set; }
     public byte[]? ProfilePicture { get; set; }
     public virtual ICollection<AccessControl> Projects { get; set; } = [];
+    public bool ResetPassword {get; set; } = false;
 
 }

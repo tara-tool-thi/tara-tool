@@ -232,13 +232,6 @@
         if (!long.TryParse(id, out long idLong)) return;
 
 
-        // 👇 Guard: don't re-run if we're already showing this entity
-        if (urlPrefix == "Project" && selectedProject?.Id == idLong) return;
-        if (urlPrefix == "Item" && selectedItem?.Id == idLong) return;
-        if (urlPrefix == "Asset" && selectedAsset?.Id == idLong) return;
-        if (urlPrefix == "DamageScenario" && selectedDamageScenario?.Id == idLong) return;
-        if (urlPrefix == "ThreatScenario" && selectedThreatScenario?.Id == idLong) return;
-
         //Listen to States -> Set Data -> reset otherwise
         if (urlPrefix == "Project")
         {

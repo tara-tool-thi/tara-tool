@@ -27,15 +27,8 @@
             </div>
         }
 
-        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator />
-            <FluentValidationSummary class="text-danger" role="alert" />
             <FluentTextField Value="@username" Placeholder="Please choose your username." Disabled Label="Username"
                              Appearance=FluentInputAppearance.Filled Style="width: 100%" />
-            <p style="margin-top: 10px; text-align: end;">
-                <FluentButton Type="ButtonType.Submit" Appearance="Appearance.Accent">Save</FluentButton>
-            </p>
-        </EditForm>
     </FluentGridItem>
 </FluentGrid>
 
@@ -46,13 +39,8 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new();
-
         user = await UserManager.GetUserAsync(HttpContext.User);
         if (user is null)
         {
@@ -74,6 +62,4 @@
         await SignInManager.RefreshSignInAsync(user);
         RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
     }
-
-    private sealed class InputModel { }
 }

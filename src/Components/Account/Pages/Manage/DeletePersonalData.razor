@@ -1,4 +1,4 @@
-﻿@page "/Account/Manage/DeletePersonalData"
+@page "/Account/Manage/DeletePersonalData"
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -6,6 +6,7 @@
 @using tara_tool.Data.Tables
 
 @inject UserManager<ApplicationUser> UserManager
+@inject SessionService SessionService
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<DeletePersonalData> Logger
@@ -20,12 +21,20 @@
     <FluentGridItem sm="6">
         <div class="alert alert-warning" role="alert">
 
-            <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
+            <strong class="text-danger" >Deleting this data will permanently remove your account, <u>including projects you own</u> and you will not be able to recover them.</strong>
 
         </div>
         <EditForm Model="Input" FormName="delete-user" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <FluentValidationSummary class="text-danger" role="alert" />
+
+            <p>
+                If you’d like to transfer your projects to another user without deleting them, please enter their email address below.
+            </p>
+
+            <FluentTextField type="email" Name="Input.TransferEmail" @bind-Value="Input.TransferEmail" Required="false"
+                             Placeholder="Transfer projects to…" Label="Project transfer recipient" Class="fullwidth"/>
+
             @if (requirePassword)
             {
                 <FluentTextField type="password" Name="Input.Password" @bind-Value="Input.Password"
@@ -78,10 +87,31 @@
             return;
         }
 
-        var result = await UserManager.DeleteAsync(user);
+        IList<ApplicationUser> admins = await UserManager.GetUsersInRoleAsync("Admin");
+        if (admins is { Count: <= 1 } && admins.First().Id == user.Id)
+        {
+            message = "Error: You cannot delete your account, as you are the last administrator of this instance. Please designate at least one other administrator before deleting your account.";
+            return;
+        }
+
+        ApplicationUser? transferRecipient = null;
+
+        if (!string.IsNullOrWhiteSpace(Input.TransferEmail))
+        {
+            transferRecipient = await UserManager.FindByEmailAsync(Input.TransferEmail);
+
+            if (transferRecipient is not ApplicationUser)
+            {
+                message = "Error: The user you tried to transfer your projects to does not exist.";
+                return;
+            }
+        }
+
+        IdentityResult result = await UserManager.DeleteUserAndProjectsAsync(user, transferRecipient);
         if (!result.Succeeded)
         {
-            throw new InvalidOperationException("Unexpected error occurred deleting user.");
+            message = "Error: Unexpected error occurred deleting user.";
+            return;
         }
 
         await SignInManager.SignOutAsync();
@@ -96,5 +126,8 @@
     {
         [DataType(DataType.Password)]
         public string Password { get; set; } = "";
+
+        [DataType(DataType.EmailAddress)]
+        public string TransferEmail { get; set; } = "";
     }
 }

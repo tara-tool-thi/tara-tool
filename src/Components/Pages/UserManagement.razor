@@ -1,7 +1,11 @@
 @page "/UserManagement"
 @using System.Security.Claims
 @using System.Net.Mail
+@using tara_tool.Components.Account.Pages.Manage
+@using tara_tool.Data.Services
 @rendermode InteractiveServer
+
+@attribute [Authorize]
 
 @inject NavigationManager NavigationManager
 @inject UserManager<ApplicationUser> UserManager
@@ -11,34 +15,36 @@
 @inject IJSRuntime JSRuntime
 @inject IToastService ToastService
 @inject ApplicationUserService ApplicationUserService
+@inject SessionService SessionService
 
 <AuthorizeView Roles="Admin">
     <PageTitle>User Management</PageTitle>
 
     <h1>User Management</h1>
-
-    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
-            HorizontalAlignment="HorizontalAlignment.SpaceBetween">
-        <FluentSpacer />
-        <FluentButton OnClick="OpenDialogInviteUser" IconStart=@(new Icons.Regular.Size20.Add())>
-            New User
-        </FluentButton>
-    </FluentStack>
+    <p class="tiny-text">Manage users and pending registrations</p>
 
 @if(paginationPendingRegistrations is not null)
 {
-    <h4 class="margin-bottom-16">Pending Registrations</h4>
+    <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center">
+        <h4 class="margin-bottom-16">Pending Registrations</h4>
+        <FluentSpacer />
+        <FluentButton Title="Generate registration link" OnClick="OpenDialogInviteUserLink" IconStart=@(new Icons.Regular.Size20.Add())>
+            New User
+        </FluentButton>
+    </FluentStack>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_registrationSearch />
-    <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations">
-        <PropertyColumn Property="@(w => w.Email)" Sortable="true" />
+    <FluentDataGrid Items="filteredRegistrations.AsQueryable()" TGridItem="PendingRegistration" Pagination="@paginationPendingRegistrations.pagination" Class="margin-top-10" RowSize="DataGridRowSize.Medium" AutoFit="true" ShowHover="true" @ref="gridPendingRegistrations" @key=pendingRegistrations>
+        <PropertyColumn Title="Email" Property="@(w => w.Email.ToLower())" Sortable="true" class="min-width-max-content" />
         <TemplateColumn Title="Registration Link" Context="pendingRow"> @*context= lokale Variable für das aktuell übergebene Objekt, hier Zeile*@
             @GenerateRegistrationLink(pendingRow.Id)
         </TemplateColumn>
         <TemplateColumn Context="pendingRow">
-            <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) />
-            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
-            </FluentButton>
+            <FluentStack Orientation="Orientation.Horizontal" class="maxwidth-100">
+                <FluentButton OnClick="@(() => @CopyLinkToClipboard(pendingRow.Id))" IconStart=@(new Icons.Regular.Size16.Copy()) Title="Copy link"/>
+                <FluentButton aria-label="Delete pending registration" Title="Delete registration link" OnClick="@(() => @DeletePendingRegistration(pendingRow.Id))">
+                    <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+                </FluentButton>
+            </FluentStack>
         </TemplateColumn>
     </FluentDataGrid>
 }
@@ -48,48 +54,51 @@
 {
     <h4 class="margin-bottom-16">Registered Users</h4>
     <FluentSearch Placeholder="Type to search for email..." Immediate=true ImmediateDelay="500" Style="Width: 25%" @bind-Value=@_userSearch />
-    <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" @ref="gridUsers"> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
-        <PropertyColumn Property="@(p => p.Email)" Sortable="true" /> @*Für jedes Objekt in people wird die Email angezeigt *@
-        <PropertyColumn Property="@(p => p.UserName)" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
-        <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
-        <TemplateColumn Context="userRow">
-            <FluentButton aria-label="Delete pending registration" OnClick="@(() => @OpenDialogDeleteUser(userRow))">
-                <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
-            </FluentButton>
-        </TemplateColumn>
-     </FluentDataGrid>
+    <div class="table-users-1">
+        <div class="table-users-2">
+            <FluentDataGrid Items="@filteredUsers.AsQueryable()" TGridItem="ApplicationUser" Class="margin-top-10" RowSize="DataGridRowSize.Medium" Pagination="@paginationUsers.pagination" AutoFit="true" Style="min-width: max-content" ShowHover="true" @ref="gridUsers" @key=users> @*Jede Zeile im Grid entspricht einem Objekt vom A.U und er will Datentyp IQuerable nicht Liste*@
+                <TemplateColumn Title="Email" SortBy="@emailSort" Context="userRow">
+                    <FluentStack Style="align-items: center">
+                        <ChildContent>
+                            @userRow.Email @if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
+                                <FluentIcon Value="@(new Icons.Regular.Size16.Crown())" Class="icon-spacing" Style="height: 1hl; width: 1hl; scale: 1.2;" Id="IsAdminIcon" />
+                                <FluentTooltip Anchor="IsAdminIcon" Position="TooltipPosition.End">Admin</FluentTooltip>
+                            }
+                        </ChildContent>
+                    </FluentStack>
+                </TemplateColumn>
+                <PropertyColumn Property="@(p => p.NameOfUser)" Title="Username" Sortable="true" /> @* P ist ein einzelnes pbjekt auf people*@
+                <PropertyColumn Property="@(p => p.Organization)" Sortable="true" />
+                <TemplateColumn Title="Projects" Context="userRow">
+                    <FluentButton Title="Show projects of user" OnClick="@(() => OpenDialogShowProjects(userRow))" IconStart="@(new Icons.Regular.Size20.AppsList())">
+                        Show projects
+                    </FluentButton>
+                </TemplateColumn>
+                <TemplateColumn Context="userRow">
+                    <FluentStack HorizontalAlignment="HorizontalAlignment.Right" Orientation="Orientation.Horizontal" class="maxwidth-100">
+                        @if (IsCurrentUser(userRow.Id).Result) {
+                        } else if (UserManager.IsInRoleAsync(user: userRow, "Admin").Result){
+                            <FluentButton OnClick="@(() => @OpenDialogChangeRoleToUser(userRow.Id))" IconStart=@(new Icons.Regular.Size20.CrownSubtract()) Title="Remove from Admin Group" />
+                        } else {
+                            <FluentButton OnClick="@(() => @OpenDialogChangeRoleToAdmin(userRow.Id))" IconStart=@(new Icons.Regular.Size20.Crown()) Title="Add to Admin Group"/>
+                        }
+                        <FluentButton aria-label="Reset password" Id="info" OnClick="@(() => @OpenDialogResetPassword(userRow))" Title="Reset Password of User" >
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Password())" Color="Color.Error" />
+                        </FluentButton>
+                        <FluentButton Title="Delete user account" OnClick="@(() => @OpenDialogDeleteUser(userRow))" >
+                            <FluentIcon Value="@(new Icons.Regular.Size16.Delete())" Color="Color.Error" />
+                        </FluentButton>
+                    </FluentStack>
+                </TemplateColumn>
+            </FluentDataGrid>
+        </div>
+    </div>
 }
 <PaginationUI @ref=@paginationUsers />
 
-
-@* Dialog that contains the invite link *@
-<div>
-    <FluentDialog title="Invite link" @ref="copyLink" @bind-Hidden="@inviteLinkHidden" @ondialogdismiss=CloseCopyLink>
-        <FluentDialogHeader ShowDismiss="true">
-            <FluentStack VerticalAlignment="VerticalAlignment.Center">
-                <FluentIcon Value="@(new Icons.Regular.Size28.PersonAdd())" />
-                <h3>Invite link</h3>
-            </FluentStack>
-        </FluentDialogHeader>
-        <FluentDialogBody>
-            <FluentStack Orientation="Orientation.Vertical">
-                <p class="margin-bottom-0">This is the register link for the new user:</p>
-                <FluentStack Orientation="Orientation.Horizontal">
-                    <FluentTextField ReadOnly="true" @bind-Value="link" class="fullwidth"></FluentTextField>
-                    <FluentButton OnClick="@(() => CopyLinkToClipboard(null))" IconStart=@(new Icons.Regular.Size20.Copy())/>
-                </FluentStack>
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" class="margin-top-10">
-                    <FluentIcon Value="@(new Icons.Regular.Size24.Info())" Class="min-width-24"/>
-                    <p class="margin-bottom-0">Please don't share this link with anyone except the user you want to invite. You can manage the users and pending registrations on this page.</p>
-                </FluentStack>
-            </FluentStack>
-        </FluentDialogBody>
-        <FluentDialogFooter>
-            <FluentSpacer/>
-            <FluentButton OnClick=CloseCopyLink Appearance="Appearance.Accent">OK</FluentButton>
-        </FluentDialogFooter>
-    </FluentDialog>
-</div>
+<br />
+<br />
+<hr class="hr-invisible"/>
 
 <BackButton />
 
@@ -97,20 +106,13 @@
 
 
 @code {
-    private PaginationUI paginationPendingRegistrations { get; set; } = default!;
-    private PaginationUI paginationUsers { get; set; } = default!;
-
-    private string? email = "";
-
-    private string? link;
-
-    private FluentDialog? copyLink;
-    private bool inviteLinkHidden { get; set; } = true;
-
-    private ClaimsPrincipal? user { get; set; }
+    private ClaimsPrincipal? currentUser { get; set; }
 
     private FluentDataGrid<PendingRegistration> gridPendingRegistrations = default!;
     private FluentDataGrid<ApplicationUser> gridUsers = default!;
+
+    private PaginationUI paginationPendingRegistrations { get; set; } = default!;
+    private PaginationUI paginationUsers { get; set; } = default!;
 
     List<PendingRegistration> pendingRegistrations = new();
     List<ApplicationUser> users = new();
@@ -187,6 +189,20 @@
         }
     }
 
+    GridSort<ApplicationUser> emailSort = GridSort<ApplicationUser>
+        .ByDescending(filteredUsers => filteredUsers.Email)
+        .ThenDescending(filteredUsers => filteredUsers.Email);
+
+
+    protected override async Task OnInitializedAsync() {
+        currentUser = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
+        if (currentUser is null || !currentUser.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
+        if(users.Count == 0 || pendingRegistrations.Count == 0)
+        {
+            await OnRefreshUsers();
+            await OnRefreshPendingRegistrations();
+        }
+    }
 
     // necessary for rendering tables with pagination
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -196,58 +212,172 @@
         }
     }
 
-    protected override async Task OnInitializedAsync() {
-        user = AuthenticationStateProvider.GetAuthenticationStateAsync().Result.User;
-        if (user is null || !user.IsInRole("Admin")) NavigationManager.NavigateTo("/Account/AccessDenied");
-        if(users.Count == 0 || pendingRegistrations.Count == 0)
-        {
-            users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
-            pendingRegistrations = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
-        }
-   }
 
-    private async Task OpenDialogInviteUser()
+
+    // Methods necessary for automatic refresh of grids
+    public async Task OnRefreshPendingRegistrations() {
+        pendingRegistrations = await PendingRegistrationService.GetAllPendingRegistrations(); //Service aufrufen und dort die Methode GetAllPendingRegistrations() aufrufen
+        if(gridPendingRegistrations != null) {
+            await gridPendingRegistrations.RefreshDataAsync(true);
+        }
+    }
+
+    public async Task OnRefreshUsers() {
+        users = await ApplicationUserService.GetAllUsers(); //Service aufrufen und dort die Methode GetAllUsers() aufrufen
+        if(gridUsers != null) {
+            await gridUsers.RefreshDataAsync(true);
+        }
+    }
+
+
+    // OpenDialog-Methods
+    private async Task OpenDialogInviteUserLink()
     {
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
-        DialogResult? result = await dialog.Result;
-        if (user is null || !user.IsInRole("Admin")) return;
-        email = (string?)result?.Data;
+        IDialogReference dialogInviteUser = await this.DialogService.ShowDialogAsync<Dialogs.InviteUser>(new DialogParameters { });
+        DialogResult? result = await dialogInviteUser.Result;
+        if (currentUser is null || !currentUser.IsInRole("Admin")) return;
+        string? email = (string?)result?.Data;
         if(email == null)
             return;
         string? id = await PendingRegistrationService.Create(email);
+        await OnRefreshPendingRegistrations();
 
         if (id== null){
             ToastService.ShowError("Failed to create pending registration");
             return;
         }
 
-        link = GenerateRegistrationLink(id);
-        await DialogService.CloseAsync(dialog);
-        copyLink!.Show();
+        await DialogService.CloseAsync(dialogInviteUser);
+
+        IDialogReference dialogCopyLink = await this.DialogService.ShowDialogAsync<Dialogs.InviteLink>(GenerateRegistrationLink(id), new DialogParameters { });
+    }
+
+    private async Task OpenDialogShowProjects(ApplicationUser userWithProjects)
+    {
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ShowProjectsOfUser>(userWithProjects, new DialogParameters {Width="50%", });
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+    }
+
+    private async Task OpenDialogChangeRoleToAdmin(string id)    // Methods necessary for pending registration links
+    {
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
+        if (userToChangeRole == null) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToAdmin>(userToChangeRole, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != true)
+        {
+            await ChangeRoleToAdmin(userToChangeRole);
+            return;
+        }
+    }
+
+    private async Task OpenDialogChangeRoleToUser(string id)
+    {
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        ApplicationUser? userToChangeRole = await UserManager.FindByIdAsync(id);
+        if (userToChangeRole == null) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ChangeRoleToUser>(userToChangeRole, new DialogParameters { });
+        DialogResult? result = await dialog.Result;
+        if(result.Cancelled != true)
+        {
+            await ChangeRoleToUser(userToChangeRole);
+            return;
+        }
     }
 
     private async Task OpenDialogDeleteUser(ApplicationUser userToDelete)
     {
-        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
-        DialogResult? result = await dialog.Result;
-        if(result.Cancelled != true)
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        if(IsCurrentUser(userToDelete.Id).Result != true)
         {
-            await DeleteUser(userToDelete.Id);
+            IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUser>(userToDelete, new DialogParameters { });
+            DialogResult? result = await dialog.Result;
+            if(result.Cancelled != true)
+            {
+                await DeleteUser(userToDelete.Id);
+            }
+        }
+        else
+        {
+            IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.DeleteUserSelf>(new DialogParameters { });
         }
     }
 
-    private string GenerateRegistrationLink(string id)
+    private async Task OpenDialogResetPassword(ApplicationUser userWithForgottenPassword)
     {
-        return NavigationManager.BaseUri + "Account/Register?id=" + id;
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        if(IsCurrentUser(userWithForgottenPassword.Id).Result != true)
+        {
+            IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ResetPassword>(userWithForgottenPassword, new DialogParameters { });
+            DialogResult? result = await dialog.Result;
+            if(result.Cancelled != true)
+            {
+                await ResetPassword(userWithForgottenPassword.Id);
+            }
+        }
+        else
+        {
+            IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.ResetPasswordSelf>(new DialogParameters { });
+        }
     }
 
-    private void CloseCopyLink()
+    private async Task OpenDialogAdminInfoResetPassword(string password){
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        IDialogReference dialog = await this.DialogService.ShowDialogAsync<Dialogs.AdminInfoResetPassword>(password, new DialogParameters { });
+    }
+
+
+    // Delete methods
+    private async Task DeletePendingRegistration(string id)
     {
-        copyLink!.Hide();
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        await PendingRegistrationService.Delete(id);
+        ToastService.ShowSuccess("Deleted pending registration");
+        await OnRefreshPendingRegistrations();
+    }
+
+    private async Task DeleteUser(string id)
+    {
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        ApplicationUser? userToDelete = await UserManager.FindByIdAsync(id);
+        if(userToDelete != null)
+        {
+            await UserManager.DeleteUserAndProjectsAsync(userToDelete);
+            ToastService.ShowSuccess("Deleted user");
+            await OnRefreshUsers();
+        } else {
+            Console.WriteLine("Failed to delete user");
+        }
+    }
+
+    private async Task ResetPassword (string id)
+    {
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        ApplicationUser? userWithForgottenPassword = await UserManager.FindByIdAsync(id);
+        if(userWithForgottenPassword != null){
+            await UserManager.RemovePasswordAsync(userWithForgottenPassword);
+            string randomPassword = GenerateRandomPassword();
+            await UserManager.AddPasswordAsync(userWithForgottenPassword, randomPassword);
+            await ApplicationUserService.ToggleResetPassword(id);
+            await OpenDialogAdminInfoResetPassword(randomPassword);
+        } else {
+            Console.WriteLine("Failed to reset the password");
+        }
+    }
+
+
+    // Methods necessary for pending registration links
+    private string GenerateRegistrationLink(string id)
+    {
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return "";
+        return NavigationManager.BaseUri + "Account/Register?id=" + id;
     }
 
     private async Task CopyLinkToClipboard(string? id)
     {
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        string? link = null;
         if(id != null)
         {
             link = GenerateRegistrationLink(id);
@@ -263,28 +393,84 @@
         }
     }
 
-    private async Task DeletePendingRegistration(string id)
+    // Methods for managing users
+    private async Task<string> GetRolesForUser (ApplicationUser user)
     {
-        await PendingRegistrationService.Delete(id);
-        ToastService.ShowSuccess("Deleted pending registration");
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return "";
+        IList<string> roles = await UserManager.GetRolesAsync(user);
+        return string.Join(", ", roles);
     }
 
-    private async Task DeleteUser(string id)
+    private async Task ChangeRoleToAdmin (ApplicationUser userToCangeRole)
     {
-        ApplicationUser? userToDelete = await UserManager.FindByIdAsync(id);
-        if(userToDelete != null)
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        await UserManager.AddToRoleAsync(userToCangeRole, "Admin");
+        return;
+    }
+
+    private async Task ChangeRoleToUser (ApplicationUser userToChangeRole)
+    {
+        if (currentUser is null || currentUser.IsInRole("Admin") == false) return;
+        await UserManager.RemoveFromRoleAsync(userToChangeRole, "Admin");
+        return;
+    }
+
+    private async Task<bool> IsCurrentUser (string id)
+    {
+        if (this.currentUser is null || this.currentUser.IsInRole("Admin") == false) return false;
+        ApplicationUser? currentUser = SessionService.GetApplicationUserAsync().Result;
+        if (currentUser == null)
+            return false;
+        return (currentUser.Id == id);
+    }
+
+    public static string GenerateRandomPassword(PasswordOptions? opts = null)
+    {
+        if (opts == null) opts = new PasswordOptions()
         {
-            await UserManager.DeleteAsync(userToDelete);
-            ToastService.ShowSuccess("Deleted user");
-        } else {
-            Console.WriteLine("Failed to delete user");
+            RequiredLength = 8,
+            RequiredUniqueChars = 4,
+            RequireDigit = true,
+            RequireLowercase = true,
+            RequireNonAlphanumeric = true,
+            RequireUppercase = true
+        };
+
+        string[] randomChars = new[] {
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ",    // uppercase
+            "abcdefghijklmnopqrstuvwxyz",    // lowercase
+            "0123456789",                   // digits
+            "!@$?_-"                        // non-alphanumeric
+        };
+
+        Random rand = new Random(Environment.TickCount);
+        List<char> chars = new List<char>();
+
+        if (opts.RequireUppercase)
+            chars.Insert(rand.Next(0, chars.Count),
+                randomChars[0][rand.Next(0, randomChars[0].Length)]);
+
+        if (opts.RequireLowercase)
+            chars.Insert(rand.Next(0, chars.Count),
+                randomChars[1][rand.Next(0, randomChars[1].Length)]);
+
+        if (opts.RequireDigit)
+            chars.Insert(rand.Next(0, chars.Count),
+                randomChars[2][rand.Next(0, randomChars[2].Length)]);
+
+        if (opts.RequireNonAlphanumeric)
+            chars.Insert(rand.Next(0, chars.Count),
+                randomChars[3][rand.Next(0, randomChars[3].Length)]);
+
+        for (int i = chars.Count; i < opts.RequiredLength
+            || chars.Distinct().Count() < opts.RequiredUniqueChars; i++)
+        {
+            string rcs = randomChars[rand.Next(0, randomChars.Length)];
+            chars.Insert(rand.Next(0, chars.Count),
+                rcs[rand.Next(0, rcs.Length)]);
         }
+
+        return new string(chars.ToArray());
     }
 
-    private void RefreshGrid()
-    {
-        // grid may be null during initial render
-        if (gridPendingRegistrations is not null)
-            InvokeAsync(() => gridPendingRegistrations.RefreshDataAsync());
-    }
 }

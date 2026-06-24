@@ -1,0 +1,40 @@
+@implements IDialogContentComponent<string>
+@rendermode InteractiveServer
+
+<FluentDialogHeader ShowDismiss="true">
+    <h3>Deleting your own account</h3>
+</FluentDialogHeader>
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical">
+        <p>It is not possible to delete your own account on this page.
+            <br />
+        If you want to delete your account please do that
+            <FluentAnchor Href="Account/Manage/PersonalData" Appearance="Appearance.Hypertext">here</FluentAnchor>.
+        </p>
+    </FluentStack>
+</FluentDialogBody>
+
+<FluentDialogFooter>
+    <FluentSpacer />
+    <FluentButton Appearance="Appearance.Outline" OnClick="@CancelDialog">Cancel</FluentButton>
+</FluentDialogFooter>
+
+
+@code
+{
+    [Parameter]
+    public string Content { get; set; } = default!;
+
+    [CascadingParameter]
+    public FluentDialog? Dialog { get; set; }
+
+    private async Task CloseDialog()
+    {
+        await Dialog!.CloseAsync();
+    }
+    private async Task CancelDialog()
+    {
+        await Dialog!.CancelAsync();
+    }
+}
