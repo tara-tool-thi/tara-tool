@@ -325,6 +325,13 @@ table th {
     margin: 16px 0;
 }
 
+.hr-invisible {
+    color: var(--neutral-fill-rest);
+    background-color: var(--neutral-fill-rest);
+    border: none;
+    height: 2px;
+}
+
 .margin-bottom-0 {
     margin-bottom: 0;
 }
