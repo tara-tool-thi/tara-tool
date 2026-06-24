@@ -83,9 +83,11 @@
                              HorizontalAlignment="HorizontalAlignment.SpaceBetween">
                     <span><strong>Damage Scenarios</strong></span>
                     <FluentSpacer />
-                    <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateDamageScenario">
-                        New Damage Scenario
-                    </FluentButton>
+                    <div @onclick:stopPropagation="true">
+                        <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateDamageScenario">
+                            New Damage Scenario
+                        </FluentButton>
+                    </div>
                 </FluentStack>
             </HeadingTemplate>
             <ChildContent>
@@ -155,7 +157,14 @@
 
     private async Task CreateDamageScenario()
     {
-        DamageScenario? ds = await DamageScenarioService.CreateNew(IdAsset);
+        IDialogReference dialog = await DialogService.ShowDialogAsync<CreateDamageScenarioDialog>(
+            new CreateDamageScenarioDialog.Goals(), new DialogParameters());
+        DialogResult result = await dialog.Result;
+        if (result is { Cancelled: true } or { Data: null }) return;
+
+        CreateDamageScenarioDialog.Goals goals = (CreateDamageScenarioDialog.Goals)result.Data;
+        DamageScenario? ds = await DamageScenarioService.CreateNew(
+            IdAsset, goals.Confidentiality, goals.Integrity, goals.Availability);
         if (ds is not null)
         {
             NavigationManager.NavigateTo($"/DamageScenario/{ds.Id}");
