@@ -1,3 +1,9 @@
 @inject NavigationManager NavigationManager
 @rendermode InteractiveServer
-<FluentButton OnClick=@(() => NavigationManager.NavigateTo("/")) Class="path-dropdown-select"><b>THIARA</b></FluentButton>
+<FluentButton OnClick=@(() => NavigationManager.NavigateTo("/")) Class="path-dropdown-select">
+    <span style="display: inline-flex; align-items: center; gap: 6px;">
+        <img src="/favicon.svg" alt="" style="height: 22px; width: auto;" />
+        <b style="margin-top: 5px;">THIARA</b>
+    </span>
+</FluentButton>
+
