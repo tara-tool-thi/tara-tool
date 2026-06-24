@@ -358,6 +358,11 @@ h6 {
     margin-bottom: 0;
 }
 
+.no-data {
+    min-height: 20%;
+    max-height: 100px;
+}
+
 .accordion {
     margin-bottom: 1rem;
 }
