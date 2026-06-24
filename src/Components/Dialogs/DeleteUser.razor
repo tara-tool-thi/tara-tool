@@ -86,7 +86,7 @@
             ApplicationUser? transferRecipient = await UserManager.FindByEmailAsync(transferEmail);
             if (transferRecipient is ApplicationUser)
             {
-                IdentityResult transferResult = await UserManager.TransferAllProjects(Content, transferRecipient, doNotVerifyOwnership: true);
+                IdentityResult transferResult = await UserManager.TransferAllProjects(Content, transferRecipient, omitOwnershipVerification: true);
                 if(transferResult.Succeeded)
                 {
                     ToastService.ShowSuccess("Transfered projects successfully");

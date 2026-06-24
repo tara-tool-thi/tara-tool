@@ -54,7 +54,7 @@ public static class UserManagerDeletionExtension
         /// </summary>
         public async Task<IdentityResult> TransferAllProjects
         (
-            ApplicationUser sourceUser, ApplicationUser targetUser, bool doNotVerifyOwnership = false
+            ApplicationUser sourceUser, ApplicationUser targetUser, bool omitOwnershipVerification = false
         )
         {
             ProjectService projectService = self.ServiceProvider.GetRequiredService<ProjectService>();
@@ -63,22 +63,22 @@ public static class UserManagerDeletionExtension
 
             try
             {
-                List<Exception> oex = [];
+                List<Exception> outerException = [];
                 projects.ForEach(async p =>
                 {
                     try
                     {
-                        if (!await projectService.TransferOwnershipAsync(p.Id, targetUser, doNotVerifyOwnership))
+                        if (!await projectService.TransferOwnershipAsync(p.Id, targetUser, omitOwnershipVerification))
                             throw new Exception($"Failed to transfer project {p.ProjectName}");
                     }
                     catch (Exception ex)
                     {
-                        oex.Add(ex);
+                        outerException.Add(ex);
                     }
                 });
-                if (oex is not [])
+                if (outerException is not [])
                 {
-                    throw new Exception(string.Join('\n', oex.Select(e => e.Message)));
+                    throw new Exception(string.Join('\n', outerException.Select(e => e.Message)));
                 }
             }
             catch (Exception ex)
@@ -101,7 +101,7 @@ public static class UserManagerDeletionExtension
 
             try
             {
-                List<Exception> oex = [];
+                List<Exception> outerException = [];
                 projects.ForEach(async p =>
                 {
                     try
@@ -111,12 +111,12 @@ public static class UserManagerDeletionExtension
                     }
                     catch (Exception ex)
                     {
-                        oex.Add(ex);
+                        outerException.Add(ex);
                     }
                 });
-                if (oex is not [])
+                if (outerException is not [])
                 {
-                    throw new Exception(string.Join('\n', oex.Select(e => e.Message)));
+                    throw new Exception(string.Join('\n', outerException.Select(e => e.Message)));
                 }
             }
             catch (Exception ex)

@@ -121,7 +121,7 @@ UserManager<ApplicationUser> UserManager = scope.ServiceProvider.GetRequiredServ
 PendingRegistrationService PendingRegistrationService = scope.ServiceProvider.GetRequiredService<PendingRegistrationService>();
 string link = "";
 bool newId = !UserManager.Users.Any() && !await PendingRegistrationService.Any();
-string? id;
+string? id = null;
 if(newId)
 {
     id = await PendingRegistrationService.Create("");

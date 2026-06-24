@@ -508,26 +508,26 @@ public class ProjectService(
         using ApplicationDbContext context =
             await _contextFactory.CreateDbContextAsync();
 
-        AccessControl? currentOwnerAc =
+        AccessControl? currentOwnerAccessControl =
             await context.AccessControls.FirstOrDefaultAsync(
                 a => a.Project.Id == projectId &&
                      a.ApplicationUser.Id == currentUser.Id && a.Owner);
 
-        AccessControl? newOwnerAc =
+        AccessControl? newOwnerAccessControl =
             await context.AccessControls.FirstOrDefaultAsync(
                 a => a.Id == newOwnerAccessControlId && a.Project.Id == projectId &&
                      !a.Owner);
 
-        if (currentOwnerAc == null || newOwnerAc == null)
+        if (currentOwnerAccessControl == null || newOwnerAccessControl == null)
         {
             return false;
         }
 
-        currentOwnerAc.Owner = false;
-        newOwnerAc.Owner = true;
-        newOwnerAc.Manage = true;
-        newOwnerAc.WriteAccess = true;
-        newOwnerAc.ReadAccess = true;
+        currentOwnerAccessControl.Owner = false;
+        newOwnerAccessControl.Owner = true;
+        newOwnerAccessControl.Manage = true;
+        newOwnerAccessControl.WriteAccess = true;
+        newOwnerAccessControl.ReadAccess = true;
 
         await context.Projects.Where(p => p.Id == projectId).ExecuteUpdateAsync(setters => setters.SetProperty(p => p.DateLastChanged, DateTime.UtcNow));
 
@@ -541,7 +541,7 @@ public class ProjectService(
     /// </summary>
     public async Task<bool> TransferOwnershipAsync
     (
-        long projectId, ApplicationUser newOwner, bool doNotVerifyOwnership = false
+        long projectId, ApplicationUser newOwner, bool omitOwnershipVerification = false
     )
     {
         if (newOwner is null) return false;
@@ -554,22 +554,22 @@ public class ProjectService(
         Project? project = context.Projects.Include(p => p.Access).ThenInclude(a => a.ApplicationUser).First(p => p.Id == projectId);
         if (project is null) return false;
 
-        if (!project.Access.Any(a => a.ApplicationUser.Id == currentUser.Id && a.Owner) && !doNotVerifyOwnership) return false;
+        if (!project.Access.Any(a => a.ApplicationUser.Id == currentUser.Id && a.Owner) && !omitOwnershipVerification) return false;
 
-        AccessControl? currentOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
+        AccessControl? currentOwnerAccessControl = await context.AccessControls.Include(a => a.ApplicationUser)
             .FirstOrDefaultAsync(a => a.Project.Id == projectId && a.Owner);
-        if (currentOwnerAc is null) return false;
+        if (currentOwnerAccessControl is null) return false;
 
-        AccessControl? newOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
+        AccessControl? newOwnerAccessControl = await context.AccessControls.Include(a => a.ApplicationUser)
             .FirstOrDefaultAsync(a => a.ApplicationUser.Id == newOwner.Id && a.Project.Id == projectId && !a.Owner);
 
-        currentOwnerAc.Owner = false;
+        currentOwnerAccessControl.Owner = false;
 
-        if (newOwnerAc is null)
+        if (newOwnerAccessControl is null)
         {
             ApplicationUser? applicationUser = await context.Users.FirstOrDefaultAsync(u => u.Id == newOwner.Id);
             if (applicationUser is null) return false;
-            newOwnerAc = new AccessControl
+            newOwnerAccessControl = new AccessControl
             {
                 Project = project,
                 ApplicationUser = applicationUser,
@@ -578,14 +578,14 @@ public class ProjectService(
                 WriteAccess = true,
                 ReadAccess = true
             };
-            context.AccessControls.Add(newOwnerAc);
+            context.AccessControls.Add(newOwnerAccessControl);
         }
         else
         {
-            newOwnerAc.Owner = true;
-            newOwnerAc.Manage = true;
-            newOwnerAc.WriteAccess = true;
-            newOwnerAc.ReadAccess = true;
+            newOwnerAccessControl.Owner = true;
+            newOwnerAccessControl.Manage = true;
+            newOwnerAccessControl.WriteAccess = true;
+            newOwnerAccessControl.ReadAccess = true;
         }
         await context.SaveChangesAsync();
         return true;
@@ -602,13 +602,13 @@ public class ProjectService(
         if (project.Access.Any(a => a.Owner))
             return false;
 
-        AccessControl? newOwnerAc = await context.AccessControls.Include(a => a.ApplicationUser)
+        AccessControl? newOwnerAccessControl = await context.AccessControls.Include(a => a.ApplicationUser)
             .FirstOrDefaultAsync(a => a.ApplicationUser.Id == newOwner.Id && a.Project.Id == projectId && !a.Owner);
 
-        if (newOwnerAc is null)
+        if (newOwnerAccessControl is null)
         {
             context.Users.Attach(newOwner);
-            newOwnerAc = new AccessControl
+            newOwnerAccessControl = new AccessControl
             {
                 Project = project,
                 ApplicationUser = newOwner,
@@ -617,14 +617,14 @@ public class ProjectService(
                 WriteAccess = true,
                 ReadAccess = true
             };
-            context.AccessControls.Add(newOwnerAc);
+            context.AccessControls.Add(newOwnerAccessControl);
         }
         else
         {
-            newOwnerAc.Owner = true;
-            newOwnerAc.Manage = true;
-            newOwnerAc.WriteAccess = true;
-            newOwnerAc.ReadAccess = true;
+            newOwnerAccessControl.Owner = true;
+            newOwnerAccessControl.Manage = true;
+            newOwnerAccessControl.WriteAccess = true;
+            newOwnerAccessControl.ReadAccess = true;
         }
         await context.SaveChangesAsync();
         return true;
