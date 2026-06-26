@@ -5,7 +5,7 @@
 @inject NavigationManager NavigationManager
 
 <AuthorizeView Roles="Admin">
-    <FluentButton @onclick="RedirectUserManagement">
+    <FluentButton @onclick="RedirectUserManagement" Title="Admin settings">
         <FluentIcon Value="@(new Icons.Regular.Size24.ShieldSettings())"/>
     </FluentButton>
 </AuthorizeView>
