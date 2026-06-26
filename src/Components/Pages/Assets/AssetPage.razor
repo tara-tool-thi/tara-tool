@@ -14,7 +14,7 @@
     <BackButton />
 
     <FluentStack VerticalAlignment="VerticalAlignment.Center">
-        <h1>Asset Nr: @asset.AssetNumber</h1>
+        <h1>Asset</h1>
         <FluentIcon Id="asset-info-icon" Value="@(new Icons.Regular.Size24.Info())" />
         <FluentTooltip Anchor="asset-info-icon" MaxWidth="450px" >
             <p><strong>Asset</strong></p>
@@ -33,14 +33,12 @@
         </FluentTooltip>
         <GenericAutosave TEntity="Asset" Entity="@asset" SaveService="@AssetService" @ref=@genericAutosave />
         <FluentSpacer />
-        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
+        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)" Title="Delete asset">
             <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
             Delete Asset
         </FluentButton>
     </FluentStack>
     <p class="tiny-text">Asset, CIA Properties and damage scenarios</p>
-
-    <div style="height: 1rem;"></div>
 
     <DeletionDialog ItemName="@asset.AssetName" OnDelete="@OnDelete" @ref=@deletionDialog />
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
@@ -48,7 +46,7 @@
         <div class="fullwidth">
             <FluentTextField Label="Asset Name" Placeholder="Type an asset Name" @bind-Value="@asset.AssetName"
                              @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Immediate=true
-                             ImmediateDelay="500" />
+                             ImmediateDelay="500" Autofocus="true" />
         </div>
         <div>
             <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
@@ -72,19 +70,15 @@
                     @bind-Value:after="@(() => genericAutosave.ScheduleAutoSave())" Class="fullwidth" Label="Description"
                     Placeholder="Description..." />
 
-    <br />
-    <hr />
-    <br />
-
     <FluentAccordion Class="fullwidth accordion">
         <FluentAccordionItem Expanded="true">
             <HeadingTemplate>
-                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center"
+                <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Center" Appearance="Appearance.Accent"
                              HorizontalAlignment="HorizontalAlignment.SpaceBetween">
                     <span><strong>Damage Scenarios</strong></span>
                     <FluentSpacer />
                     <div @onclick:stopPropagation="true">
-                        <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateDamageScenario">
+                        <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateDamageScenario" Appearance="Appearance.Accent">
                             New Damage Scenario
                         </FluentButton>
                     </div>
@@ -92,8 +86,8 @@
             </HeadingTemplate>
             <ChildContent>
                 <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
-                    <FluentSearch Label="Search Damage Scenarios" Placeholder="Search by description or number"
-                                  Style="width: 250px;" @bind-Value="damageScenarioSearchText" Immediate="true"
+                    <FluentSearch Placeholder="Search by description or number"
+                                  Class="search-width" @bind-Value="damageScenarioSearchText" Immediate="true"
                                   ImmediateDelay="500" />
                 </FluentStack>
                 <DamageScenarioTable @ref="@damageScenarioTable" ProjectId="@asset!.ItemDefinition!.IdProject" Filters="@(e => e.Where(a => a.Asset!.Id == IdAsset).Where(ds => string.IsNullOrWhiteSpace(damageScenarioSearchText) ||

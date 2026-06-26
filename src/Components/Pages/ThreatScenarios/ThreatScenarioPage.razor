@@ -12,7 +12,7 @@
 <PageTitle>Threat Scenario</PageTitle>
 
 <FluentStack VerticalAlignment="VerticalAlignment.Center">
-    <h2>Threat Scenario</h2>
+    <h1>Threat Scenario</h1>
     <FluentIcon Id="threat-scenario-info-icon" Value="@(new Icons.Regular.Size24.Info())" />
     <FluentTooltip Anchor="threat-scenario-info-icon" MaxWidth="450px">
         <p><strong>Threat Scenario</strong></p>
@@ -43,7 +43,7 @@
     <GenericAutosave TEntity="ThreatScenario" Entity="@thisTS" SaveService="@threatScenarioService"
                      @ref=@genericAutosave />
     <FluentSpacer/>
-    <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)">
+    <FluentButton Appearance="Appearance.Outline" OnClick="@(() => showDeleteDialog = true)" Color="var(--error)" Title="Delete threat scenario">
         <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
         Delete
     </FluentButton>
@@ -65,7 +65,7 @@
                         ImmediateDelay="500"
                         Class="fullwidth"
                         placeholder="Add description here..."
-                        @bind-Value:after="@NotifyTSAutosave" />
+                        @bind-Value:after="@NotifyTSAutosave" @ref=textarea/>
         </span>
     </FluentStack>
 
@@ -79,7 +79,7 @@
 
 <FluentStack HorizontalAlignment="HorizontalAlignment.Center" Class="threat-scenario-attackpaths-shell">
     <FluentStack Orientation="Orientation.Vertical" VerticalGap="15" Class="threat-scenario-attackpaths" HorizontalAlignment="HorizontalAlignment.Center">
-        <FluentSearch Placeholder="Free text search" @bind-Value=@searchText Immediate=true Class="fullwidth"
+        <FluentSearch Placeholder="Free text search" @bind-Value=@searchText Immediate=true Class="search-width"
                   ImmediateDelay="500" />
         @if (FilteredAttackPaths.Any())
         {
@@ -111,10 +111,11 @@
             }
         }
 
-        <FluentButton Appearance="Appearance.Neutral"
+        <FluentButton Appearance="Appearance.Accent"
                     OnClick="AddAP"
-                    Class="fullwidth">
-            <FluentIcon Value="@(new Icons.Regular.Size20.Add())" Slot="start" />
+                    Class="fullwidth"
+                    Title="Add new attack path"
+                    IconStart="@(new Icons.Regular.Size20.Add())">
             New Attack Path
         </FluentButton>
 
@@ -189,6 +190,7 @@
 
     public string BgColor { get; set; } = "#dff6ff"; // Default light blue
     private string RiskColor => GetRiskColor();
+    private FluentTextArea? textarea = null;
 
     List<AttackPath> AttackPaths = new();
 
@@ -228,6 +230,14 @@
         foreach (AttackPath ap in thisTS.AttackPaths)
         {
             AttackPaths.Add(ap);
+        }
+    }
+
+    //Workaround for Textarea Autofocus not working correctly
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender) {
+            if (textarea is not null) textarea.FocusAsync();
         }
     }
 

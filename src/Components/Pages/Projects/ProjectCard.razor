@@ -1,6 +1,6 @@
 @inject NavigationManager navigator
 
-<FluentCard @onclick=@(() => navigator.NavigateTo($"Project/{Project!.Id}"))>
+<FluentCard @onclick=@(() => navigator.NavigateTo($"Project/{Project!.Id}")) Class="project-card-clickable">
     <FluentStack Orientation="Orientation.Horizontal" VerticalAlignment="VerticalAlignment.Stretch"
                  HorizontalAlignment="HorizontalAlignment.SpaceBetween">
         <h4>@Project.ProjectName</h4>

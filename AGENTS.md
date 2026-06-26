@@ -2,6 +2,8 @@
 
 This file provides guidance to AI Agents when working with code in this repository.
 
+See `README.md` for a project overview and setup instructions.
+
 ## What this project is
 
 THIARA (the binary/csproj name) is a **TARA tool** — Threat Analysis and Risk Assessment — for automotive/embedded security engineering. It implements the ISO 21434 workflow: users define items, identify assets, create damage scenarios rated by CIA impact, link threat scenarios (STRIDE categories), and detail attack paths with feasibility ratings.

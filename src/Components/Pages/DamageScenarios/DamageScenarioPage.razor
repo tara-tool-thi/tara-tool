@@ -4,6 +4,7 @@
 @using tara_tool.Data.Services
 @using tara_tool.Components
 @using tara_tool.Components.Pages.ThreatScenarios
+@using Microsoft.EntityFrameworkCore
 @inject DamageScenarioService DamageScenarioService;
 @inject ThreatScenarioService ThreatScenarioService
 @inject NavigationManager NavigationManager
@@ -41,7 +42,7 @@
         <GenericAutosave TEntity="DamageScenario" Entity="@damageScenario" SaveService="@DamageScenarioService"
                          @ref=@genericAutosave />
         <FluentSpacer />
-        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)">
+        <FluentButton Appearance="Appearance.Outline" OnClick="@deletionDialog.Show" Color="var(--error)" Title="Delete damage scenario">
             <FluentIcon Value="@(new Icons.Regular.Size20.Delete())" Color="Color.Error" Slot="start" />
             Delete Damage Scenario
         </FluentButton>
@@ -60,7 +61,7 @@
             <FluentStack Class="ts-header-description" VerticalAlignment="VerticalAlignment.Center">
                 <span class="ts-header-description-field">
                 <FluentTextArea Class="fullwidth" @bind-Value=@damageScenario!.Description
-                                @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true />
+                                @bind-Value:after=@genericAutosave.ScheduleAutoSave Immediate=true @ref=textarea />
                 </span>
             </FluentStack>
         </FluentStack>
@@ -90,17 +91,22 @@
                     }
                 </FluentStack>
             </FluentAccordionItem>
-            <FluentAccordionItem Expanded=true Heading="Impact Rating">
-                <FluentStack>
-                    <ImpactRatingCard @bind-Value=@damageScenario.Safety @bind-Value:after=@genericAutosave.ScheduleAutoSave
-                                      CategoryName="Safety" />
-                    <ImpactRatingCard @bind-Value=@damageScenario.Financial
-                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Financial" />
-                    <ImpactRatingCard @bind-Value=@damageScenario.Operational
-                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Operational" />
-                    <ImpactRatingCard @bind-Value=@damageScenario.Privacy
-                                      @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
-                </FluentStack>
+            <FluentAccordionItem Expanded=true>
+                <HeadingTemplate>
+                    <strong>Impact Rating</strong>
+                </HeadingTemplate>
+                <ChildContent>
+                    <FluentStack>
+                        <ImpactRatingCard @bind-Value=@damageScenario.Safety @bind-Value:after=@genericAutosave.ScheduleAutoSave
+                                          CategoryName="Safety" />
+                        <ImpactRatingCard @bind-Value=@damageScenario.Financial
+                                          @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Financial" />
+                        <ImpactRatingCard @bind-Value=@damageScenario.Operational
+                                          @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Operational" />
+                        <ImpactRatingCard @bind-Value=@damageScenario.Privacy
+                                          @bind-Value:after=@genericAutosave.ScheduleAutoSave CategoryName="Privacy" />
+                    </FluentStack>
+                </ChildContent>
             </FluentAccordionItem>
             <FluentAccordionItem Expanded=true>
                 <HeadingTemplate>
@@ -109,15 +115,26 @@
                         <span><strong>Threat Scenarios</strong></span>
                         <FluentSpacer />
                         <div @onclick:stopPropagation="true">
-                            <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateThreatScenario">
+                            <FluentButton IconStart=@(new Icons.Regular.Size20.Add()) OnClick="CreateThreatScenario"
+                                          Appearance="Appearance.Accent" Title="New Threat Scenario">
                                 New Threat Scenario
                             </FluentButton>
                         </div>
                     </FluentStack>
                 </HeadingTemplate>
                 <ChildContent>
-                    <ThreatScenarioTable ProjectId="@damageScenario!.Asset!.ItemDefinition!.IdProject"
-                                         Filters="@(t => t.Where(x => x.DamageScenarios!.Id == IdDamageScenario))" />
+                    <FluentStack VerticalAlignment="VerticalAlignment.Bottom">
+                        <FluentSearch Placeholder="Search by name or description"
+                                      Class="search-width" @bind-Value="tsSearchText" Immediate="true"
+                                      ImmediateDelay="500" />
+                    </FluentStack>
+                    <ThreatScenarioTable @ref="threatScenarioTable"
+                                         ProjectId="@damageScenario!.Asset!.ItemDefinition!.IdProject"
+                                         Filters="@(t => t.Where(x => x.DamageScenarios!.Id == IdDamageScenario)
+                                                           .Where(ts => string.IsNullOrWhiteSpace(tsSearchText) ||
+                                                                        EF.Functions.Like(ts.Name, $"%{tsSearchText}%") ||
+                                                                        EF.Functions.Like(ts.Description, $"%{tsSearchText}%") ||
+                                                                        ts.Id == _parsedTsSearchId))" />
                 </ChildContent>
             </FluentAccordionItem>
         </FluentAccordion>
@@ -140,6 +157,23 @@
 
     private GenericAutosave<DamageScenario> genericAutosave { get; set; } = default!;
     private DeletionDialog deletionDialog { get; set; } = default!;
+    private ThreatScenarioTable? threatScenarioTable;
+
+    private string _tsSearchText = string.Empty;
+    private long? _parsedTsSearchId;
+
+    private FluentTextArea? textarea = null;
+
+    private string tsSearchText
+    {
+        get => _tsSearchText;
+        set
+        {
+            _tsSearchText = string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+            _parsedTsSearchId = long.TryParse(_tsSearchText, out long n) ? n : null;
+            threatScenarioTable?.RefreshGrid();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -148,6 +182,14 @@
         .ThenInclude(g => g != null ? g.ItemDefinition : null)
         .ThenInclude(h => h != null ? h.Project : null)));
 
+    }
+
+    //Workaround, because Autofocus does not work correctly on fluent textareas.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) {
+            if(textarea is not null) textarea.FocusAsync();
+        }
     }
 
     private async Task OnDelete()
@@ -164,7 +206,7 @@
         setter(newValue);
         if (!damageScenario!.ConfidentialityAffected && !damageScenario.IntegrityAffected && !damageScenario.AvailabilityAffected)
         {
-            setter(!newValue); 
+            setter(!newValue);
             securityGoalError = true;
             return;
         }

@@ -5,6 +5,7 @@
 @inject ThreatScenarioService threatScenarioService
 
 
+<div id="@("ap-card-" + attackPath.Id)">
 <FluentStack Class="attackpath-card">
     <FluentAccordionItem Expanded="@attackPath.AccordionExpanded" Style="width: 100%;">
         <HeadingTemplate>
@@ -188,6 +189,8 @@
         </ChildContent>
     </FluentAccordionItem>
 </FluentStack>
+
+</div>
 
     <FluentDialog Hidden="@(!showDeleteDialog)" Modal="true" TrapFocus="true" aria-label="Delete attack path confirmation">
         <FluentDialogHeader>
@@ -375,6 +378,7 @@
         attackPath.Steps.Add(new AttackStep { Text = string.Empty, AttackPath = attackPath });
         await OnFieldChanged.InvokeAsync();
     }
+
 
     private async Task RemoveStep(AttackStep step)
     {

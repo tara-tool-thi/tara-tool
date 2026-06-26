@@ -14,7 +14,7 @@
 
     @if (_title is not null)
     {
-            <h2>@_title</h2>
+            <h1>@_title</h1>
     }
     <OverviewElement IdProject="@IdProject" IdAsset="@IdAsset" IdDamageScenario=@IdDamageScenario IdItem=@IdItem
                      IdThreatScenario="@IdThreatScenario" LastLayer=@((LayerType)bottomLayer)
@@ -102,8 +102,7 @@
         {
             bottomLayer = LayerType.Item;
         }
-        else if (IdProject == -1)
-        {
+        else if (IdProject == -1){
             bottomLayer = LayerType.Project;
         }
 
@@ -155,7 +154,7 @@
             LayerType.Asset => await GetItemTitleAsync(),
             LayerType.DamageScenario => await GetAssetTitleAsync(),
             LayerType.ThreatScenario => await GetDamageScenarioTitleAsync(),
-            _ => null
+            _ => await GetDamageScenarioTitleAsync(),
         };
     }
 
@@ -184,6 +183,6 @@
     {
         if (IdDamageScenario is null || IdDamageScenario == -1) return null;
         DamageScenario? damageScenario = await DamageScenarioService.GetItemByIdAsync((long)IdDamageScenario);
-        return damageScenario is not null ? $"Damage Scenario: #{damageScenario.DamageScenarioNumber}" : null;
+        return damageScenario is not null ? $"Damage Scenario: {damageScenario.DamageScenarioNumber}" : null;
     }
 }

@@ -85,7 +85,7 @@ footer a:hover {
 }
 
 .path-dropdown-select-placeholder::part(control) {
-    color: var(--foreground-on-accent-focus);
+    color: #fff;
     font-style: italic;
 }
 
@@ -307,6 +307,7 @@ table th {
 .tiny-text {
     color: var(--neutral-fill-strong-hover);
     font-size: 1em;
+    margin-bottom: 12px;
 }
 
 .date-text {
@@ -344,6 +345,10 @@ table th {
     min-width: 24px;
 }
 
+h1 {
+    font-weight: bold;
+}
+
 h1,
 h2,
 h3,
@@ -351,6 +356,11 @@ h4,
 h5,
 h6 {
     margin-bottom: 0;
+}
+
+.no-data {
+    min-height: 20%;
+    max-height: 100px;
 }
 
 .accordion {
@@ -462,6 +472,14 @@ h6 {
 
 .search-field {
     flex-grow: 1;
+}
+
+.search-width {
+    width: 20%;
+}
+
+.project-card-clickable {
+    cursor: pointer;
 }
 
 /* AttackPathCard reusable styles (moved from component-specific CSS) */
