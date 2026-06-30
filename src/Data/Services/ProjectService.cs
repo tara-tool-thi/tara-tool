@@ -54,8 +54,7 @@ public class ProjectService(
 
         JsonSerializerOptions options = new JsonSerializerOptions
         {
-            ReferenceHandler =
-                                                      ReferenceHandler.Preserve,
+            ReferenceHandler = ReferenceHandler.Preserve,
             WriteIndented = true
         };
 
@@ -221,7 +220,25 @@ public class ProjectService(
 
         if (user is null) return [];
 
-        return [.. context.Projects.Where(p => p.Access.Any(a => a.Owner == true && a.ApplicationUser.Id == user.Id))];
+        return [.. context.Projects.Include(p => p.ItemDefinitions)
+                               .ThenInclude(id => id.TechnicalSketch)
+                               .Include(p => p.ItemDefinitions)
+                               .ThenInclude(id => id.PreliminaryArchitecture)
+                               .Include(p => p.ItemDefinitions)
+                               .ThenInclude(id => id.ItemBoundary)
+                               .Include(p => p.ItemDefinitions)
+                               .ThenInclude(id => id.OperationalEnvironmentImage)
+                               .Include(p => p.ItemDefinitions)
+                               .ThenInclude(id => id.Assets)
+                               .ThenInclude(a => a.Tag)
+                               .Include(p => p.ItemDefinitions)
+                               .ThenInclude(id => id.Assets)
+                               .ThenInclude(a => a.DamageScenarios)
+                               .ThenInclude(ds => ds.ThreatScenarios)
+                               .ThenInclude(ts => ts.AttackPaths)
+                               .ThenInclude(ap => ap.Steps)
+                               .Include(p => p.Tags)
+                               .Where(p => p.Access.Any(a => a.Owner == true && a.ApplicationUser.Id == user.Id))];
     }
 
     public async Task<Project?> CreateNewProjectAsync(string name)
